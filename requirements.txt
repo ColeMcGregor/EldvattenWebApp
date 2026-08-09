@@ -1,0 +1,5 @@
+# requirements.txt
+
+Django
+psycopg[binary]
+gunicorn
