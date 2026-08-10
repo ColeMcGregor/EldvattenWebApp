@@ -1,0 +1,497 @@
+@startuml
+title Eldvatten Web App - Database Model
+
+hide methods
+hide stereotypes
+
+' =========================================================
+' IDENTITY & ACCESS
+' =========================================================
+
+package "Identity & Access" {
+
+    class User {
+        id : bigint
+        username : varchar
+        email : varchar
+        password : varchar
+        account_status : AccountStatus
+        display_name : varchar
+        sca_name : varchar?
+        sca_title : varchar?
+        date_joined : datetime
+        is_active : boolean
+    }
+
+    enum AccountStatus {
+        PENDING
+        MEMBER
+        SUSPENDED
+        DISABLED
+    }
+
+    class ApplicationRole {
+        id : bigint
+        name : varchar
+    }
+
+    class Permission {
+        id : bigint
+        code : varchar
+        description : varchar
+    }
+
+    class UserApplicationRole {
+        user_id : bigint
+        role_id : bigint
+    }
+
+    class RolePermission {
+        role_id : bigint
+        permission_id : bigint
+    }
+
+    User ||--o{ UserApplicationRole
+    ApplicationRole ||--o{ UserApplicationRole
+
+    ApplicationRole ||--o{ RolePermission
+    Permission ||--o{ RolePermission
+}
+
+
+' =========================================================
+' COMMUNITY ORGANIZATION
+' =========================================================
+
+package "Community Organization" {
+
+    class CommunityGroup {
+        id : bigint
+        name : varchar
+        description : text?
+        is_active : boolean
+        chat_enabled : boolean
+        created_at : datetime
+    }
+
+    class GroupMembership {
+        id : bigint
+        user_id : bigint
+        group_id : bigint
+        joined_at : datetime
+    }
+
+    class Office {
+        id : bigint
+        name : varchar
+        description : text?
+        is_active : boolean
+        created_at : datetime
+    }
+
+    class UserOffice {
+        id : bigint
+        user_id : bigint
+        office_id : bigint
+        assigned_at : datetime
+    }
+
+    User ||--o{ GroupMembership
+    CommunityGroup ||--o{ GroupMembership
+
+    User ||--o{ UserOffice
+    Office ||--o{ UserOffice
+}
+
+
+' =========================================================
+' TAVERN / COMMUNITY CONTENT
+' =========================================================
+
+package "Tavern / Community Content" {
+
+    class Post {
+        id : bigint
+        author_id : bigint
+        title : varchar
+        body : text
+        post_type : PostType
+        visibility : VisibilityType
+        is_pinned : boolean
+        is_locked : boolean
+        created_at : datetime
+        updated_at : datetime
+    }
+
+    enum PostType {
+        POST
+        ANNOUNCEMENT
+    }
+
+    enum VisibilityType {
+        PUBLIC
+        GUESTS
+        MEMBERS
+        GROUP
+    }
+
+    class PostGroupVisibility {
+        post_id : bigint
+        group_id : bigint
+    }
+
+    class Comment {
+        id : bigint
+        post_id : bigint
+        author_id : bigint
+        parent_id : bigint?
+        body : text
+        created_at : datetime
+        updated_at : datetime
+    }
+
+    class Tag {
+        id : bigint
+        name : varchar
+    }
+
+    class PostTag {
+        post_id : bigint
+        tag_id : bigint
+    }
+
+    class Bookmark {
+        user_id : bigint
+        post_id : bigint
+        created_at : datetime
+    }
+
+    class Mention {
+        id : bigint
+        post_id : bigint?
+        comment_id : bigint?
+        mentioned_user_id : bigint
+        created_at : datetime
+    }
+
+    User ||--o{ Post : authors
+
+    Post ||--o{ PostGroupVisibility
+    CommunityGroup ||--o{ PostGroupVisibility
+
+    Post ||--o{ Comment
+    User ||--o{ Comment : authors
+    Comment ||--o{ Comment : replies
+
+    Post ||--o{ PostTag
+    Tag ||--o{ PostTag
+
+    User ||--o{ Bookmark
+    Post ||--o{ Bookmark
+
+    User ||--o{ Mention : mentioned
+    Post ||--o{ Mention
+    Comment ||--o{ Mention
+}
+
+
+' =========================================================
+' ACTIONS
+' =========================================================
+
+package "Actions" {
+
+    class ActionItem {
+        id : bigint
+        post_id : bigint
+        title : varchar
+        instructions : text
+        external_url : varchar?
+        deadline : datetime?
+        is_required : boolean
+        completion_method : CompletionMethod
+        is_active : boolean
+        created_at : datetime
+    }
+
+    enum CompletionMethod {
+        MANUAL
+        OPEN_LINK
+    }
+
+    class ActionAudience {
+        id : bigint
+        action_item_id : bigint
+        audience_type : ActionAudienceType
+        user_id : bigint?
+        group_id : bigint?
+        event_id : bigint?
+    }
+
+    enum ActionAudienceType {
+        ALL_MEMBERS
+        USER
+        GROUP
+        EVENT_ATTENDEES
+    }
+
+    class ActionAssignment {
+        id : bigint
+        action_item_id : bigint
+        user_id : bigint
+        status : ActionStatus
+        assigned_at : datetime
+        opened_at : datetime?
+        completed_at : datetime?
+    }
+
+    enum ActionStatus {
+        NOT_STARTED
+        OPENED
+        COMPLETED
+    }
+
+    class ActionReminderRule {
+        id : bigint
+        action_item_id : bigint
+        days_before_deadline : int
+        enabled : boolean
+    }
+
+    Post ||--o| ActionItem
+
+    ActionItem ||--o{ ActionAudience
+    User ||--o{ ActionAudience
+    CommunityGroup ||--o{ ActionAudience
+
+    ActionItem ||--o{ ActionAssignment
+    User ||--o{ ActionAssignment
+
+    ActionItem ||--o{ ActionReminderRule
+
+    note right of ActionStatus
+    OVERDUE is derived:
+    deadline has passed
+    AND status != COMPLETED
+    end note
+}
+
+
+' =========================================================
+' EVENTS
+' =========================================================
+
+package "Events" {
+
+    class Event {
+        id : bigint
+        organizer_id : bigint
+        title : varchar
+        description : text
+        location : varchar?
+        start_at : datetime
+        end_at : datetime?
+        visibility : VisibilityType
+        recurrence_rule : varchar?
+    }
+
+    class EventRSVP {
+        id : bigint
+        event_id : bigint
+        user_id : bigint
+        status : RSVPStatus
+        updated_at : datetime
+    }
+
+    enum RSVPStatus {
+        GOING
+        MAYBE
+        NOT_GOING
+    }
+
+    class EventAttendance {
+        id : bigint
+        event_id : bigint
+        user_id : bigint
+        status : AttendanceStatus
+        recorded_at : datetime
+    }
+
+    enum AttendanceStatus {
+        UNKNOWN
+        ATTENDED
+        ABSENT
+    }
+
+    User ||--o{ Event : organizes
+
+    Event ||--o{ EventRSVP
+    User ||--o{ EventRSVP
+
+    Event ||--o{ EventAttendance
+    User ||--o{ EventAttendance
+
+    Event ||--o{ ActionAudience
+}
+
+
+' =========================================================
+' NOTIFICATIONS
+' =========================================================
+
+package "Notifications" {
+
+    class Notification {
+        id : bigint
+        user_id : bigint
+        notification_type : NotificationType
+        message : text
+        target_url : varchar?
+        created_at : datetime
+        read_at : datetime?
+    }
+
+    enum NotificationType {
+        REQUIRED_ACTION
+        ACTION_REMINDER
+        ANNOUNCEMENT
+        MENTION
+        REPLY
+        MESSAGE
+        MEMBERSHIP
+    }
+
+    class NotificationPreference {
+        id : bigint
+        user_id : bigint
+        email_enabled : boolean
+        announcements_enabled : boolean
+        action_reminders_enabled : boolean
+        mentions_enabled : boolean
+        replies_enabled : boolean
+        messages_enabled : boolean
+    }
+
+    User ||--o{ Notification
+    User ||--o| NotificationPreference
+}
+
+
+' =========================================================
+' MESSAGING
+' =========================================================
+
+package "Messaging" {
+
+    class Conversation {
+        id : bigint
+        conversation_type : ConversationType
+        name : varchar?
+        community_group_id : bigint?
+        created_at : datetime
+    }
+
+    enum ConversationType {
+        DIRECT
+        COMMUNITY_GROUP
+    }
+
+    class ConversationParticipant {
+        id : bigint
+        conversation_id : bigint
+        user_id : bigint
+        joined_at : datetime
+    }
+
+    class Message {
+        id : bigint
+        conversation_id : bigint
+        sender_id : bigint
+        body : text
+        sent_at : datetime
+    }
+
+    class MessageRead {
+        id : bigint
+        message_id : bigint
+        user_id : bigint
+        read_at : datetime
+    }
+
+    class UserBlock {
+        id : bigint
+        blocker_id : bigint
+        blocked_id : bigint
+        created_at : datetime
+    }
+
+    class MessageArchive {
+        id : bigint
+        date_from : datetime
+        date_to : datetime
+        file_path : varchar
+        message_count : bigint
+        created_at : datetime
+        created_by_id : bigint?
+    }
+
+    CommunityGroup ||--o| Conversation : group chat
+
+    Conversation ||--o{ ConversationParticipant
+    User ||--o{ ConversationParticipant
+
+    Conversation ||--o{ Message
+    User ||--o{ Message : sends
+
+    Message ||--o{ MessageRead
+    User ||--o{ MessageRead
+
+    User ||--o{ UserBlock : blocker
+    User ||--o{ UserBlock : blocked
+
+    User ||--o{ MessageArchive : created by
+
+    note right of MessageRead
+    Read information is admin-only.
+    Users do not see read receipts.
+    end note
+
+    note right of UserBlock
+    Blocks direct messaging only.
+    Shared group chat remains visible.
+    end note
+
+    note right of CommunityGroup
+    If chat_enabled = true,
+    group membership controls
+    access to the group conversation.
+    end note
+
+    note right of MessageArchive
+    Messages are exported,
+    compressed, verified,
+    then removed from the live DB.
+    end note
+}
+
+
+' =========================================================
+' ADMINISTRATION
+' =========================================================
+
+package "Administration" {
+
+    class AuditLog {
+        id : bigint
+        actor_id : bigint?
+        action : varchar
+        target_type : varchar
+        target_id : bigint?
+        details : text?
+        created_at : datetime
+    }
+
+    User ||--o{ AuditLog : actor
+}
+
+@enduml
