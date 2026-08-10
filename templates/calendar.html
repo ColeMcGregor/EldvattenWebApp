@@ -1,18 +1,29 @@
 {% extends "base.html" %}
+{% load static %}
+
+
+<!-- The calendar page, displaying a monthly view of events, with some listed on the bottom for next upcoming. -->
 
 {% block title %}Event Calendar | EldVatten{% endblock %}
 
 {% block content %}
 
-<!-- TODO: ADD YOUR COMMENT HERE -->
-<section class="page-hero">
-    <div class="site-width">
-        <h1 class="page-title">Event Calendar</h1>
+<!-- A hero image showing Eldvatten having a war and some hero text. -->
+<section
+    class="hero"
+    style="background-image: url('{% static 'images/Eldvatten_War_Photo_in_Armor_Pennsic.jpg' %}');"
+>
+    <div class="hero-content">
+        <h1 class="hero-title">Event Calendar</h1>
+
+        <p class="hero-text">
+            A community updated calendar for tracking and discovering events. Events are displayed in a monthly view, displaying those open to all, including the public.
+        </p>
     </div>
 </section>
 
 
-<!-- TODO: ADD YOUR COMMENT HERE -->
+<!-- Calendar and Calendar header, with the changeable navigation -->
 <section class="page-section">
     <div class="site-width">
 
@@ -37,7 +48,7 @@
         </div>
 
 
-        <!-- TODO: ADD YOUR COMMENT HERE -->
+        <!-- This Calendar is generated based on the provided date range from the Django connection -->
         <div class="calendar-grid">
 
             <div class="calendar-weekday">Sunday</div>
@@ -64,7 +75,9 @@
 </section>
 
 
-<!-- TODO: ADD YOUR COMMENT HERE -->
+<!-- TODO: Connect to the events database
+List type depiction of the next 5 events posted, or closest, defaulting "no current events" -->
+
 <section class="page-section page-section-alt">
     <div class="site-width">
 
@@ -72,7 +85,7 @@
 
         <div class="calendar-empty">
             <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                No upcoming events at this time. Please check back later.
             </p>
         </div>
 

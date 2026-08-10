@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}The Tavern | EldVatten{% endblock %}
+
+{% block content %}
+
+<!-- The hero section for the tavern page. includes a description of what the tavern is. -->
+<section
+    class="hero"
+    style="background-image: url('{% static 'images/Eldvatten_Group_Bar_1.jpg' %}');"
+>
+    <div class="hero-content">
+        <h1 class="hero-title">The Tavern</h1>
+
+        <p class="hero-text">
+            A community application for EldVatten members, 
+            built for blogging, events, voting, messaging, and more.
+            <br><br>
+            The Tavern also connects with other parts of the site,
+             keeping relevant community information available to those curious about joining.
+        </p>
+    </div>
+</section>
+
+
+<!-- The section introducing the tavern and its purpose, as well as how it ties into the broader EldVatten community. -->
+<section class="page-section">
+    <div class="site-width two-column">
+
+        <div>
+            <h2 class="section-heading">EldVatten Community</h2>
+
+            <p>
+                While Eldvatten has had various means of communication in the past and in the present, 
+                there has always been a need for a centralized place to connect and share information.
+                So was born The Tavern.
+            </p>
+
+            <p>
+                It allows members to stay connected, share updates, and participate in discussions.
+                It sends notifications about events and updates, and is especially useful for communication during events.
+                It provides a space for centralized votes by community members, as well as member and group messaging.
+            </p>
+
+            <div class="button-row">
+                <a class="button button-primary" href="#">
+                    Member Login
+                </a>
+
+                <a class="button button-secondary" href="#">
+                    Register
+                </a>
+            </div>
+        </div>
+
+
+        <div>
+            <img
+                class="section-image"
+                src="{% static 'images/Eldvatten_Group_Photo_2.jpg' %}"
+                alt="EldVatten members together"
+            >
+        </div>
+
+    </div>
+</section>
+
+
+<!-- TODO: needs to have more images added from when the tavern has a UI
+Section showcasing the features and functionality of The Tavern. -->
+<section class="page-section page-section-alt">
+    <div class="site-width">
+
+        <h2 class="section-heading">Inside The Tavern</h2>
+
+          <div class="card-grid">
+
+            <article class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Community Feed</h3>
+
+                    <p class="card-text">
+                        A centralized place for community updates and discussions. Allows text and image posts, as well as commmenting.
+                    </p>
+                </div>
+            </article>
+
+            <article class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Events</h3>
+
+                    <p class="card-text">
+                        Events can be made by members and posted, allowing for easy discovery and participation.
+                    </p>
+                </div>
+            </article>
+
+            <article class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Member Tools</h3>
+
+                    <p class="card-text">
+                        Member profiles and messaging capabilities, as well as voting and poll features.
+                    </p>
+                </div>
+            </article>
+
+        </div>
+
+    </div>
+</section>
+
+
+<!-- Section for non-members to learn about joining the community. -->
+<section class="page-section">
+    <div class="site-width">
+
+        <h2 class="section-heading">Not a Member Yet?</h2>
+
+        <p class="section-intro">
+            Register below to join the community, approval contingent on meeting membership requirements. Membership can be revoked, suspended, or changed to honorary based on participation, and lack of adherence to community guidelines.
+        </p>
+
+        <div class="button-row">
+            <a class="button button-primary" href="#">
+                Register
+            </a>
+
+            <a class="button button-secondary" href="{% url 'contact' %}">
+                Contact EldVatten
+            </a>
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}

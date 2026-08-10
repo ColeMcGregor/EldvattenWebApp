@@ -1,37 +1,49 @@
 {% extends "base.html" %}
+{% load static %}
 
+<!-- The contact page, used to display and  add means of contacting the Eldvatten group without being part of it-->
 {% block title %}Contact | EldVatten{% endblock %}
 
 {% block content %}
 
-<!-- TODO: ADD YOUR COMMENT HERE -->
-<section class="page-hero">
-    <div class="site-width">
-        <h1 class="page-title">Contact EldVatten</h1>
+<!-- Hero section, image, hero text, and some description of what the page is for [contactinng...]-->
+<section
+    class="hero"
+    style="background-image: url('{% static 'images/Eldvatten_Group_Photo_in_Armor_Studio.jpg' %}');"
+>
+    <div class="hero-content">
+        <h1 class="hero-title">Contact EldVatten</h1>
+
+        <p class="hero-text">
+            Outside of showing up to an event, you can reach out to us through the contact form or by email.
+        </p>
     </div>
 </section>
 
 
-<!-- TODO: ADD YOUR COMMENT HERE -->
+<!--  -->
 <section class="page-section">
     <div class="site-width two-column">
 
-        <div>
+       <div>
             <h2 class="section-heading">Get in Touch</h2>
 
             <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                Have a question about EldVatten, an upcoming event, or how to get involved?
+                Send us a message and someone from the group will get back to you.
             </p>
 
             <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                If you are new to the SCA or just not sure who you need to talk to, that is fine too.
+                We can help point you in the right direction.
             </p>
 
             <div class="link-list">
-                <span>Lorem ipsum dolor sit amet.</span>
-                <span>Lorem ipsum dolor sit amet.</span>
-                <span>Lorem ipsum dolor sit amet.</span>
+                <span>- Questions about events</span>
+                <span>- Questions about joining or attending</span>
+                <span>- General EldVatten questions</span>
+                <span>- Questions about safely participating</span>
+                <span>- Questions about existence and what life means</span>
             </div>
         </div>
 
@@ -87,14 +99,14 @@
 </section>
 
 
-<!-- TODO: ADD YOUR COMMENT HERE -->
+<!-- Invitation to join and attend section. with buttons for the purpose.-->
 <section class="page-section page-section-alt">
     <div class="site-width">
 
         <h2 class="section-heading">Looking to Attend?</h2>
 
         <p class="section-intro">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            View our events page or learn more about us!
         </p>
 
         <div class="button-row">
