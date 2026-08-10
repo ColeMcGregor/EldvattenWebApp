@@ -1,5 +1,3 @@
-
-
 /* Root Variables, used for consistent theming */
 
 :root {
@@ -35,6 +33,32 @@
     --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+
+/* Fonts, celtic style, */
+@font-face {
+    font-family: "EldVatten";
+    src: url("../fonts/dum1.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+@font-face {
+    font-family: "EldVatten Shadow";
+    src: url("../fonts/dum1shad.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+@font-face {
+    font-family: "EldVatten 3D";
+    src: url("../fonts/dum13d.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+
 /* Top level styles */
 
 * {
@@ -56,6 +80,7 @@ body {
     line-height: 1.6;
 }
 
+
 /* Styles for images and links */
 
 img {
@@ -72,12 +97,14 @@ a:hover {
     color: var(--eldvatten-red);
 }
 
+
 /* Site width container */
 
 .site-width {
     width: min(var(--content-width), calc(100% - 2rem));
     margin: 0 auto;
 }
+
 
 /* Header styles */
 
@@ -101,16 +128,20 @@ a:hover {
 /* styling for the site Header content  */
 
 .site-name {
-    font-size: 1.8rem;
+    font-family: "EldVatten", Georgia, serif;
+
+    font-size: 3.8rem;
     font-weight: 700;
     letter-spacing: 0.04em;
 }
 
 .site-logo {
-    width: 74px;
-    height: 74px;
+    width: 88px;
+    height: 88px;
 
     object-fit: contain;
+
+    border-radius: 6px;
 }
 
 .site-nav {
@@ -120,7 +151,7 @@ a:hover {
 
     gap: 1.5rem;
 
-    font-size: 1rem;
+    font-size: 1.25rem;
 }
 
 .site-nav a {
@@ -137,6 +168,7 @@ a:hover {
     color: var(--eldvatten-red);
     font-weight: 700;
 }
+
 
 /* Hero styling, which is just what you see when you load in */
 
@@ -177,7 +209,9 @@ a:hover {
 
     max-width: 700px;
 
+    font-family: "EldVatten", Georgia, serif;
     font-size: clamp(3rem, 7vw, 6rem);
+    font-weight: normal;
     line-height: 1;
 }
 
@@ -188,6 +222,7 @@ a:hover {
 
     font-size: 1.25rem;
 }
+
 
 /* Button styles */
 
@@ -231,6 +266,7 @@ a:hover {
     color: var(--text-main);
 }
 
+
 /* Two-column layout */
 
 .page-section {
@@ -241,14 +277,17 @@ a:hover {
     background: var(--surface);
 }
 
+
 /* section styling */
 
 .section-heading {
     margin: 0 0 var(--space-medium);
 
-    font-size: clamp(2rem, 4vw, 3rem);
+    font-family: "EldVatten", Georgia, serif;
+    font-size: clamp(3.25rem, 6vw, 4.25rem);
+    font-weight: normal;
     line-height: 1.15;
-}
+}SS
 
 .section-intro {
     max-width: 760px;
@@ -259,6 +298,7 @@ a:hover {
 
     font-size: 1.1rem;
 }
+
 
 /* TODO: ADD YOUR COMMENT HERE */
 
@@ -278,6 +318,7 @@ a:hover {
 
     border-radius: var(--radius-medium);
 }
+
 
 /* styling for cards and what defines a card */
 
@@ -301,7 +342,7 @@ a:hover {
 
 .card-image {
     width: 100%;
-    height: 240px;
+    height: 400px;
 
     object-fit: cover;
 }
@@ -313,7 +354,9 @@ a:hover {
 .card-title {
     margin: 0 0 0.75rem;
 
+    font-family: "EldVatten", Georgia, serif;
     font-size: 1.5rem;
+    font-weight: normal;
 }
 
 .card-meta {
@@ -330,6 +373,7 @@ a:hover {
     color: var(--text-muted);
 }
 
+
 /* styling for link lists */
 
 .link-list {
@@ -342,6 +386,7 @@ a:hover {
     color: var(--eldvatten-red);
     font-weight: 700;
 }
+
 
 /* page styling */
 
@@ -356,8 +401,11 @@ a:hover {
 .page-title {
     margin: 0;
 
+    font-family: "EldVatten", Georgia, serif;
     font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: normal;
 }
+
 
 /* Footer styling */
 
@@ -378,7 +426,9 @@ a:hover {
 .footer-heading {
     margin-top: 0;
 
+    font-family: "EldVatten", Georgia, serif;
     font-size: 1.35rem;
+    font-weight: normal;
 }
 
 .footer-links {
@@ -401,6 +451,7 @@ a:hover {
 
     gap: 1rem;
 }
+
 
 /* different media styling (like tablets, etc */
 
@@ -436,6 +487,7 @@ a:hover {
         grid-template-columns: 1fr 1fr;
     }
 }
+
 
 /* smaller sizes, like phones*/
 
