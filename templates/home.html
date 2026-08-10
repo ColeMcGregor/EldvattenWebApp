@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}EldVatten{% endblock %}
+
+{% block content %}
+
+<!-- TODO: ADD YOUR COMMENT HERE -->
+<section
+    class="hero"
+    style="background-image: url('{% static 'images/Eldvatten_Group_Photo_in_Armor_Pennsic.jpg' %}');"
+>
+    <div class="hero-content">
+        <h1 class="hero-title">EldVatten</h1>
+
+        <p class="hero-text">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            Lorem ipsum dolor sit amet.
+        </p>
+
+        <div class="button-row">
+            <a class="button button-primary" href="{% url 'calendar' %}">
+                View Events
+            </a>
+
+            <a class="button button-secondary" href="{% url 'about' %}">
+                About EldVatten
+            </a>
+        </div>
+    </div>
+</section>
+
+
+<!-- TODO: ADD YOUR COMMENT HERE -->
+<section class="page-section">
+    <div class="site-width">
+
+        <h2 class="section-heading">Upcoming Events</h2>
+
+        <p class="section-intro">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        </p>
+
+        <div class="card-grid">
+
+            <article class="card">
+                <div class="card-body">
+                    <p class="card-meta">Lorem ipsum</p>
+
+                    <h3 class="card-title">Lorem Ipsum Event</h3>
+
+                    <p class="card-text">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    </p>
+                </div>
+            </article>
+
+            <article class="card">
+                <div class="card-body">
+                    <p class="card-meta">Lorem ipsum</p>
+
+                    <h3 class="card-title">Lorem Ipsum Event</h3>
+
+                    <p class="card-text">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    </p>
+                </div>
+            </article>
+
+            <article class="card">
+                <div class="card-body">
+                    <p class="card-meta">Lorem ipsum</p>
+
+                    <h3 class="card-title">Lorem Ipsum Event</h3>
+
+                    <p class="card-text">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    </p>
+                </div>
+            </article>
+
+        </div>
+
+        <div class="button-row">
+            <a class="button button-primary" href="{% url 'calendar' %}">
+                View Full Calendar
+            </a>
+        </div>
+
+    </div>
+</section>
+
+
+<!-- TODO: ADD YOUR COMMENT HERE -->
+<section class="page-section page-section-alt">
+    <div class="site-width two-column">
+
+        <div>
+            <h2 class="section-heading">About EldVatten</h2>
+
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            </p>
+
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            </p>
+
+            <div class="button-row">
+                <a class="button button-primary" href="{% url 'about' %}">
+                    Learn More
+                </a>
+            </div>
+        </div>
+
+        <div>
+            <img
+                class="section-image"
+                src="{% static 'images/Eldvatten_Group_Photo_in_Armor.jpg' %}"
+                alt="EldVatten group"
+            >
+        </div>
+
+    </div>
+</section>
+
+
+<!-- TODO: ADD YOUR COMMENT HERE -->
+<section class="page-section">
+    <div class="site-width">
+
+        <h2 class="section-heading">What We Do</h2>
+
+        <p class="section-intro">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        </p>
+
+        <div class="card-grid">
+
+            <article class="card">
+                <img
+                    class="card-image"
+                    src="{% static 'images/Eldvatten_Warrior_Pair_1.jpg' %}"
+                    alt="EldVatten fighters"
+                >
+
+                <div class="card-body">
+                    <h3 class="card-title">Fighting</h3>
+
+                    <p class="card-text">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    </p>
+                </div>
+            </article>
+
+            <article class="card">
+                <img
+                    class="card-image"
+                    src="{% static 'images/Helmet_Crafting_1.jpg' %}"
+                    alt="Helmet crafting"
+                >
+
+                <div class="card-body">
+                    <h3 class="card-title">Arts &amp; Sciences</h3>
+
+                    <p class="card-text">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    </p>
+                </div>
+            </article>
+
+            <article class="card">
+                <img
+                    class="card-image"
+                    src="{% static 'images/Eldvatten_Group_Photo_Tents_Pennsic.jpg' %}"
+                    alt="EldVatten camp"
+                >
+
+                <div class="card-body">
+                    <h3 class="card-title">Events &amp; Community</h3>
+
+                    <p class="card-text">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    </p>
+                </div>
+            </article>
+
+        </div>
+
+    </div>
+</section>
+
+
+<!-- TODO: ADD YOUR COMMENT HERE -->
+<section
+    class="hero"
+    style="background-image: url('{% static 'images/Eldvatten_War_Photo_in_Armor_Pennsic.jpg' %}');"
+>
+    <div class="hero-content">
+
+        <h2 class="hero-title">Get Involved</h2>
+
+        <p class="hero-text">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            Lorem ipsum dolor sit amet.
+        </p>
+
+        <div class="button-row">
+            <a class="button button-primary" href="{% url 'calendar' %}">
+                View Events
+            </a>
+
+            <a class="button button-secondary" href="{% url 'contact' %}">
+                Contact
+            </a>
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}
