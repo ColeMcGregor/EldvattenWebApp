@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Event Calendar | EldVatten{% endblock %}
+
+{% block content %}
+
+<!-- TODO: ADD YOUR COMMENT HERE -->
+<section class="page-hero">
+    <div class="site-width">
+        <h1 class="page-title">Event Calendar</h1>
+    </div>
+</section>
+
+
+<!-- TODO: ADD YOUR COMMENT HERE -->
+<section class="page-section">
+    <div class="site-width">
+
+        <div class="calendar-heading">
+            <a
+                class="calendar-navigation"
+                href="{% url 'calendar' %}?year={{ previous_year }}&month={{ previous_month }}"
+            >
+                Previous
+            </a>
+
+            <h2 class="section-heading calendar-month">
+                {{ month_name }} {{ year }}
+            </h2>
+
+            <a
+                class="calendar-navigation"
+                href="{% url 'calendar' %}?year={{ next_year }}&month={{ next_month }}"
+            >
+                Next
+            </a>
+        </div>
+
+
+        <!-- TODO: ADD YOUR COMMENT HERE -->
+        <div class="calendar-grid">
+
+            <div class="calendar-weekday">Sunday</div>
+            <div class="calendar-weekday">Monday</div>
+            <div class="calendar-weekday">Tuesday</div>
+            <div class="calendar-weekday">Wednesday</div>
+            <div class="calendar-weekday">Thursday</div>
+            <div class="calendar-weekday">Friday</div>
+            <div class="calendar-weekday">Saturday</div>
+
+            {% for week in weeks %}
+                {% for day in week %}
+                    <div class="calendar-day {% if day.month != month %}calendar-day-outside{% endif %}">
+                        <span class="calendar-date">
+                            {{ day.day }}
+                        </span>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+
+        </div>
+
+    </div>
+</section>
+
+
+<!-- TODO: ADD YOUR COMMENT HERE -->
+<section class="page-section page-section-alt">
+    <div class="site-width">
+
+        <h2 class="section-heading">Upcoming Events</h2>
+
+        <div class="calendar-empty">
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            </p>
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}

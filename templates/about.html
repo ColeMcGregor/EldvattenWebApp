@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}About | EldVatten{% endblock %}
+
+{% block content %}
+
+<!-- TODO: ADD YOUR COMMENT HERE -->
+<section
+    class="hero"
+    style="background-image: url('{% static 'images/Eldvatten_Group_Photo_in_Armor_Studio.jpg' %}');"
+>
+    <div class="hero-content">
+        <h1 class="hero-title">About EldVatten</h1>
+
+        <p class="hero-text">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            Lorem ipsum dolor sit amet.
+        </p>
+    </div>
+</section>
+
+
+<!-- TODO: ADD YOUR COMMENT HERE -->
+<section class="page-section">
+    <div class="site-width two-column">
+
+        <div>
+            <h2 class="section-heading">Who We Are</h2>
+
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            </p>
+
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+            </p>
+        </div>
+
+        <div>
+            <img
+                class="section-image"
+                src="{% static 'images/Eldvatten_Leaders_2.jpg' %}"
+                alt="Members of EldVatten"
+            >
+        </div>
+
+    </div>
+</section>
+
+
+<!-- TODO: ADD YOUR COMMENT HERE -->
+<section class="page-section page-section-alt">
+    <div class="site-width">
+
+        <h2 class="section-heading">What We Do</h2>
+
+        <p class="section-intro">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        </p>
+
+        <div class="card-grid">
+
+            <article class="card">
+                <img
+                    class="card-image"
+                    src="{% static 'images/fighting_studio_1.jpg' %}"
+                    alt="Armored fighting"
+                >
+
+                <div class="card-body">
+                    <h3 class="card-title">Fighting</h3>
+
+                    <p class="card-text">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                        Sed do eiusmod tempor incididunt ut labore.
+                    </p>
+                </div>
+            </article>
+
+            <article class="card">
+                <img
+                    class="card-image"
+                    src="{% static 'images/Helmet_Crafting_2.jpg' %}"
+                    alt="Armor crafting"
+                >
+
+                <div class="card-body">
+                    <h3 class="card-title">Arts &amp; Sciences</h3>
+
+                    <p class="card-text">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                        Sed do eiusmod tempor incididunt ut labore.
+                    </p>
+                </div>
+            </article>
+
+            <article class="card">
+                <img
+                    class="card-image"
+                    src="{% static 'images/Eldvatten_Group_Photo.jpg' %}"
+                    alt="EldVatten Members together at a table"
+                >
+
+                <div class="card-body">
+                    <h3 class="card-title">Community</h3>
+
+                    <p class="card-text">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                        Sed do eiusmod tempor incididunt ut labore.
+                    </p>
+                </div>
+            </article>
+
+        </div>
+
+    </div>
+</section>
+
+
+<!-- TODO: ADD YOUR COMMENT HERE -->
+<div class="site-width two-column">
+
+    <div class="learning-gallery">
+        <img
+            class="learning-gallery-main"
+            src="{% static 'images/Helmet_Crafting_3.jpg' %}"
+            alt="Crafting armor"
+        >
+
+        <img
+            class="learning-gallery-small"
+            src="{% static 'images/Eldvatten_Group_Crafting_Forge.jpg' %}"
+            alt="EldVatten group crafting at a forge"
+        >
+
+        <img
+            class="learning-gallery-small"
+            src="{% static 'images/Eldvatten_Group_Crafting_Studio.jpg' %}"
+            alt="EldVatten group crafting in a studio"
+        >
+    </div>
+
+    <div>
+        <h2 class="section-heading">Learning &amp; Making</h2>
+
+        <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+        </p>
+
+        <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+        </p>
+    </div>
+
+</div>
+
+
+<!-- TODO: ADD YOUR COMMENT HERE -->
+<section class="page-section page-section-alt">
+    <div class="site-width two-column">
+
+        <div>
+            <h2 class="section-heading">New to EldVatten?</h2>
+
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            </p>
+
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            </p>
+
+            <div class="button-row">
+                <a class="button button-primary" href="{% url 'calendar' %}">
+                    View Events
+                </a>
+
+                <a class="button button-secondary" href="{% url 'contact' %}">
+                    Contact
+                </a>
+            </div>
+        </div>
+
+        <div>
+            <img
+                class="section-image"
+                src="{% static 'images/Sword_Shield_Armor_Warrior_2.jpg' %}"
+                alt="EldVatten member"
+            >
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}
