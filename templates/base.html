@@ -1,0 +1,99 @@
+{% load static %}
+
+  <!-- This is the base html file. it is to be used to reference for the other non blog files so that
+   their can be similar headers and footers on all pages. 
+   
+   CHANGES HERE REFLECT ON ALL OTHER HTML FILES...BE CAREFUL-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}EldVatten{% endblock %}</title>
+
+    <link rel="stylesheet" href="{% static 'css/site.css' %}">
+</head>
+
+<body>
+
+    <!-- Header section, contains name, logo, and nav section -->
+    <header class="site-header">
+        <div class="site-width site-header-inner">
+
+            <a class="site-name" href="{% url 'home' %}">
+                EldVatten
+            </a>
+
+            <a class="site-logo-link" href="{% url 'home' %}">
+                <img
+                    class="site-logo"
+                    src="{% static 'images/Eldvatten_logo_black_rgb.png' %}"
+                    alt="EldVatten"
+                >
+            </a>
+
+            <nav class="site-nav" aria-label="Main navigation">
+                <a href="{% url 'about' %}">About</a>
+                <a href="{% url 'calendar' %}">Event Calendar</a>
+                <a href="{% url 'tavern' %}">The Tavern</a>
+                <a href="{% url 'contact' %}">Contact</a>
+                <a class="login-link" href="#">Login</a>
+            </nav>
+
+        </div>
+    </header>
+
+    <!-- This is where every other page will shove stuff in between the header adn footer -->
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Here is the footer for each page, with links and information -->
+    <footer class="site-footer">
+
+        <div class="site-width footer-main">
+
+            <section>
+                <h2 class="footer-heading">Participate</h2>
+
+                <div class="footer-links">
+                    <a href="{% url 'calendar' %}">Event Calendar</a>
+                    <a href="{% url 'about' %}">About EldVatten</a>
+                    <a href="{% url 'contact' %}">Contact</a>
+                </div>
+            </section>
+
+            <section>
+                <h2 class="footer-heading">Community</h2>
+
+                <div class="footer-links">
+                    <a href="{% url 'tavern' %}">The Tavern</a>
+                    <a href="#">Member Login</a>
+                </div>
+            </section>
+
+            <section>
+                <h2 class="footer-heading">Information</h2>
+
+                <div class="footer-links">
+                    <a href="https://www.sca.org/">Society for Creative Anachronism</a>
+                    <a href="#">Privacy</a>
+                </div>
+            </section>
+
+        </div>
+
+        <div class="footer-bottom">
+            <div class="site-width footer-bottom-inner">
+                <span>EldVatten</span>
+                <span>Lorem ipsum dolor sit amet.</span>
+            </div>
+        </div>
+
+    </footer>
+
+</body>
+</html>
