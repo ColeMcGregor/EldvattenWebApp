@@ -1,31 +1,35 @@
 {% extends "base.html" %}
 {% load static %}
 
+
 <!-- The about page, providing information about EldVatten and its mission as well as some things eldvatten does-->
 
 
 {% block title %}About | EldVatten{% endblock %}
 
+
 {% block content %}
+
 
 <!-- About page hero section, an image and some description text for what sums up the organization -->
 <section
     class="hero"
-    style="background-image: url('{% static 'images/Eldvatten_Group_Photo_in_Armor_Studio.jpg' %}');"
+    style="background-image: url('{% static 'images/Eldvatten_Group_Photo_in_Armor.jpg' %}');"
 >
     <div class="hero-content">
         <h1 class="hero-title">About EldVatten</h1>
 
         <p class="hero-text">
-            blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah
-            blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah
+            EldVatten is an all-volunteer group dedicated to learning about,
+            recreating, and sharing the culture and history of
+            the Viking Age. This often extends into Viking adjacent
+            cultures as well.
         </p>
     </div>
 </section>
 
 
-<!-- TODO: Add the content of this with one of them
- This is the section describing the heart of Eldvatten, and how they wish to identify. -->
+<!-- This is the section describing the heart of Eldvatten, and how they identify. -->
 <section class="page-section">
     <div class="site-width two-column">
 
@@ -33,13 +37,15 @@
             <h2 class="section-heading">Who We Are</h2>
 
             <p>
-            blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah
-            blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah
+                EldVatten is the public name of The Birka Era Research and Re-enactment Society,
+                a non-profit educational organization focused on increasing understanding of
+                Viking-era life, culture, technology, seafaring, and exploration.
             </p>
 
             <p>
-            blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah
-            blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah
+                While we do specialize in the Viking era, we also study the people and cultures
+                the Vikings encountered through travel and trade, as well as any kind of fighting
+                that can be appropriately pieced into the age or kinds of fighting the Vikings engaged in.
             </p>
         </div>
 
@@ -55,15 +61,15 @@
 </section>
 
 
-<!-- TODO: Add the text content for this section
- This section contains information about the activities of EldVatten. -->
+<!-- This section contains information about the activities of EldVatten. -->
 <section class="page-section page-section-alt">
     <div class="site-width">
 
-        <h2 class="section-heading">What We Do</h2>
+        <h2 class="section-heading">Living History</h2>
 
         <p class="section-intro">
-            Blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah
+            We try to do more than just read about history. EldVatten members prefer to engage with
+            history in a more physical sense, gearing up and learning to fight together. 
         </p>
 
         <div class="card-grid">
@@ -76,14 +82,18 @@
                 >
 
                 <div class="card-body">
-                    <h3 class="card-title">Fighting</h3>
+                    <h3 class="card-title">Historical Fighting</h3>
 
                     <p class="card-text">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                        Sed do eiusmod tempor incididunt ut labore.
+                        Fighting is the main part of EldVatten for mmost of our members.
+                        We train, build and maintain equipment, and participate in several
+                        different historical fighting arts. Abridged, this would include 
+                        shortsword, longsword, greatsword, daggers, axes, polearms, greatshields,
+                        and much more. We will often pick up a new weapon if enough interest is shown.
                     </p>
                 </div>
             </article>
+
 
             <article class="card">
                 <img
@@ -93,14 +103,19 @@
                 >
 
                 <div class="card-body">
-                    <h3 class="card-title">Arts &amp; Sciences</h3>
+                    <h3 class="card-title">Arts, Crafts &amp; Research</h3>
 
                     <p class="card-text">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                        Sed do eiusmod tempor incididunt ut labore.
+                        Members are often involved in making and maintaining their 
+                        own armor and other equipment used for fighting with EldVatten. 
+                        Whenever possible, weapons are made from rattan to reduce the risk
+                        of serious injury if a weapon breaks during use. Some equipment
+                        can be bought ready to use, but most members will end up helping
+                        make, modify, or maintain something at some point.
                     </p>
                 </div>
             </article>
+
 
             <article class="card">
                 <img
@@ -110,12 +125,15 @@
                 >
 
                 <div class="card-body">
-                    <h3 class="card-title">Community</h3>
+                    <h3 class="card-title">Education &amp; Reenactment</h3>
 
                     <p class="card-text">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                        Sed do eiusmod tempor incididunt ut labore.
+                        EldVatten participates in living history events, historical
+                        reenactments, exhibits, and educational demonstrations for people
+                        and organizations interested in Viking history. While not mandatory*,
+                        participation in many of these is encouraged.
                     </p>
+                    <sup>&#42; Some events are required for members to retain their membership status and roles</sup>
                 </div>
             </article>
 
@@ -125,44 +143,46 @@
 </section>
 
 
-<!--  The gallery of images used to show some of the work done in eldvatten for crafts-->
-<div class="site-width two-column">
+<!-- The gallery of images used to show some of the work done in eldvatten for crafts-->
+<section class="page-section">
+    <div class="site-width two-column">
 
-    <div class="learning-gallery">
-        <img
-            class="learning-gallery-main"
-            src="{% static 'images/Helmet_Crafting_3.jpg' %}"
-            alt="Crafting armor"
-        >
+        <div class="learning-gallery">
+            <img
+                class="learning-gallery-main"
+                src="{% static 'images/Helmet_Crafting_3.jpg' %}"
+                alt="Crafting armor"
+            >
 
-        <img
-            class="learning-gallery-small"
-            src="{% static 'images/Eldvatten_Group_Crafting_Forge.jpg' %}"
-            alt="EldVatten group crafting at a forge"
-        >
+            <img
+                class="learning-gallery-small"
+                src="{% static 'images/Eldvatten_Group_Crafting_Forge.jpg' %}"
+                alt="EldVatten group crafting at a forge"
+            >
 
-        <img
-            class="learning-gallery-small"
-            src="{% static 'images/Eldvatten_Group_Crafting_Studio.jpg' %}"
-            alt="EldVatten group crafting in a studio"
-        >
+            <img
+                class="learning-gallery-small"
+                src="{% static 'images/Eldvatten_Group_Crafting_Studio.jpg' %}"
+                alt="EldVatten group crafting in a studio"
+            >
+        </div>
+
+        <div>
+            <h2 class="section-heading">Learning &amp; Making</h2>
+
+            <p>
+                People come in all shapes and sizes, and we are here to support you in your journey.
+                We have several members who are experienced in various crafts and can help you learn and improve your skills.
+                This is how many members have acquired their armor, clothing, and weapons.
+            </p>
+
+            <p>
+                Much of this is done as a group or at least in pairs, so that mistakes can be caught and corrected. It also ensures correct sizing and function, as hitting eachother can be dangerous.
+            </p>
+        </div>
+
     </div>
-
-    <div>
-        <h2 class="section-heading">Learning &amp; Making</h2>
-
-        <p>
-            People come in all shapes and sizes, and we are here to support you in your journey.
-            We have several members who are experienced in various crafts and can help you learn and improve your skills.
-            This is how many members have acquired their armor, clothing, and weapons.
-        </p>
-
-        <p>
-            Much of this is done as a group or at least in pairs, so that mistakes can be caught and corrected. It also ensures correct sizing and function, as hitting eachother can be dangerous.
-        </p>
-    </div>
-
-</div>
+</section>
 
 
 <!-- Invitation to join section. -->
@@ -173,7 +193,7 @@
             <h2 class="section-heading">New to EldVatten?</h2>
 
             <p>
-                We love new people to come and join us. We are welcoming of all, and tolerant of all <strong>except</strong> the intolerant. 
+                We love new people to come and join us. We are welcoming of all, and tolerant of all <strong>except</strong> the intolerant.
                 Leave your disagreements and prejudices at the door. We welcome debate and argument, we have zero tolerance for any form of assault, harassment, or discrimination.
             </p>
 
@@ -202,5 +222,6 @@
 
     </div>
 </section>
+
 
 {% endblock %}

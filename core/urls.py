@@ -9,4 +9,5 @@ urlpatterns = [
     path("calendar/", views.calendar_view, name="calendar"),
     path("tavern/", views.tavern, name="tavern"),
     path("contact/", views.contact, name="contact"),
+    path("privacy/", views.privacy, name="privacy"),
 ]
