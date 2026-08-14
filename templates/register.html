@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Register | EldVatten{% endblock %}
+
+{% block content %}
+
+<!-- A small registration form for new users attempting to join the platform -->
+<section class="page-section">
+    <div class="site-width">
+
+        <h1 class="section-heading">Register</h1>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <button class="button button-primary" type="submit">
+                Create Account
+            </button>
+        </form>
+
+    </div>
+</section>
+
+{% endblock %}
