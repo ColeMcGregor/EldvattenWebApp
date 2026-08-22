@@ -223,6 +223,7 @@ a:hover {
     font-size: 1.25rem;
 }
 
+
 /* TODO: ADD YOUR COMMENT HERE */
 
 .learning-gallery {
@@ -268,7 +269,8 @@ form {
 }
 
 .form-field input,
-.form-field textarea {
+.form-field textarea,
+.form-input {
     width: 100%;
 
     padding: 0.75rem;
@@ -284,9 +286,116 @@ form {
 }
 
 .form-field input:focus,
-.form-field textarea:focus {
+.form-field textarea:focus,
+.form-input:focus {
     outline: 2px solid var(--eldvatten-gold);
     outline-offset: 2px;
+}
+
+
+/* TODO: ADD YOUR COMMENT HERE */
+
+.registration-page {
+    min-height: 70vh;
+}
+
+.registration-container {
+    width: 100%;
+    max-width: 620px;
+
+    margin: 0 auto;
+}
+
+.registration-heading {
+    margin-bottom: var(--space-large);
+
+    text-align: center;
+}
+
+.registration-heading .section-heading {
+    margin-bottom: var(--space-small);
+}
+
+.registration-heading p {
+    max-width: 520px;
+
+    margin: 0 auto;
+
+    color: var(--text-muted);
+}
+
+.registration-form {
+    padding: var(--space-large);
+
+    background: var(--surface);
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-medium);
+
+    box-shadow: var(--shadow-light);
+}
+
+.registration-form .form-field {
+    margin: 0;
+}
+
+.registration-form .form-field label {
+    font-size: 1.05rem;
+}
+
+.password-requirements {
+    display: grid;
+
+    gap: 0.2rem;
+
+    margin-top: calc(var(--space-small) * -1);
+
+    color: var(--text-muted);
+
+    font-size: 0.9rem;
+}
+
+.field-errors,
+.form-errors {
+    color: var(--eldvatten-red-dark);
+}
+
+.field-errors ul,
+.form-errors ul {
+    margin: 0.4rem 0 0;
+
+    padding-left: 1.25rem;
+}
+
+.form-errors {
+    padding: var(--space-small) var(--space-medium);
+
+    background: var(--surface-muted);
+
+    border-left: 4px solid var(--eldvatten-red);
+    border-radius: var(--radius-small);
+}
+
+.registration-submit {
+    width: 100%;
+
+    margin-top: var(--space-small);
+
+    cursor: pointer;
+
+    font: inherit;
+}
+
+.registration-footer {
+    margin-top: var(--space-medium);
+
+    text-align: center;
+
+    color: var(--text-muted);
+}
+
+.registration-footer p {
+    margin: 0;
 }
 
 
@@ -490,7 +599,7 @@ form {
     font-size: clamp(3.25rem, 6vw, 4.25rem);
     font-weight: normal;
     line-height: 1.15;
-}SS
+}
 
 .section-intro {
     max-width: 760px;
@@ -728,6 +837,14 @@ form {
 
     .hero-text {
         font-size: 1.05rem;
+    }
+
+    .registration-form {
+        padding: var(--space-medium);
+    }
+
+    .registration-heading .section-heading {
+        font-size: 3rem;
     }
 
     .card-grid {

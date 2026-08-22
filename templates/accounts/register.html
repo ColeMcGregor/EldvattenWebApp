@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Register | EldVatten{% endblock %}
+
+{% block content %}
+
+<section class="page-section registration-page">
+    <div class="site-width">
+
+        <div class="registration-container">
+
+            <div class="registration-heading">
+                <h1 class="section-heading">Create Your Account</h1>
+
+                <p>
+                    Register for access to The Tavern. Your account will remain pending
+                    until it has been approved by an EldVatten member with approval access.
+                </p>
+            </div>
+
+            <form class="registration-form" method="post">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="form-errors">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="form-field">
+                    <label for="{{ form.username.id_for_label }}">
+                        Username
+                    </label>
+
+                    {{ form.username }}
+
+                    {% if form.username.errors %}
+                        <div class="field-errors">
+                            {{ form.username.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.display_name.id_for_label }}">
+                        Display Name
+                    </label>
+
+                    {{ form.display_name }}
+
+                    {% if form.display_name.errors %}
+                        <div class="field-errors">
+                            {{ form.display_name.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.email.id_for_label }}">
+                        Email
+                    </label>
+
+                    {{ form.email }}
+
+                    {% if form.email.errors %}
+                        <div class="field-errors">
+                            {{ form.email.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.password1.id_for_label }}">
+                        Password
+                    </label>
+
+                    {{ form.password1 }}
+
+                    {% if form.password1.errors %}
+                        <div class="field-errors">
+                            {{ form.password1.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="password-requirements">
+                    <span>Use at least 8 characters.</span>
+                    <span>Avoid common passwords or personal information.</span>
+                    <span>Your password cannot be entirely numeric.</span>
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.password2.id_for_label }}">
+                        Confirm Password
+                    </label>
+
+                    {{ form.password2 }}
+
+                    {% if form.password2.errors %}
+                        <div class="field-errors">
+                            {{ form.password2.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <button class="button button-primary registration-submit" type="submit">
+                    Create Account
+                </button>
+
+            </form>
+
+            <div class="registration-footer">
+                <p>
+                    Already have an account?
+                    <span>Member login will be available here.</span>
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}
