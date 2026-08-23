@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ event.title }}</title>
+</head>
+<body>
+    <main>
+        <p>
+            <a href="{% url 'events:event_list' %}">
+                Back to Events
+            </a>
+        </p>
+
+        <h1>{{ event.title }}</h1>
+
+        <p>
+            {{ event.start_at }} to {{ event.end_at }}
+        </p>
+
+        {% if event.location %}
+            <p>
+                Location: {{ event.location }}
+            </p>
+        {% endif %}
+
+        <p>
+            Organizer: {{ event.organizer }}
+        </p>
+
+        <p>
+            Visibility: {{ event.get_visibility_display }}
+        </p>
+
+        {% if event.description %}
+            <section>
+                <h2>Description</h2>
+                <p>{{ event.description|linebreaksbr }}</p>
+            </section>
+        {% endif %}
+
+        {% if perms.events.change_event or perms.events.delete_event %}
+            <section>
+                <h2>Event Management</h2>
+
+                {% if perms.events.change_event %}
+                    <p>
+                        <a href="{% url 'events:event_edit' event.id %}">
+                            Edit Event
+                        </a>
+                    </p>
+                {% endif %}
+
+                {% if perms.events.delete_event %}
+                    <p>
+                        <a href="{% url 'events:event_delete' event.id %}">
+                            Delete Event
+                        </a>
+                    </p>
+                {% endif %}
+            </section>
+        {% endif %}
+
+        {% if rsvp_form %}
+            <section>
+                <h2>Your RSVP</h2>
+
+                {% if participation and participation.rsvp_status %}
+                    <p>
+                        Current RSVP:
+                        {{ participation.get_rsvp_status_display }}
+                    </p>
+                {% else %}
+                    <p>You have not responded yet.</p>
+                {% endif %}
+
+                <form
+                    method="post"
+                    action="{% url 'events:update_rsvp' event.id %}"
+                >
+                    {% csrf_token %}
+
+                    {{ rsvp_form.rsvp_status.errors }}
+
+                    <label for="{{ rsvp_form.rsvp_status.id_for_label }}">
+                        RSVP
+                    </label>
+
+                    {{ rsvp_form.rsvp_status }}
+
+                    <button type="submit">
+                        Save RSVP
+                    </button>
+                </form>
+            </section>
+        {% endif %}
+
+        {% if perms.events.record_attendance %}
+            <section>
+                <h2>Attendance</h2>
+
+                {% if attendance_management_form %}
+                    <h3>Record Attendance</h3>
+
+                    <form
+                        method="post"
+                        action="{% url 'events:record_attendance' event.id %}"
+                    >
+                        {% csrf_token %}
+
+                        {{ attendance_management_form.non_field_errors }}
+
+                        <div>
+                            {{ attendance_management_form.user.errors }}
+
+                            <label for="{{ attendance_management_form.user.id_for_label }}">
+                                Member
+                            </label>
+
+                            {{ attendance_management_form.user }}
+                        </div>
+
+                        <div>
+                            {{ attendance_management_form.attendance_status.errors }}
+
+                            <label for="{{ attendance_management_form.attendance_status.id_for_label }}">
+                                Attendance
+                            </label>
+
+                            {{ attendance_management_form.attendance_status }}
+                        </div>
+
+                        <button type="submit">
+                            Record Attendance
+                        </button>
+                    </form>
+                {% endif %}
+
+                <h3>Participation Records</h3>
+
+                <ul>
+                    {% for event_participation in event.participations.all %}
+                        <li>
+                            <p>
+                                {{ event_participation.user }}
+                            </p>
+
+                            <p>
+                                RSVP:
+                                {% if event_participation.rsvp_status %}
+                                    {{ event_participation.get_rsvp_status_display }}
+                                {% else %}
+                                    No RSVP
+                                {% endif %}
+                            </p>
+
+                            <p>
+                                Attendance:
+                                {{ event_participation.get_attendance_status_display }}
+                            </p>
+
+                            <form
+                                method="post"
+                                action="{% url 'events:update_attendance' event.id event_participation.user.id %}"
+                            >
+                                {% csrf_token %}
+
+                                <label>
+                                    Attendance
+                                    <select name="attendance_status">
+                                        <option
+                                            value="UNKNOWN"
+                                            {% if event_participation.attendance_status == "UNKNOWN" %}
+                                                selected
+                                            {% endif %}
+                                        >
+                                            Unknown
+                                        </option>
+
+                                        <option
+                                            value="ATTENDED"
+                                            {% if event_participation.attendance_status == "ATTENDED" %}
+                                                selected
+                                            {% endif %}
+                                        >
+                                            Attended
+                                        </option>
+
+                                        <option
+                                            value="ABSENT"
+                                            {% if event_participation.attendance_status == "ABSENT" %}
+                                                selected
+                                            {% endif %}
+                                        >
+                                            Absent
+                                        </option>
+                                    </select>
+                                </label>
+
+                                <button type="submit">
+                                    Save Attendance
+                                </button>
+                            </form>
+                        </li>
+                    {% empty %}
+                        <li>No participation records exist.</li>
+                    {% endfor %}
+                </ul>
+            </section>
+        {% endif %}
+    </main>
+</body>
+</html>

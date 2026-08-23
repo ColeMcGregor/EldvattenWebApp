@@ -16,6 +16,7 @@ class AuditLog(models.Model):
 
     class Source(models.TextChoices):
         ADMIN = "ADMIN", "Django Admin"
+        WEB_APP = "WEB_APP", "Web App"
         ORGANIZATION_SETUP = "ORGANIZATION_SETUP", "Organization Setup"
         MEMBER_MANAGEMENT = "MEMBER_MANAGEMENT", "Member Management"
         IMPORT = "IMPORT", "Import"

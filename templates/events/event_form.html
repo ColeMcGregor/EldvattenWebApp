@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }}</title>
+</head>
+<body>
+    <main>
+        <h1>{{ page_title }}</h1>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {{ form.non_field_errors }}
+
+            <div>
+                {{ form.title.errors }}
+
+                <label for="{{ form.title.id_for_label }}">
+                    Title
+                </label>
+
+                {{ form.title }}
+            </div>
+
+            <div>
+                {{ form.description.errors }}
+
+                <label for="{{ form.description.id_for_label }}">
+                    Description
+                </label>
+
+                {{ form.description }}
+            </div>
+
+            <div>
+                {{ form.start_at.errors }}
+
+                <label for="{{ form.start_at.id_for_label }}">
+                    Start
+                </label>
+
+                {{ form.start_at }}
+            </div>
+
+            <div>
+                {{ form.end_at.errors }}
+
+                <label for="{{ form.end_at.id_for_label }}">
+                    End
+                </label>
+
+                {{ form.end_at }}
+            </div>
+
+            <div>
+                {{ form.location.errors }}
+
+                <label for="{{ form.location.id_for_label }}">
+                    Location
+                </label>
+
+                {{ form.location }}
+            </div>
+
+            <div>
+                {{ form.visibility.errors }}
+
+                <label for="{{ form.visibility.id_for_label }}">
+                    Visibility
+                </label>
+
+                {{ form.visibility }}
+            </div>
+
+            <button type="submit">
+                Save Event
+            </button>
+        </form>
+
+        {% if event %}
+            <p>
+                <a href="{% url 'events:event_detail' event.id %}">
+                    Cancel
+                </a>
+            </p>
+        {% else %}
+            <p>
+                <a href="{% url 'events:event_list' %}">
+                    Cancel
+                </a>
+            </p>
+        {% endif %}
+    </main>
+</body>
+</html>
