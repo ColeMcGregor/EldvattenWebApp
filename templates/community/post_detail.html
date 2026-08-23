@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post</title>
+</head>
+<body>
+    <main>
+        <p>
+            <a href="{% url 'community:post_list' %}">
+                Back to The Tavern
+            </a>
+        </p>
+
+        <article>
+            <h1>{{ post.author }}</h1>
+
+            <p>
+                {{ post.body|linebreaksbr }}
+            </p>
+
+            <p>
+                {{ post.created_at }}
+            </p>
+
+            <p>
+                Visibility: {{ post.get_visibility_display }}
+            </p>
+
+            {% if post.visibility == "SELECTED_GROUPS" %}
+                <p>
+                    Groups:
+                    {% for group in post.visible_to_groups.all %}
+                        {{ group.name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </p>
+            {% endif %}
+
+            {% if post.is_official %}
+                <p>Official</p>
+            {% endif %}
+
+            {% if post.is_pinned %}
+                <p>Pinned</p>
+            {% endif %}
+
+            {% if post.is_locked %}
+                <p>Locked</p>
+            {% endif %}
+
+            {% if user.id == post.author_id or perms.community.change_post %}
+                <a href="{% url 'community:post_edit' post.id %}">
+                    Edit Post
+                </a>
+            {% endif %}
+
+            {% if user.id == post.author_id or perms.community.delete_post %}
+                <a href="{% url 'community:post_delete' post.id %}">
+                    Delete Post
+                </a>
+            {% endif %}
+        </article>
+
+        <hr>
+
+        <section>
+            <h2>Comments</h2>
+
+            {% if post.is_locked %}
+                <p>This post is locked.</p>
+            {% elif comment_form %}
+                <form
+                    method="post"
+                    action="{% url 'community:add_comment' post.id %}"
+                >
+                    {% csrf_token %}
+
+                    {{ comment_form.body.errors }}
+
+                    <label for="{{ comment_form.body.id_for_label }}">
+                        Comment
+                    </label>
+
+                    {{ comment_form.body }}
+
+                    <button type="submit">
+                        Add Comment
+                    </button>
+                </form>
+            {% endif %}
+
+            {% for comment in post.comments.all %}
+                {% if not comment.parent %}
+                    <article>
+                        <p>
+                            <strong>{{ comment.author }}</strong>
+                        </p>
+
+                        <p>
+                            {{ comment.body|linebreaksbr }}
+                        </p>
+
+                        <p>
+                            {{ comment.created_at }}
+                        </p>
+
+                        {% if not post.is_locked %}
+                            {% if user.id == comment.author_id or perms.community.change_comment %}
+                                <details>
+                                    <summary>Edit</summary>
+
+                                    <form
+                                        method="post"
+                                        action="{% url 'community:comment_edit' comment.id %}"
+                                    >
+                                        {% csrf_token %}
+
+                                        <textarea
+                                            name="body"
+                                            rows="3"
+                                        >{{ comment.body }}</textarea>
+
+                                        <button type="submit">
+                                            Save
+                                        </button>
+                                    </form>
+                                </details>
+                            {% endif %}
+                        {% endif %}
+
+                        {% if user.id == comment.author_id or perms.community.delete_comment %}
+                            <a href="{% url 'community:comment_delete' comment.id %}">
+                                Delete
+                            </a>
+                        {% endif %}
+
+                        {% if reply_form and not post.is_locked %}
+                            <details>
+                                <summary>Reply</summary>
+
+                                <form
+                                    method="post"
+                                    action="{% url 'community:add_reply' comment.id %}"
+                                >
+                                    {% csrf_token %}
+
+                                    <textarea
+                                        name="body"
+                                        rows="2"
+                                    ></textarea>
+
+                                    <button type="submit">
+                                        Reply
+                                    </button>
+                                </form>
+                            </details>
+                        {% endif %}
+
+                        {% for reply in comment.replies.all %}
+                            <article>
+                                <p>
+                                    <strong>{{ reply.author }}</strong>
+                                </p>
+
+                                <p>
+                                    {{ reply.body|linebreaksbr }}
+                                </p>
+
+                                <p>
+                                    {{ reply.created_at }}
+                                </p>
+
+                                {% if not post.is_locked %}
+                                    {% if user.id == reply.author_id or perms.community.change_comment %}
+                                        <details>
+                                            <summary>Edit</summary>
+
+                                            <form
+                                                method="post"
+                                                action="{% url 'community:comment_edit' reply.id %}"
+                                            >
+                                                {% csrf_token %}
+
+                                                <textarea
+                                                    name="body"
+                                                    rows="2"
+                                                >{{ reply.body }}</textarea>
+
+                                                <button type="submit">
+                                                    Save
+                                                </button>
+                                            </form>
+                                        </details>
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if user.id == reply.author_id or perms.community.delete_comment %}
+                                    <a href="{% url 'community:comment_delete' reply.id %}">
+                                        Delete
+                                    </a>
+                                {% endif %}
+                            </article>
+                        {% endfor %}
+                    </article>
+
+                    <hr>
+                {% endif %}
+            {% empty %}
+                <p>No comments yet.</p>
+            {% endfor %}
+        </section>
+    </main>
+</body>
+</html>

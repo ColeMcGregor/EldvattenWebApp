@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Tavern</title>
+</head>
+<body>
+    <main>
+        <h1>The Tavern</h1>
+
+        {% if user.is_authenticated and user.account_status == "MEMBER" %}
+            <p>
+                <a href="{% url 'community:post_create' %}">
+                    Create Post
+                </a>
+            </p>
+        {% endif %}
+
+        {% for post in posts %}
+            <article>
+                <p>
+                    <strong>{{ post.author }}</strong>
+                </p>
+
+                <p>
+                    {{ post.body|truncatewords:40 }}
+                </p>
+
+                <p>
+                    {{ post.created_at }}
+                </p>
+
+                <p>
+                    Visibility: {{ post.get_visibility_display }}
+                </p>
+
+                {% if post.is_official %}
+                    <span>Official</span>
+                {% endif %}
+
+                {% if post.is_pinned %}
+                    <span>Pinned</span>
+                {% endif %}
+
+                {% if post.is_locked %}
+                    <span>Locked</span>
+                {% endif %}
+
+                <p>
+                    <a href="{% url 'community:post_detail' post.id %}">
+                        View Post
+                    </a>
+                </p>
+            </article>
+
+            <hr>
+        {% empty %}
+            <p>No posts are available.</p>
+        {% endfor %}
+    </main>
+</body>
+</html>

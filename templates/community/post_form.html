@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }}</title>
+</head>
+<body>
+    <main>
+        <h1>{{ page_title }}</h1>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {{ form.non_field_errors }}
+
+            <div>
+                {{ form.body.errors }}
+
+                <label for="{{ form.body.id_for_label }}">
+                    Post
+                </label>
+
+                {{ form.body }}
+            </div>
+
+            <div>
+                {{ form.visibility.errors }}
+
+                <label for="{{ form.visibility.id_for_label }}">
+                    Visibility
+                </label>
+
+                {{ form.visibility }}
+            </div>
+
+            <div>
+                {{ form.visible_to_groups.errors }}
+
+                <label for="{{ form.visible_to_groups.id_for_label }}">
+                    Visible to Groups
+                </label>
+
+                {{ form.visible_to_groups }}
+            </div>
+
+            <button type="submit">
+                Save Post
+            </button>
+        </form>
+
+        {% if post %}
+            <p>
+                <a href="{% url 'community:post_detail' post.id %}">
+                    Cancel
+                </a>
+            </p>
+        {% else %}
+            <p>
+                <a href="{% url 'community:post_list' %}">
+                    Cancel
+                </a>
+            </p>
+        {% endif %}
+    </main>
+</body>
+</html>

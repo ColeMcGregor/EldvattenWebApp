@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete {{ object_type|title }}</title>
+</head>
+<body>
+    <main>
+        <h1>Delete {{ object_type|title }}</h1>
+
+        <p>
+            Delete this {{ object_type }}?
+        </p>
+
+        <p>
+            {{ body|truncatewords:30 }}
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <button type="submit">
+                Delete
+            </button>
+        </form>
+
+        <p>
+            <a href="{% url cancel_url cancel_id %}">
+                Cancel
+            </a>
+        </p>
+    </main>
+</body>
+</html>
