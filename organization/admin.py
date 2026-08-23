@@ -1,4 +1,11 @@
+from datetime import datetime, time
+
 from django.contrib import admin
+from django.forms.models import model_to_dict
+from django.utils import timezone
+
+from audit.models import AuditLog
+from audit.services import record_audit_event
 
 from .models import (
     Chapter,
@@ -24,29 +31,112 @@ from .models import (
 )
 
 
+class AuditedAdmin(admin.ModelAdmin):
+    audit_source = AuditLog.Source.ADMIN
+
+    def get_audit_values(self, obj):
+        values = {}
+        skipped_fields = {"id", "created_at", "updated_at"}
+
+        for field in obj._meta.fields:
+            if field.name in skipped_fields:
+                continue
+
+            value = getattr(obj, field.name)
+
+            if field.is_relation and value is not None:
+                values[field.name] = str(value)
+            elif hasattr(value, "isoformat"):
+                values[field.name] = value.isoformat()
+            else:
+                values[field.name] = value
+
+        return values
+
+    def get_effective_at(self, obj):
+        started_at = getattr(obj, "started_at", None)
+
+        if not started_at:
+            return None
+
+        effective_at = datetime.combine(started_at, time.min)
+
+        if timezone.is_naive(effective_at):
+            effective_at = timezone.make_aware(effective_at)
+
+        return effective_at
+
+    def save_model(self, request, obj, form, change):
+        old_value = None
+
+        if change:
+            old_obj = type(obj).objects.get(pk=obj.pk)
+            old_value = self.get_audit_values(old_obj)
+
+        super().save_model(request, obj, form, change)
+
+        record_audit_event(
+            actor=request.user,
+            request=request,
+            action=(
+                AuditLog.Action.UPDATE
+                if change
+                else AuditLog.Action.CREATE
+            ),
+            target_type=obj._meta.verbose_name,
+            target_id=obj.pk,
+            target_label=str(obj),
+            old_value=old_value,
+            new_value=self.get_audit_values(obj),
+            effective_at=self.get_effective_at(obj),
+            source=self.audit_source,
+            method=AuditLog.Method.MANUAL,
+        )
+
+    def delete_model(self, request, obj):
+        old_value = self.get_audit_values(obj)
+        target_id = obj.pk
+        target_label = str(obj)
+        target_type = obj._meta.verbose_name
+
+        super().delete_model(request, obj)
+
+        record_audit_event(
+            actor=request.user,
+            request=request,
+            action=AuditLog.Action.DELETE,
+            target_type=target_type,
+            target_id=target_id,
+            target_label=target_label,
+            old_value=old_value,
+            source=self.audit_source,
+            method=AuditLog.Method.MANUAL,
+        )
+
+
 @admin.register(CitizenshipClass)
-class CitizenshipClassAdmin(admin.ModelAdmin):
+class CitizenshipClassAdmin(AuditedAdmin):
     list_display = ("name", "is_assignable", "updated_at")
     list_filter = ("is_assignable",)
     search_fields = ("name",)
 
 
 @admin.register(SocialRank)
-class SocialRankAdmin(admin.ModelAdmin):
+class SocialRankAdmin(AuditedAdmin):
     list_display = ("name", "is_assignable", "updated_at")
     list_filter = ("is_assignable",)
     search_fields = ("name",)
 
 
 @admin.register(Office)
-class OfficeAdmin(admin.ModelAdmin):
+class OfficeAdmin(AuditedAdmin):
     list_display = ("name", "is_assignable", "updated_at")
     list_filter = ("is_assignable",)
     search_fields = ("name",)
 
 
 @admin.register(ChapterStatus)
-class ChapterStatusAdmin(admin.ModelAdmin):
+class ChapterStatusAdmin(AuditedAdmin):
     list_display = (
         "name",
         "allows_new_citizens",
@@ -61,7 +151,7 @@ class ChapterStatusAdmin(admin.ModelAdmin):
 
 
 @admin.register(Chapter)
-class ChapterAdmin(admin.ModelAdmin):
+class ChapterAdmin(AuditedAdmin):
     list_display = (
         "name",
         "status",
@@ -77,21 +167,21 @@ class ChapterAdmin(admin.ModelAdmin):
 
 
 @admin.register(Household)
-class HouseholdAdmin(admin.ModelAdmin):
+class HouseholdAdmin(AuditedAdmin):
     list_display = ("name", "is_assignable", "updated_at")
     list_filter = ("is_assignable",)
     search_fields = ("name",)
 
 
 @admin.register(GovernanceBody)
-class GovernanceBodyAdmin(admin.ModelAdmin):
+class GovernanceBodyAdmin(AuditedAdmin):
     list_display = ("name", "is_assignable", "updated_at")
     list_filter = ("is_assignable",)
     search_fields = ("name",)
 
 
 @admin.register(Order)
-class OrderAdmin(admin.ModelAdmin):
+class OrderAdmin(AuditedAdmin):
     list_display = (
         "name",
         "uses_ranks",
@@ -106,7 +196,7 @@ class OrderAdmin(admin.ModelAdmin):
 
 
 @admin.register(OrderRank)
-class OrderRankAdmin(admin.ModelAdmin):
+class OrderRankAdmin(AuditedAdmin):
     list_display = (
         "name",
         "rank_order",
@@ -122,21 +212,21 @@ class OrderRankAdmin(admin.ModelAdmin):
 
 
 @admin.register(CommunityGroup)
-class CommunityGroupAdmin(admin.ModelAdmin):
+class CommunityGroupAdmin(AuditedAdmin):
     list_display = ("name", "is_assignable", "updated_at")
     list_filter = ("is_assignable",)
     search_fields = ("name",)
 
 
 @admin.register(HouseholdLeadershipType)
-class HouseholdLeadershipTypeAdmin(admin.ModelAdmin):
+class HouseholdLeadershipTypeAdmin(AuditedAdmin):
     list_display = ("name", "is_assignable", "updated_at")
     list_filter = ("is_assignable",)
     search_fields = ("name",)
 
 
 @admin.register(CitizenshipRecord)
-class CitizenshipRecordAdmin(admin.ModelAdmin):
+class CitizenshipRecordAdmin(AuditedAdmin):
     list_display = (
         "user",
         "citizenship_class",
@@ -156,7 +246,7 @@ class CitizenshipRecordAdmin(admin.ModelAdmin):
 
 
 @admin.register(UserSocialRank)
-class UserSocialRankAdmin(admin.ModelAdmin):
+class UserSocialRankAdmin(AuditedAdmin):
     list_display = (
         "user",
         "social_rank",
@@ -172,7 +262,7 @@ class UserSocialRankAdmin(admin.ModelAdmin):
 
 
 @admin.register(UserOffice)
-class UserOfficeAdmin(admin.ModelAdmin):
+class UserOfficeAdmin(AuditedAdmin):
     list_display = (
         "user",
         "office",
@@ -192,7 +282,7 @@ class UserOfficeAdmin(admin.ModelAdmin):
 
 
 @admin.register(HouseholdMembership)
-class HouseholdMembershipAdmin(admin.ModelAdmin):
+class HouseholdMembershipAdmin(AuditedAdmin):
     list_display = (
         "user",
         "household",
@@ -208,7 +298,7 @@ class HouseholdMembershipAdmin(admin.ModelAdmin):
 
 
 @admin.register(HouseholdLeadership)
-class HouseholdLeadershipAdmin(admin.ModelAdmin):
+class HouseholdLeadershipAdmin(AuditedAdmin):
     list_display = (
         "user",
         "household",
@@ -228,7 +318,7 @@ class HouseholdLeadershipAdmin(admin.ModelAdmin):
 
 
 @admin.register(GovernanceMembership)
-class GovernanceMembershipAdmin(admin.ModelAdmin):
+class GovernanceMembershipAdmin(AuditedAdmin):
     list_display = (
         "user",
         "governance_body",
@@ -244,7 +334,7 @@ class GovernanceMembershipAdmin(admin.ModelAdmin):
 
 
 @admin.register(OrderMembership)
-class OrderMembershipAdmin(admin.ModelAdmin):
+class OrderMembershipAdmin(AuditedAdmin):
     list_display = (
         "user",
         "order",
@@ -264,7 +354,7 @@ class OrderMembershipAdmin(admin.ModelAdmin):
 
 
 @admin.register(GroupMembership)
-class GroupMembershipAdmin(admin.ModelAdmin):
+class GroupMembershipAdmin(AuditedAdmin):
     list_display = (
         "user",
         "community_group",
@@ -280,7 +370,7 @@ class GroupMembershipAdmin(admin.ModelAdmin):
 
 
 @admin.register(InitiateSponsorship)
-class InitiateSponsorshipAdmin(admin.ModelAdmin):
+class InitiateSponsorshipAdmin(AuditedAdmin):
     list_display = (
         "initiate",
         "sponsor",
