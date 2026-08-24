@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
 from .models import User
 
@@ -51,3 +51,24 @@ class RegistrationForm(UserCreationForm):
                 "autocomplete": "new-password",
             }
         )
+
+
+class LoginForm(AuthenticationForm):
+    username = forms.CharField(
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-input",
+                "autocomplete": "username",
+            }
+        )
+    )
+
+    password = forms.CharField(
+        strip=False,
+        widget=forms.PasswordInput(
+            attrs={
+                "class": "form-input",
+                "autocomplete": "current-password",
+            }
+        ),
+    )

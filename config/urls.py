@@ -23,5 +23,6 @@ urlpatterns = [
     path("accounts/", include("accounts.urls")),
     path("events/", include("events.urls")),
     path("community/", include("community.urls")),
+    path("messages/", include("messaging.urls")),
     path("", include("core.urls")),
 ]

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversation</title>
+</head>
+<body>
+    <main>
+        <p>
+            <a href="{% url 'messaging:conversation_list' %}">
+                Back to Messages
+            </a>
+        </p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <h1>Conversation {{ conversation.id }}</h1>
+
+        <section>
+            <h2>Participants</h2>
+
+            <ul>
+                {% for participant in conversation.participants.all %}
+                    {% if not participant.left_at %}
+                        <li>
+                            {{ participant.user }}
+
+                            {% if participant.user.id != user.id %}
+                                {% if participant.user.id in blocked_user_ids %}
+                                    <form
+                                        method="post"
+                                        action="{% url 'messaging:unblock_user' participant.user.id %}"
+                                    >
+                                        {% csrf_token %}
+
+                                        <button type="submit">
+                                            Unblock
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <form
+                                        method="post"
+                                        action="{% url 'messaging:block_user' participant.user.id %}"
+                                    >
+                                        {% csrf_token %}
+
+                                        <button type="submit">
+                                            Block
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            {% endif %}
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </section>
+
+        <hr>
+
+        <section>
+            <h2>Messages</h2>
+
+            {% for conversation_message in visible_messages %}
+                <article>
+                    <p>
+                        <strong>{{ conversation_message.sender }}</strong>
+                    </p>
+
+                    <p>
+                        {{ conversation_message.body|linebreaksbr }}
+                    </p>
+
+                    <p>
+                        {{ conversation_message.created_at }}
+                    </p>
+                </article>
+
+                <hr>
+            {% empty %}
+                <p>No messages yet.</p>
+            {% endfor %}
+        </section>
+
+        {% if message_form %}
+            <section>
+                <h2>Send Message</h2>
+
+                <form
+                    method="post"
+                    action="{% url 'messaging:send_message' conversation.id %}"
+                >
+                    {% csrf_token %}
+
+                    {{ message_form.body.errors }}
+
+                    <label for="{{ message_form.body.id_for_label }}">
+                        Message
+                    </label>
+
+                    {{ message_form.body }}
+
+                    <button type="submit">
+                        Send
+                    </button>
+                </form>
+            </section>
+        {% endif %}
+
+        <hr>
+
+        <section>
+            <form
+                method="post"
+                action="{% url 'messaging:leave_conversation' conversation.id %}"
+            >
+                {% csrf_token %}
+
+                <button type="submit">
+                    Leave Conversation
+                </button>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

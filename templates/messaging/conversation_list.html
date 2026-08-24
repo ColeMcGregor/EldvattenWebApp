@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages</title>
+</head>
+<body>
+    <main>
+        <h1>Messages</h1>
+
+        <p>
+            <a href="{% url 'messaging:conversation_create' %}">
+                Start Conversation
+            </a>
+        </p>
+
+        {% for conversation in conversations %}
+            <article>
+                <h2>
+                    <a href="{% url 'messaging:conversation_detail' conversation.id %}">
+                        Conversation {{ conversation.id }}
+                    </a>
+                </h2>
+
+                <p>
+                    Participants:
+                    {% for participant in conversation.participants.all %}
+                        {% if not participant.left_at %}
+                            {{ participant.user }}
+                            {% if not forloop.last %}, {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </p>
+
+                <p>
+                    Last activity: {{ conversation.updated_at }}
+                </p>
+            </article>
+
+            <hr>
+        {% empty %}
+            <p>You have no conversations.</p>
+        {% endfor %}
+    </main>
+</body>
+</html>
