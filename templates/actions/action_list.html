@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Actions</title>
+</head>
+<body>
+    <main>
+        <h1>My Actions</h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+
+        {% if assignments %}
+            <ul>
+                {% for assignment in assignments %}
+                    <li>
+                        <a href="{% url 'actions:detail' assignment.action.id %}">
+                            {{ assignment.action.title }}
+                        </a>
+
+                        <p>Status: {{ assignment.get_status_display }}</p>
+
+                        {% if assignment.action.is_required %}
+                            <p>Required</p>
+                        {% endif %}
+
+                        {% if assignment.action.deadline %}
+                            <p>
+                                Deadline:
+                                {{ assignment.action.deadline }}
+                            </p>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>You have no active actions.</p>
+        {% endif %}
+    </main>
+</body>
+</html>

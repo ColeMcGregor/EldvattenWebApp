@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage {{ action.title }}</title>
+</head>
+<body>
+    <main>
+        <p>
+            <a href="{% url 'actions:manage_list' %}">
+                Back to Manage Actions
+            </a>
+        </p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <h1>{{ action.title }}</h1>
+
+        <p>
+            Created by:
+            {{ action.created_by.display_name|default:action.created_by.username }}
+        </p>
+
+        {% if action.is_required %}
+            <p>Required</p>
+        {% endif %}
+
+        {% if action.deadline %}
+            <p>
+                Deadline:
+                {{ action.deadline }}
+            </p>
+        {% endif %}
+
+        {% if action.instructions %}
+            <section>
+                <h2>Instructions</h2>
+                {{ action.instructions|linebreaks }}
+            </section>
+        {% endif %}
+
+        {% if action.external_url %}
+            <p>
+                <a
+                    href="{{ action.external_url }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    Open External Link
+                </a>
+            </p>
+        {% endif %}
+
+        <section>
+            <h2>Targets</h2>
+
+            {% if targets %}
+                <ul>
+                    {% for target in targets %}
+                        <li>
+                            {% if target.user %}
+                                User:
+                                {{ target.user.display_name|default:target.user.username }}
+                            {% endif %}
+
+                            {% if target.citizenship_class %}
+                                Citizenship:
+                                {{ target.citizenship_class }}
+                            {% endif %}
+
+                            {% if target.social_rank %}
+                                Rank:
+                                {{ target.social_rank }}
+                            {% endif %}
+
+                            {% if target.office %}
+                                Office:
+                                {{ target.office }}
+                            {% endif %}
+
+                            {% if target.chapter %}
+                                Chapter:
+                                {{ target.chapter }}
+                            {% endif %}
+
+                            {% if target.household %}
+                                Household:
+                                {{ target.household }}
+                            {% endif %}
+
+                            {% if target.governance_body %}
+                                Governance Body:
+                                {{ target.governance_body }}
+                            {% endif %}
+
+                            {% if target.order %}
+                                Order:
+                                {{ target.order }}
+                            {% endif %}
+
+                            {% if target.order_rank %}
+                                Order Rank:
+                                {{ target.order_rank }}
+                            {% endif %}
+
+                            {% if target.community_group %}
+                                Community Group:
+                                {{ target.community_group }}
+                            {% endif %}
+
+                            {% if target.household_leadership_type %}
+                                Household Leadership:
+                                {{ target.household_leadership_type }}
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No targets are configured.</p>
+            {% endif %}
+        </section>
+
+        <section>
+            <h2>Assignments</h2>
+
+            {% if assignments %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Status</th>
+                            <th>Active</th>
+                            <th>Assigned</th>
+                            <th>Unassigned</th>
+                            <th>Opened</th>
+                            <th>Completed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for assignment in assignments %}
+                            <tr>
+                                <td>
+                                    {{ assignment.user.display_name|default:assignment.user.username }}
+                                </td>
+
+                                <td>
+                                    {{ assignment.get_status_display }}
+                                </td>
+
+                                <td>
+                                    {% if assignment.is_active %}
+                                        Yes
+                                    {% else %}
+                                        No
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {{ assignment.assigned_at }}
+                                </td>
+
+                                <td>
+                                    {{ assignment.unassigned_at|default:"-" }}
+                                </td>
+
+                                <td>
+                                    {{ assignment.opened_at|default:"-" }}
+                                </td>
+
+                                <td>
+                                    {{ assignment.completed_at|default:"-" }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No assignments exist.</p>
+            {% endif %}
+        </section>
+
+        {% if action.linked_posts.all %}
+            <section>
+                <h2>Linked Tavern Posts</h2>
+
+                <ul>
+                    {% for post in action.linked_posts.all %}
+                        <li>
+                            <a href="{% url 'community:post_detail' post.id %}">
+                                Tavern Post {{ post.id }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </section>
+        {% endif %}
+
+        {% if perms.actions.change_action %}
+            <p>
+                <a href="{% url 'actions:edit' action.id %}">
+                    Edit Action
+                </a>
+            </p>
+        {% endif %}
+
+        {% if perms.actions.add_action %}
+            <form
+                method="post"
+                action="{% url 'actions:sync_assignments' action.id %}"
+            >
+                {% csrf_token %}
+                <button type="submit">
+                    Synchronize Assignments
+                </button>
+            </form>
+        {% endif %}
+
+        {% if perms.actions.delete_action %}
+            <p>
+                <a href="{% url 'actions:delete' action.id %}">
+                    Delete Action
+                </a>
+            </p>
+        {% endif %}
+    </main>
+</body>
+</html>

@@ -1,4 +1,7 @@
+from django.utils import timezone
+
 from accounts.models import AccountStatus, User
+from audit.services import record_audit_event
 from organization.models import (
     CitizenshipRecord,
     GovernanceMembership,
@@ -198,18 +201,165 @@ def resolve_action_targets(action):
     return resolved_user_ids
 
 
-def create_action_assignments(action):
-    user_ids = resolve_action_targets(action)
+def assignment_audit_values(assignment):
+    return {
+        "action_id": assignment.action_id,
+        "action": assignment.action.title,
+        "user_id": assignment.user_id,
+        "user": (
+            assignment.user.display_name
+            or assignment.user.get_username()
+        ),
+        "status": assignment.status,
+        "is_active": assignment.is_active,
+        "assigned_at": (
+            assignment.assigned_at.isoformat()
+            if assignment.assigned_at
+            else None
+        ),
+        "unassigned_at": (
+            assignment.unassigned_at.isoformat()
+            if assignment.unassigned_at
+            else None
+        ),
+        "opened_at": (
+            assignment.opened_at.isoformat()
+            if assignment.opened_at
+            else None
+        ),
+        "completed_at": (
+            assignment.completed_at.isoformat()
+            if assignment.completed_at
+            else None
+        ),
+    }
 
-    assignments = []
 
-    for user_id in user_ids:
-        assignment, created = ActionAssignment.objects.get_or_create(
+def sync_action_assignments(
+    action,
+    *,
+    actor=None,
+    request=None,
+    source="SYSTEM",
+    method="AUTOMATIC",
+):
+    resolved_user_ids = resolve_action_targets(action)
+
+    existing_assignments = {
+        assignment.user_id: assignment
+        for assignment in ActionAssignment.objects.filter(
             action=action,
-            user_id=user_id,
+        ).select_related(
+            "user",
+            "action",
+        )
+    }
+
+    activated_assignments = []
+    deactivated_assignments = []
+
+    now = timezone.now()
+
+    for user_id in resolved_user_ids:
+        assignment = existing_assignments.get(user_id)
+
+        if assignment is None:
+            assignment = ActionAssignment.objects.create(
+                action=action,
+                user_id=user_id,
+            )
+
+            assignment = ActionAssignment.objects.select_related(
+                "user",
+                "action",
+            ).get(
+                id=assignment.id,
+            )
+
+            record_audit_event(
+                action="ASSIGN",
+                target_type="ActionAssignment",
+                target_id=assignment.id,
+                target_label=str(assignment),
+                actor=actor,
+                request=request,
+                old_value=None,
+                new_value=assignment_audit_values(assignment),
+                effective_at=assignment.assigned_at,
+                source=source,
+                method=method,
+                notes="Action assignment created from current action targets.",
+            )
+
+            activated_assignments.append(assignment)
+            continue
+
+        if not assignment.is_active:
+            old_value = assignment_audit_values(assignment)
+
+            assignment.is_active = True
+            assignment.unassigned_at = None
+
+            assignment.full_clean()
+            assignment.save(
+                update_fields=[
+                    "is_active",
+                    "unassigned_at",
+                ]
+            )
+
+            record_audit_event(
+                action="ASSIGN",
+                target_type="ActionAssignment",
+                target_id=assignment.id,
+                target_label=str(assignment),
+                actor=actor,
+                request=request,
+                old_value=old_value,
+                new_value=assignment_audit_values(assignment),
+                effective_at=now,
+                source=source,
+                method=method,
+                notes="Action assignment reactivated from current action targets.",
+            )
+
+            activated_assignments.append(assignment)
+
+    for user_id, assignment in existing_assignments.items():
+        if user_id in resolved_user_ids:
+            continue
+
+        if not assignment.is_active:
+            continue
+
+        old_value = assignment_audit_values(assignment)
+
+        assignment.is_active = False
+        assignment.unassigned_at = now
+
+        assignment.full_clean()
+        assignment.save(
+            update_fields=[
+                "is_active",
+                "unassigned_at",
+            ]
         )
 
-        if created:
-            assignments.append(assignment)
+        record_audit_event(
+            action="REMOVE",
+            target_type="ActionAssignment",
+            target_id=assignment.id,
+            target_label=str(assignment),
+            actor=actor,
+            request=request,
+            old_value=old_value,
+            new_value=assignment_audit_values(assignment),
+            effective_at=assignment.unassigned_at,
+            source=source,
+            method=method,
+            notes="Action assignment deactivated because the user no longer matches the current action targets.",
+        )
 
-    return assignments
+        deactivated_assignments.append(assignment)
+
+    return activated_assignments, deactivated_assignments

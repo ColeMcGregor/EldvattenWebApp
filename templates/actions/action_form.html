@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }}</title>
+</head>
+<body>
+    <main>
+        <h1>{{ page_title }}</h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            {{ form.non_field_errors }}
+
+            <div>
+                {{ form.title.label_tag }}
+                {{ form.title }}
+                {{ form.title.errors }}
+            </div>
+
+            <div>
+                {{ form.instructions.label_tag }}
+                {{ form.instructions }}
+                {{ form.instructions.errors }}
+            </div>
+
+            <div>
+                {{ form.external_url.label_tag }}
+                {{ form.external_url }}
+                {{ form.external_url.errors }}
+            </div>
+
+            <div>
+                {{ form.deadline.label_tag }}
+                {{ form.deadline }}
+                {{ form.deadline.errors }}
+            </div>
+
+            <div>
+                {{ form.is_required }}
+                {{ form.is_required.label_tag }}
+                {{ form.is_required.errors }}
+            </div>
+
+            <div>
+                {{ form.linked_posts.label_tag }}
+                {{ form.linked_posts }}
+                {{ form.linked_posts.errors }}
+            </div>
+
+            <section>
+                <h2>Targets</h2>
+
+                {{ target_formset.management_form }}
+                {{ target_formset.non_form_errors }}
+
+                {% for target_form in target_formset %}
+                    <fieldset>
+                        {{ target_form.non_field_errors }}
+
+                        {% for hidden_field in target_form.hidden_fields %}
+                            {{ hidden_field }}
+                        {% endfor %}
+
+                        <div>
+                            {{ target_form.user.label_tag }}
+                            {{ target_form.user }}
+                            {{ target_form.user.errors }}
+                        </div>
+
+                        <div>
+                            {{ target_form.citizenship_class.label_tag }}
+                            {{ target_form.citizenship_class }}
+                            {{ target_form.citizenship_class.errors }}
+                        </div>
+
+                        <div>
+                            {{ target_form.social_rank.label_tag }}
+                            {{ target_form.social_rank }}
+                            {{ target_form.social_rank.errors }}
+                        </div>
+
+                        <div>
+                            {{ target_form.office.label_tag }}
+                            {{ target_form.office }}
+                            {{ target_form.office.errors }}
+                        </div>
+
+                        <div>
+                            {{ target_form.chapter.label_tag }}
+                            {{ target_form.chapter }}
+                            {{ target_form.chapter.errors }}
+                        </div>
+
+                        <div>
+                            {{ target_form.household.label_tag }}
+                            {{ target_form.household }}
+                            {{ target_form.household.errors }}
+                        </div>
+
+                        <div>
+                            {{ target_form.governance_body.label_tag }}
+                            {{ target_form.governance_body }}
+                            {{ target_form.governance_body.errors }}
+                        </div>
+
+                        <div>
+                            {{ target_form.order.label_tag }}
+                            {{ target_form.order }}
+                            {{ target_form.order.errors }}
+                        </div>
+
+                        <div>
+                            {{ target_form.order_rank.label_tag }}
+                            {{ target_form.order_rank }}
+                            {{ target_form.order_rank.errors }}
+                        </div>
+
+                        <div>
+                            {{ target_form.community_group.label_tag }}
+                            {{ target_form.community_group }}
+                            {{ target_form.community_group.errors }}
+                        </div>
+
+                        <div>
+                            {{ target_form.household_leadership_type.label_tag }}
+                            {{ target_form.household_leadership_type }}
+                            {{ target_form.household_leadership_type.errors }}
+                        </div>
+
+                        {% if target_form.DELETE %}
+                            <div>
+                                {{ target_form.DELETE }}
+                                {{ target_form.DELETE.label_tag }}
+                            </div>
+                        {% endif %}
+                    </fieldset>
+                {% endfor %}
+            </section>
+
+            <button type="submit">
+                Save Action
+            </button>
+        </form>
+
+        <p>
+            <a href="{% url 'actions:manage_list' %}">
+                Cancel
+            </a>
+        </p>
+    </main>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ action.title }}</title>
+</head>
+<body>
+    <main>
+        <p>
+            <a href="{% url 'actions:list' %}">
+                Back to My Actions
+            </a>
+        </p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <h1>{{ action.title }}</h1>
+
+        <p>Status: {{ assignment.get_status_display }}</p>
+
+        {% if action.is_required %}
+            <p>Required</p>
+        {% endif %}
+
+        {% if action.deadline %}
+            <p>
+                Deadline:
+                {{ action.deadline }}
+            </p>
+        {% endif %}
+
+        {% if action.instructions %}
+            <section>
+                <h2>Instructions</h2>
+                {{ action.instructions|linebreaks }}
+            </section>
+        {% endif %}
+
+        {% if action.external_url %}
+            <p>
+                <a
+                    href="{{ action.external_url }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    Open External Link
+                </a>
+            </p>
+        {% endif %}
+
+        {% if action.linked_posts.all %}
+            <section>
+                <h2>Related Tavern Posts</h2>
+
+                <ul>
+                    {% for post in action.linked_posts.all %}
+                        <li>
+                            <a href="{% url 'community:post_detail' post.id %}">
+                                Tavern Post {{ post.id }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </section>
+        {% endif %}
+
+        {% if assignment.status != "COMPLETED" %}
+            <form
+                method="post"
+                action="{% url 'actions:complete' action.id %}"
+            >
+                {% csrf_token %}
+                <button type="submit">
+                    Mark Complete
+                </button>
+            </form>
+        {% else %}
+            <p>
+                Completed:
+                {{ assignment.completed_at }}
+            </p>
+        {% endif %}
+    </main>
+</body>
+</html>

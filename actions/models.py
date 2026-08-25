@@ -237,6 +237,15 @@ class ActionAssignment(models.Model):
         null=True,
     )
 
+    is_active = models.BooleanField(
+        default=True,
+    )
+
+    unassigned_at = models.DateTimeField(
+        blank=True,
+        null=True,
+    )
+
     assigned_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -251,6 +260,16 @@ class ActionAssignment(models.Model):
         ]
 
     def clean(self):
+        if self.is_active and self.unassigned_at is not None:
+            raise ValidationError(
+                "An active assignment cannot have an unassigned timestamp."
+            )
+
+        if not self.is_active and self.unassigned_at is None:
+            raise ValidationError(
+                "An inactive assignment must have an unassigned timestamp."
+            )
+
         if self.status == self.Status.NOT_STARTED:
             if self.opened_at is not None or self.completed_at is not None:
                 raise ValidationError(
@@ -285,6 +304,9 @@ class ActionAssignment(models.Model):
                 )
 
     def mark_opened(self):
+        if not self.is_active:
+            return
+
         if self.status != self.Status.NOT_STARTED:
             return
 
@@ -302,6 +324,9 @@ class ActionAssignment(models.Model):
         )
 
     def mark_completed(self):
+        if not self.is_active:
+            return
+
         if self.status == self.Status.COMPLETED:
             return
 

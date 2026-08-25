@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "events",
     "community",
     "messaging",
+    "voting",
     "audit",
 ]
 

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Actions</title>
+</head>
+<body>
+    <main>
+        <h1>Manage Actions</h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+
+        {% if perms.actions.add_action %}
+            <p>
+                <a href="{% url 'actions:create' %}">
+                    Create Action
+                </a>
+            </p>
+        {% endif %}
+
+        {% if actions %}
+            <ul>
+                {% for action in actions %}
+                    <li>
+                        <h2>
+                            <a href="{% url 'actions:manage_detail' action.id %}">
+                                {{ action.title }}
+                            </a>
+                        </h2>
+
+                        <p>
+                            Created by:
+                            {{ action.created_by.display_name|default:action.created_by.username }}
+                        </p>
+
+                        {% if action.is_required %}
+                            <p>Required</p>
+                        {% endif %}
+
+                        {% if action.deadline %}
+                            <p>
+                                Deadline:
+                                {{ action.deadline }}
+                            </p>
+                        {% endif %}
+
+                        <p>
+                            Targets:
+                            {{ action.targets.count }}
+                        </p>
+
+                        <p>
+                            Assignments:
+                            {{ action.assignments.count }}
+                        </p>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No actions exist.</p>
+        {% endif %}
+    </main>
+</body>
+</html>
