@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ vote.title }}</title>
+</head>
+<body>
+    <p>
+        <a href="{% url 'voting:vote_list' %}">
+            Back to votes
+        </a>
+    </p>
+
+    <h1>{{ vote.title }}</h1>
+
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if vote.description %}
+        <p>{{ vote.description|linebreaksbr }}</p>
+    {% endif %}
+
+    <p>
+        Status:
+        {{ vote.get_status_display }}
+    </p>
+
+    <p>
+        Approval rule:
+        {{ vote.get_approval_rule_display }}
+    </p>
+
+    {% if vote.is_anonymous %}
+        <p>
+            This vote is anonymous.
+        </p>
+
+        <p>
+            Your selected option will not be stored with your identity.
+        </p>
+
+        {% if not eligibility.has_responded %}
+            <p>
+                Anonymous ballots cannot be changed after submission.
+            </p>
+        {% endif %}
+    {% else %}
+        <p>
+            This is an identified vote.
+        </p>
+    {% endif %}
+
+    {% if vote.requires_quorum %}
+        <p>
+            Quorum:
+            {{ vote.quorum_numerator }}/{{ vote.quorum_denominator }}
+        </p>
+    {% else %}
+        <p>No quorum requirement.</p>
+    {% endif %}
+
+    {% if vote.requires_all_responses %}
+        <p>
+            Every eligible voter must respond.
+        </p>
+    {% endif %}
+
+    {% if vote.opens_at %}
+        <p>
+            Scheduled opening:
+            {{ vote.opens_at }}
+        </p>
+    {% endif %}
+
+    {% if vote.closes_at %}
+        <p>
+            Closes:
+            {{ vote.closes_at }}
+        </p>
+    {% endif %}
+
+    {% if existing_response %}
+        <h2>Your current response</h2>
+
+        <p>
+            {{ existing_response.option.label }}
+        </p>
+    {% endif %}
+
+    {% if vote.is_anonymous and eligibility.has_responded %}
+        <h2>Response submitted</h2>
+
+        <p>
+            Your anonymous ballot has been recorded.
+        </p>
+    {% endif %}
+
+    {% if can_vote %}
+        <h2>Cast your vote</h2>
+
+        <form
+            method="post"
+            action="{% url 'voting:vote_submit' vote.id %}"
+        >
+            {% csrf_token %}
+
+            {{ ballot_form.non_field_errors }}
+
+            <fieldset>
+                <legend>Choose an option</legend>
+
+                {{ ballot_form.option.errors }}
+                {{ ballot_form.option }}
+            </fieldset>
+
+            <fieldset>
+                <legend>Optional comment for vote reviewers</legend>
+
+                <p>
+                    Your comment is not anonymous.
+                    Vote reviewers can see who submitted it.
+                    Other voters cannot see it.
+                </p>
+
+                {% if vote.is_anonymous %}
+                    <p>
+                        If you add a comment to this anonymous vote,
+                        the comment is submitted with your ballot and
+                        cannot be added, changed, or removed later.
+                    </p>
+                {% endif %}
+
+                {{ ballot_form.comment.errors }}
+                {{ ballot_form.comment }}
+            </fieldset>
+
+            {% if vote.is_anonymous %}
+                <p>
+                    Your ballot choice cannot be changed after you submit it.
+                </p>
+            {% endif %}
+
+            <button type="submit">
+                {% if existing_response %}
+                    Update Vote
+                {% else %}
+                    Submit Vote
+                {% endif %}
+            </button>
+        </form>
+    {% endif %}
+
+    {% if existing_comment and not vote.is_anonymous %}
+        <h2>Your reviewer comment</h2>
+
+        <p>
+            A private reviewer comment is currently stored for this vote.
+        </p>
+    {% endif %}
+
+    {% if result %}
+        <h2>Result</h2>
+
+        <p>
+            {{ result.reason }}
+        </p>
+
+        <p>
+            Eligible voters:
+            {{ result.eligible_count }}
+        </p>
+
+        <p>
+            Responses:
+            {{ result.response_count }}
+        </p>
+
+        <p>
+            Required quorum:
+            {{ result.quorum_required }}
+        </p>
+
+        <p>
+            Quorum met:
+            {% if result.quorum_met %}
+                Yes
+            {% else %}
+                No
+            {% endif %}
+        </p>
+
+        {% if result.winner %}
+            <p>
+                Winning option:
+                {{ result.winner.label }}
+            </p>
+        {% endif %}
+
+        <h3>Tally</h3>
+
+        <ul>
+            {% for item in result.tally %}
+                <li>
+                    {{ item.label }}:
+                    {{ item.response_count }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</body>
+</html>

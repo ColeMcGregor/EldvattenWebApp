@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vote Management</title>
+</head>
+<body>
+    <h1>Vote Management</h1>
+
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if perms.voting.add_vote %}
+        <p>
+            <a href="{% url 'voting:vote_create' %}">
+                Create Vote
+            </a>
+        </p>
+    {% endif %}
+
+    {% if votes %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Anonymous</th>
+                    <th>Approval Rule</th>
+                    <th>Opens</th>
+                    <th>Closes</th>
+                    <th>Created By</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for vote in votes %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'voting:vote_manage_detail' vote.id %}">
+                                {{ vote.title }}
+                            </a>
+                        </td>
+
+                        <td>
+                            {{ vote.get_status_display }}
+                        </td>
+
+                        <td>
+                            {% if vote.is_anonymous %}
+                                Yes
+                            {% else %}
+                                No
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ vote.get_approval_rule_display }}
+                        </td>
+
+                        <td>
+                            {{ vote.opens_at|default:"-" }}
+                        </td>
+
+                        <td>
+                            {{ vote.closes_at|default:"-" }}
+                        </td>
+
+                        <td>
+                            {{ vote.created_by }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No votes have been created.</p>
+    {% endif %}
+</body>
+</html>

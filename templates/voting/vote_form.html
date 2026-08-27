@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>
+        {% if vote %}
+            Edit Vote
+        {% else %}
+            Create Vote
+        {% endif %}
+    </title>
+</head>
+<body>
+    <p>
+        <a href="{% url 'voting:vote_manage_list' %}">
+            Back to vote management
+        </a>
+    </p>
+
+    <h1>
+        {% if vote %}
+            Edit Vote
+        {% else %}
+            Create Vote
+        {% endif %}
+    </h1>
+
+    {% if vote %}
+        <p>
+            Status:
+            {{ vote.get_status_display }}
+        </p>
+
+        {% if vote.status == "OPEN" %}
+            <p>
+                Opened:
+                {{ vote.opened_at }}
+            </p>
+        {% endif %}
+
+        {% if vote.status == "CLOSED" %}
+            <p>
+                Opened:
+                {{ vote.opened_at }}
+            </p>
+
+            <p>
+                Closed:
+                {{ vote.closed_at }}
+            </p>
+        {% endif %}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        <fieldset>
+            <legend>Vote</legend>
+
+            <p>
+                {{ form.title.label_tag }}
+                <br>
+                {{ form.title }}
+                {{ form.title.errors }}
+            </p>
+
+            <p>
+                {{ form.description.label_tag }}
+                <br>
+                {{ form.description }}
+                {{ form.description.errors }}
+            </p>
+
+            <p>
+                {{ form.approval_rule.label_tag }}
+                <br>
+                {{ form.approval_rule }}
+                {{ form.approval_rule.errors }}
+            </p>
+
+            <p>
+                {{ form.is_anonymous }}
+                {{ form.is_anonymous.label_tag }}
+                {{ form.is_anonymous.errors }}
+            </p>
+
+            <p>
+                {{ form.requires_quorum }}
+                {{ form.requires_quorum.label_tag }}
+                {{ form.requires_quorum.errors }}
+            </p>
+
+            <p>
+                {{ form.quorum_numerator.label_tag }}
+                <br>
+                {{ form.quorum_numerator }}
+                {{ form.quorum_numerator.errors }}
+            </p>
+
+            <p>
+                {{ form.quorum_denominator.label_tag }}
+                <br>
+                {{ form.quorum_denominator }}
+                {{ form.quorum_denominator.errors }}
+            </p>
+
+            <p>
+                {{ form.requires_all_responses }}
+                {{ form.requires_all_responses.label_tag }}
+                {{ form.requires_all_responses.errors }}
+            </p>
+
+            <p>
+                {{ form.opens_at.label_tag }}
+                <br>
+                {{ form.opens_at }}
+                {{ form.opens_at.errors }}
+            </p>
+
+            <p>
+                {{ form.closes_at.label_tag }}
+                <br>
+                {{ form.closes_at }}
+                {{ form.closes_at.errors }}
+            </p>
+        </fieldset>
+
+        {% if option_formset %}
+            <fieldset>
+                <legend>Options</legend>
+
+                <p>
+                    A vote must have at least one option before it can be opened.
+                </p>
+
+                {{ option_formset.management_form }}
+                {{ option_formset.non_form_errors }}
+
+                {% for option_form in option_formset %}
+                    <div>
+                        {{ option_form.id }}
+
+                        <p>
+                            {{ option_form.label.label_tag }}
+                            {{ option_form.label }}
+                            {{ option_form.label.errors }}
+                        </p>
+
+                        <p>
+                            {{ option_form.sort_order.label_tag }}
+                            {{ option_form.sort_order }}
+                            {{ option_form.sort_order.errors }}
+                        </p>
+
+                        {% if option_form.instance.pk %}
+                            <p>
+                                {{ option_form.DELETE }}
+                                {{ option_form.DELETE.label_tag }}
+                            </p>
+                        {% endif %}
+                    </div>
+
+                    <hr>
+                {% endfor %}
+            </fieldset>
+        {% endif %}
+
+        {% if target_formset %}
+            <fieldset>
+                <legend>Eligibility Targets</legend>
+
+                <p>
+                    Fields inside one target are combined.
+                    Separate targets add additional eligible groups.
+                </p>
+
+                {{ target_formset.management_form }}
+                {{ target_formset.non_form_errors }}
+
+                {% for target_form in target_formset %}
+                    <div>
+                        {{ target_form.id }}
+
+                        {{ target_form.non_field_errors }}
+
+                        <p>
+                            {{ target_form.user.label_tag }}
+                            {{ target_form.user }}
+                            {{ target_form.user.errors }}
+                        </p>
+
+                        <p>
+                            {{ target_form.citizenship_class.label_tag }}
+                            {{ target_form.citizenship_class }}
+                            {{ target_form.citizenship_class.errors }}
+                        </p>
+
+                        <p>
+                            {{ target_form.social_rank.label_tag }}
+                            {{ target_form.social_rank }}
+                            {{ target_form.social_rank.errors }}
+                        </p>
+
+                        <p>
+                            {{ target_form.office.label_tag }}
+                            {{ target_form.office }}
+                            {{ target_form.office.errors }}
+                        </p>
+
+                        <p>
+                            {{ target_form.chapter.label_tag }}
+                            {{ target_form.chapter }}
+                            {{ target_form.chapter.errors }}
+                        </p>
+
+                        <p>
+                            {{ target_form.household.label_tag }}
+                            {{ target_form.household }}
+                            {{ target_form.household.errors }}
+                        </p>
+
+                        <p>
+                            {{ target_form.governance_body.label_tag }}
+                            {{ target_form.governance_body }}
+                            {{ target_form.governance_body.errors }}
+                        </p>
+
+                        <p>
+                            {{ target_form.order.label_tag }}
+                            {{ target_form.order }}
+                            {{ target_form.order.errors }}
+                        </p>
+
+                        <p>
+                            {{ target_form.order_rank.label_tag }}
+                            {{ target_form.order_rank }}
+                            {{ target_form.order_rank.errors }}
+                        </p>
+
+                        <p>
+                            {{ target_form.community_group.label_tag }}
+                            {{ target_form.community_group }}
+                            {{ target_form.community_group.errors }}
+                        </p>
+
+                        <p>
+                            {{ target_form.household_leadership_type.label_tag }}
+                            {{ target_form.household_leadership_type }}
+                            {{ target_form.household_leadership_type.errors }}
+                        </p>
+
+                        {% if target_form.instance.pk %}
+                            <p>
+                                {{ target_form.DELETE }}
+                                {{ target_form.DELETE.label_tag }}
+                            </p>
+                        {% endif %}
+                    </div>
+
+                    <hr>
+                {% endfor %}
+            </fieldset>
+        {% else %}
+            <p>
+                Options and eligibility targets cannot be changed after the
+                vote has opened.
+            </p>
+        {% endif %}
+
+        {% if not vote or vote.status == "DRAFT" %}
+            <button
+                type="submit"
+                name="submit_action"
+                value="draft"
+            >
+                Save as Draft
+            </button>
+
+            <button
+                type="submit"
+                name="submit_action"
+                value="open"
+            >
+                Save and Open Vote
+            </button>
+
+            <p>
+                Opening the vote freezes the eligible voter list.
+                Anonymity, options, and eligibility cannot be changed
+                after the vote opens.
+            </p>
+        {% else %}
+            <button
+                type="submit"
+                name="submit_action"
+                value="save"
+            >
+                Save Changes
+            </button>
+        {% endif %}
+    </form>
+</body>
+</html>

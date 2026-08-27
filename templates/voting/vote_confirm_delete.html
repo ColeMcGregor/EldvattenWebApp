@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Delete Vote</title>
+</head>
+<body>
+    <h1>Delete Vote</h1>
+
+    <p>
+        Are you sure you want to delete:
+    </p>
+
+    <p>
+        <strong>{{ vote.title }}</strong>
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <button type="submit">
+            Delete Vote
+        </button>
+    </form>
+
+    <p>
+        <a href="{% url 'voting:vote_manage_detail' vote.id %}">
+            Cancel
+        </a>
+    </p>
+</body>
+</html>

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ vote.title }} - Vote Management</title>
+</head>
+<body>
+    <p>
+        <a href="{% url 'voting:vote_manage_list' %}">
+            Back to vote management
+        </a>
+    </p>
+
+    <h1>{{ vote.title }}</h1>
+
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if vote.description %}
+        <p>{{ vote.description|linebreaksbr }}</p>
+    {% endif %}
+
+    <h2>Vote Settings</h2>
+
+    <dl>
+        <dt>Status</dt>
+        <dd>{{ vote.get_status_display }}</dd>
+
+        <dt>Anonymous</dt>
+        <dd>
+            {% if vote.is_anonymous %}
+                Yes
+            {% else %}
+                No
+            {% endif %}
+        </dd>
+
+        <dt>Approval Rule</dt>
+        <dd>{{ vote.get_approval_rule_display }}</dd>
+
+        <dt>Quorum Required</dt>
+        <dd>
+            {% if vote.requires_quorum %}
+                Yes
+            {% else %}
+                No
+            {% endif %}
+        </dd>
+
+        {% if vote.requires_quorum %}
+            <dt>Quorum</dt>
+            <dd>
+                {{ vote.quorum_numerator }}/{{ vote.quorum_denominator }}
+            </dd>
+        {% endif %}
+
+        <dt>All Responses Required</dt>
+        <dd>
+            {% if vote.requires_all_responses %}
+                Yes
+            {% else %}
+                No
+            {% endif %}
+        </dd>
+
+        <dt>Scheduled Open</dt>
+        <dd>{{ vote.opens_at|default:"-" }}</dd>
+
+        <dt>Scheduled Close</dt>
+        <dd>{{ vote.closes_at|default:"-" }}</dd>
+
+        <dt>Actually Opened</dt>
+        <dd>{{ vote.opened_at|default:"-" }}</dd>
+
+        <dt>Actually Closed</dt>
+        <dd>{{ vote.closed_at|default:"-" }}</dd>
+
+        <dt>Created By</dt>
+        <dd>{{ vote.created_by }}</dd>
+    </dl>
+
+    {% if perms.voting.change_vote %}
+        <p>
+            <a href="{% url 'voting:vote_edit' vote.id %}">
+                Edit Vote
+            </a>
+        </p>
+    {% endif %}
+
+    {% if vote.status == "DRAFT" and perms.voting.change_vote %}
+        <form
+            method="post"
+            action="{% url 'voting:vote_open' vote.id %}"
+        >
+            {% csrf_token %}
+            <button type="submit">
+                Open Vote
+            </button>
+        </form>
+    {% endif %}
+
+    {% if vote.status == "OPEN" and perms.voting.change_vote %}
+        <form
+            method="post"
+            action="{% url 'voting:vote_close' vote.id %}"
+        >
+            {% csrf_token %}
+            <button type="submit">
+                Close Vote
+            </button>
+        </form>
+    {% endif %}
+
+    {% if perms.voting.delete_vote %}
+        <p>
+            <a href="{% url 'voting:vote_delete' vote.id %}">
+                Delete Vote
+            </a>
+        </p>
+    {% endif %}
+
+    <hr>
+
+    <h2>Options</h2>
+
+    {% if vote.options.all %}
+        <ol>
+            {% for option in vote.options.all %}
+                <li>
+                    {{ option.label }}
+                </li>
+            {% endfor %}
+        </ol>
+    {% else %}
+        <p>No options.</p>
+    {% endif %}
+
+    {% if vote.status == "DRAFT" %}
+        <h2>Current Eligibility Preview</h2>
+
+        {% if eligibility_preview %}
+            <ul>
+                {% for user in eligibility_preview %}
+                    <li>
+                        {{ user.display_name|default:user.username }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No currently eligible users.</p>
+        {% endif %}
+    {% else %}
+        <h2>Frozen Eligible Voters</h2>
+
+        <p>
+            Eligible:
+            {{ eligible_count }}
+        </p>
+
+        <p>
+            Responded:
+            {{ participation_count }}
+        </p>
+
+        <p>
+            Required quorum:
+            {{ required_quorum }}
+        </p>
+
+        {% if eligible_users %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Member</th>
+                        <th>Responded</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for eligible_user in eligible_users %}
+                        <tr>
+                            <td>
+                                {{ eligible_user.user.display_name|default:eligible_user.user.username }}
+                            </td>
+
+                            <td>
+                                {% if eligible_user.has_responded %}
+                                    Yes
+                                {% else %}
+                                    No
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    {% endif %}
+
+    <hr>
+
+    <h2>Tally</h2>
+
+    {% if tally %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Option</th>
+                    <th>Responses</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for item in tally %}
+                    <tr>
+                        <td>{{ item.label }}</td>
+                        <td>{{ item.response_count }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No responses.</p>
+    {% endif %}
+
+    {% if vote.is_anonymous %}
+        <p>
+            Individual ballot selections are not available for anonymous votes.
+        </p>
+    {% elif identified_responses %}
+        <h2>Individual Responses</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Voter</th>
+                    <th>Selection</th>
+                    <th>Submitted</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for response in identified_responses %}
+                    <tr>
+                        <td>
+                            {{ response.eligibility.user.display_name|default:response.eligibility.user.username }}
+                        </td>
+
+                        <td>
+                            {{ response.option.label }}
+                        </td>
+
+                        <td>
+                            {{ response.submitted_at }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <hr>
+
+    <h2>Private Voter Comments</h2>
+
+    <p>
+        These comments are visible to vote reviewers only.
+    </p>
+
+    {% if comments %}
+        {% for comment in comments %}
+            <article>
+                <p>
+                    <strong>
+                        {{ comment.author.display_name|default:comment.author.username }}
+                    </strong>
+                </p>
+
+                <p>
+                    {{ comment.body|linebreaksbr }}
+                </p>
+
+                <p>
+                    Submitted:
+                    {{ comment.created_at }}
+                </p>
+
+                {% if comment.updated_at != comment.created_at %}
+                    <p>
+                        Updated:
+                        {{ comment.updated_at }}
+                    </p>
+                {% endif %}
+            </article>
+
+            <hr>
+        {% endfor %}
+    {% else %}
+        <p>No voter comments.</p>
+    {% endif %}
+
+    <h2>Result</h2>
+
+    <p>
+        {{ result.reason }}
+    </p>
+
+    <p>
+        Responses:
+        {{ response_count }}
+    </p>
+
+    <p>
+        Quorum met:
+        {% if result.quorum_met %}
+            Yes
+        {% else %}
+            No
+        {% endif %}
+    </p>
+
+    <p>
+        All required responses received:
+        {% if result.all_required_responses_received %}
+            Yes
+        {% else %}
+            No
+        {% endif %}
+    </p>
+
+    {% if result.winner %}
+        <p>
+            Current winning option:
+            {{ result.winner.label }}
+        </p>
+    {% endif %}
+</body>
+</html>

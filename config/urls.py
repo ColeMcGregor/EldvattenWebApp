@@ -25,5 +25,6 @@ urlpatterns = [
     path("events/", include("events.urls")),
     path("community/", include("community.urls")),
     path("messages/", include("messaging.urls")),
+    path("votes/",  include("voting.urls"),),
     path("", include("core.urls")),
 ]

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Votes</title>
+</head>
+<body>
+    <h1>Votes</h1>
+
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if vote_rows %}
+        {% for row in vote_rows %}
+            <article>
+                <h2>
+                    <a href="{% url 'voting:vote_detail' row.vote.id %}">
+                        {{ row.vote.title }}
+                    </a>
+                </h2>
+
+                <p>
+                    Status:
+                    {{ row.vote.get_status_display }}
+                </p>
+
+                {% if row.vote.is_anonymous %}
+                    <p>Anonymous vote</p>
+                {% else %}
+                    <p>Identified vote</p>
+                {% endif %}
+
+                {% if row.vote.closes_at %}
+                    <p>
+                        Closes:
+                        {{ row.vote.closes_at }}
+                    </p>
+                {% endif %}
+
+                {% if row.has_responded %}
+                    <p>You have responded.</p>
+                {% else %}
+                    <p>You have not responded.</p>
+                {% endif %}
+
+                {% if row.response %}
+                    <p>
+                        Your current selection:
+                        {{ row.response.option.label }}
+                    </p>
+                {% endif %}
+
+                {% if row.can_vote %}
+                    <p>
+                        <a href="{% url 'voting:vote_detail' row.vote.id %}">
+                            Vote
+                        </a>
+                    </p>
+                {% else %}
+                    <p>
+                        <a href="{% url 'voting:vote_detail' row.vote.id %}">
+                            View
+                        </a>
+                    </p>
+                {% endif %}
+            </article>
+
+            <hr>
+        {% endfor %}
+    {% else %}
+        <p>You do not have any votes.</p>
+    {% endif %}
+</body>
+</html>
