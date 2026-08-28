@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "community",
     "messaging",
     "voting",
+    "notifications",
     "audit",
 ]
 
@@ -135,7 +136,6 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
@@ -149,3 +149,21 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+
+# Web Push
+
+VAPID_PUBLIC_KEY = os.environ.get(
+    "VAPID_PUBLIC_KEY",
+    "",
+)
+
+VAPID_PRIVATE_KEY = os.environ.get(
+    "VAPID_PRIVATE_KEY",
+    "",
+)
+
+VAPID_SUBJECT = os.environ.get(
+    "VAPID_SUBJECT",
+    "",
+)

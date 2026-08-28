@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}
+    Notification Setup
+{% endblock %}
+
+{% block content %}
+<section class="push-setup">
+    <div class="push-setup__content">
+        <h1>Stay Connected</h1>
+
+        <p>
+            EldVatten can send notifications for actions,
+            event updates, votes, messages, and other
+            important information.
+        </p>
+
+        <p>
+            You can change your notification settings later
+            from your profile.
+        </p>
+
+        <div
+            id="push-status"
+            class="push-setup__status"
+            aria-live="polite"
+        ></div>
+
+        <div class="push-setup__actions">
+            <button
+                id="enable-push-button"
+                type="button"
+            >
+                Enable notifications
+            </button>
+
+            <form
+                method="post"
+                action="{% url 'notification_setup' %}"
+            >
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    name="action"
+                    value="skip"
+                >
+                    Not now
+                </button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<script src="{% static 'js/notifications/push-registration.js' %}"></script>
+{% endblock %}

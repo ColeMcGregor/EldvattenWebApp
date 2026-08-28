@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-#These define the models for the accounts
+# These define the models for the accounts
 
 
 # Account status options
@@ -11,7 +11,9 @@ class AccountStatus(models.TextChoices):
     SUSPENDED = "SUSPENDED", "Suspended"
     DISABLED = "DISABLED", "Disabled"
 
-#changes to the django supplied AbstractUser, adds display name and account status.
+
+# Changes to the Django supplied AbstractUser.
+# Adds display name and account status.
 class User(AbstractUser):
     display_name = models.CharField(
         max_length=150,
@@ -22,6 +24,10 @@ class User(AbstractUser):
         max_length=20,
         choices=AccountStatus.choices,
         default=AccountStatus.PENDING,
+    )
+
+    push_prompt_seen = models.BooleanField(
+        default=False,
     )
 
     class Meta:

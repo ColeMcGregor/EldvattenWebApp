@@ -58,6 +58,7 @@ class VoteForm(forms.ModelForm):
             "quorum_numerator",
             "quorum_denominator",
             "requires_all_responses",
+            "push_on_open",
             "opens_at",
             "closes_at",
         ]
@@ -82,6 +83,12 @@ class VoteForm(forms.ModelForm):
             ),
         }
 
+        labels = {
+            "push_on_open": (
+                "Send push notification when vote opens"
+            ),
+        }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -98,6 +105,7 @@ class VoteForm(forms.ModelForm):
             and self.instance.status != Vote.Status.DRAFT
         ):
             self.fields["is_anonymous"].disabled = True
+            self.fields["push_on_open"].disabled = True
 
 
 class VoteOptionForm(forms.ModelForm):

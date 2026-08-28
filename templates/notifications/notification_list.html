@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Notifications</title>
+</head>
+<body>
+    <h1>Notifications</h1>
+
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <p>
+        Unread:
+        {{ unread_count }}
+    </p>
+
+    {% if unread_count %}
+        <form
+            method="post"
+            action="{% url 'notifications:notification_mark_all_read' %}"
+        >
+            {% csrf_token %}
+
+            <button type="submit">
+                Mark All Read
+            </button>
+        </form>
+    {% endif %}
+
+    <hr>
+
+    {% if notifications %}
+        {% for notification in notifications %}
+            <article>
+                <h2>
+                    {% if notification.target_url %}
+                        <a href="{% url 'notifications:notification_open' notification.id %}">
+                            {{ notification.title }}
+                        </a>
+                    {% else %}
+                        {{ notification.title }}
+                    {% endif %}
+                </h2>
+
+                <p>
+                    Type:
+                    {{ notification.get_notification_type_display }}
+                </p>
+
+                {% if notification.message %}
+                    <p>
+                        {{ notification.message }}
+                    </p>
+                {% endif %}
+
+                <p>
+                    Created:
+                    {{ notification.created_at }}
+                </p>
+
+                {% if notification.is_read %}
+                    <p>Read</p>
+
+                    {% if notification.read_at %}
+                        <p>
+                            Read at:
+                            {{ notification.read_at }}
+                        </p>
+                    {% endif %}
+
+                    <form
+                        method="post"
+                        action="{% url 'notifications:notification_mark_unread' notification.id %}"
+                    >
+                        {% csrf_token %}
+
+                        <button type="submit">
+                            Mark Unread
+                        </button>
+                    </form>
+                {% else %}
+                    <p>Unread</p>
+
+                    <form
+                        method="post"
+                        action="{% url 'notifications:notification_mark_read' notification.id %}"
+                    >
+                        {% csrf_token %}
+
+                        <button type="submit">
+                            Mark Read
+                        </button>
+                    </form>
+                {% endif %}
+
+                {% if notification.target_url %}
+                    <p>
+                        <a href="{% url 'notifications:notification_open' notification.id %}">
+                            Open
+                        </a>
+                    </p>
+                {% endif %}
+            </article>
+
+            <hr>
+        {% endfor %}
+    {% else %}
+        <p>You do not have any notifications.</p>
+    {% endif %}
+</body>
+</html>

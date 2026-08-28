@@ -1,8 +1,11 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 from django.http import HttpResponseForbidden
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import (
+    get_object_or_404,
+    redirect,
+    render,
+)
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
@@ -18,6 +21,7 @@ from .models import (
     MessageRead,
     UserBlock,
 )
+from .services import send_conversation_message
 
 
 def is_member(user):
@@ -28,7 +32,10 @@ def is_member(user):
     )
 
 
-def get_active_participation(user, conversation):
+def get_active_participation(
+    user,
+    conversation,
+):
     if not user.is_authenticated:
         return None
 
@@ -39,43 +46,17 @@ def get_active_participation(user, conversation):
     ).first()
 
 
-def can_view_conversation(user, conversation):
-    return get_active_participation(user, conversation) is not None
-
-
-def users_are_blocked(user_a, user_b):
-    return UserBlock.objects.filter(
-        Q(
-            blocker=user_a,
-            blocked=user_b,
+def can_view_conversation(
+    user,
+    conversation,
+):
+    return (
+        get_active_participation(
+            user,
+            conversation,
         )
-        | Q(
-            blocker=user_b,
-            blocked=user_a,
-        )
-    ).exists()
-
-
-def conversation_has_block(request_user, conversation):
-    other_user_ids = conversation.participants.filter(
-        left_at__isnull=True,
-    ).exclude(
-        user=request_user,
-    ).values_list(
-        "user_id",
-        flat=True,
+        is not None
     )
-
-    return UserBlock.objects.filter(
-        Q(
-            blocker=request_user,
-            blocked_id__in=other_user_ids,
-        )
-        | Q(
-            blocker_id__in=other_user_ids,
-            blocked=request_user,
-        )
-    ).exists()
 
 
 def conversation_values(conversation):
@@ -89,15 +70,21 @@ def conversation_values(conversation):
                 flat=True,
             )
         ),
-        "created_at": conversation.created_at.isoformat(),
+        "created_at": (
+            conversation.created_at.isoformat()
+        ),
     }
 
 
 def participant_values(participant):
     return {
-        "conversation_id": participant.conversation_id,
+        "conversation_id": (
+            participant.conversation_id
+        ),
         "user": str(participant.user),
-        "joined_at": participant.joined_at.isoformat(),
+        "joined_at": (
+            participant.joined_at.isoformat()
+        ),
         "left_at": (
             participant.left_at.isoformat()
             if participant.left_at
@@ -109,10 +96,16 @@ def participant_values(participant):
 def message_values(message):
     return {
         "message_id": message.pk,
-        "conversation_id": message.conversation_id,
+        "conversation_id": (
+            message.conversation_id
+        ),
         "sender": str(message.sender),
-        "delivery_status": message.delivery_status,
-        "created_at": message.created_at.isoformat(),
+        "delivery_status": (
+            message.delivery_status
+        ),
+        "created_at": (
+            message.created_at.isoformat()
+        ),
     }
 
 
@@ -120,7 +113,9 @@ def block_values(block):
     return {
         "blocker": str(block.blocker),
         "blocked": str(block.blocked),
-        "created_at": block.created_at.isoformat(),
+        "created_at": (
+            block.created_at.isoformat()
+        ),
     }
 
 
@@ -146,7 +141,10 @@ def conversation_list(request):
 
 
 @login_required
-def conversation_detail(request, conversation_id):
+def conversation_detail(
+    request,
+    conversation_id,
+):
     if not is_member(request.user):
         return HttpResponseForbidden()
 
@@ -157,7 +155,10 @@ def conversation_detail(request, conversation_id):
         pk=conversation_id,
     )
 
-    if not can_view_conversation(request.user, conversation):
+    if not can_view_conversation(
+        request.user,
+        conversation,
+    ):
         return HttpResponseForbidden()
 
     visible_messages = conversation.messages.filter(
@@ -218,9 +219,15 @@ def conversation_create(request):
         )
 
         if form.is_valid():
-            selected_users = form.cleaned_data["participants"]
+            selected_users = (
+                form.cleaned_data[
+                    "participants"
+                ]
+            )
 
-            conversation = Conversation.objects.create()
+            conversation = (
+                Conversation.objects.create()
+            )
 
             ConversationParticipant.objects.create(
                 conversation=conversation,
@@ -237,10 +244,14 @@ def conversation_create(request):
                 actor=request.user,
                 request=request,
                 action=AuditLog.Action.CREATE,
-                target_type=conversation._meta.verbose_name,
+                target_type=(
+                    conversation._meta.verbose_name
+                ),
                 target_id=conversation.pk,
                 target_label=str(conversation),
-                new_value=conversation_values(conversation),
+                new_value=conversation_values(
+                    conversation
+                ),
                 source=AuditLog.Source.WEB_APP,
                 method=AuditLog.Method.MANUAL,
             )
@@ -265,7 +276,10 @@ def conversation_create(request):
 
 @login_required
 @require_POST
-def send_message(request, conversation_id):
+def send_message(
+    request,
+    conversation_id,
+):
     if not is_member(request.user):
         return HttpResponseForbidden()
 
@@ -274,28 +288,28 @@ def send_message(request, conversation_id):
         pk=conversation_id,
     )
 
-    if not can_view_conversation(request.user, conversation):
+    if not can_view_conversation(
+        request.user,
+        conversation,
+    ):
         return HttpResponseForbidden()
 
     form = MessageForm(request.POST)
 
     if form.is_valid():
-        message = form.save(commit=False)
-        message.conversation = conversation
-        message.sender = request.user
-
-        if conversation_has_block(request.user, conversation):
-            message.delivery_status = Message.DeliveryStatus.BLOCKED
-        else:
-            message.delivery_status = Message.DeliveryStatus.SENT
-
-        message.save()
+        message = send_conversation_message(
+            conversation=conversation,
+            sender=request.user,
+            body=form.cleaned_data["body"],
+        )
 
         record_audit_event(
             actor=request.user,
             request=request,
             action=AuditLog.Action.CREATE,
-            target_type=message._meta.verbose_name,
+            target_type=(
+                message._meta.verbose_name
+            ),
             target_id=message.pk,
             target_label=str(message),
             new_value=message_values(message),
@@ -303,18 +317,14 @@ def send_message(request, conversation_id):
             method=AuditLog.Method.MANUAL,
         )
 
-        if message.delivery_status == Message.DeliveryStatus.BLOCKED:
+        if (
+            message.delivery_status
+            == Message.DeliveryStatus.BLOCKED
+        ):
             messages.error(
                 request,
                 "Sorry, this user is unavailable.",
             )
-
-            return redirect(
-                "messaging:conversation_detail",
-                conversation_id=conversation.pk,
-            )
-
-        conversation.save()
 
     return redirect(
         "messaging:conversation_detail",
@@ -324,7 +334,10 @@ def send_message(request, conversation_id):
 
 @login_required
 @require_POST
-def leave_conversation(request, conversation_id):
+def leave_conversation(
+    request,
+    conversation_id,
+):
     if not is_member(request.user):
         return HttpResponseForbidden()
 
@@ -341,22 +354,30 @@ def leave_conversation(request, conversation_id):
     if participation is None:
         return HttpResponseForbidden()
 
-    old_value = participant_values(participation)
+    old_value = participant_values(
+        participation
+    )
 
     participation.left_at = timezone.now()
     participation.save(
-        update_fields=["left_at"],
+        update_fields=[
+            "left_at",
+        ],
     )
 
     record_audit_event(
         actor=request.user,
         request=request,
         action=AuditLog.Action.UPDATE,
-        target_type=participation._meta.verbose_name,
+        target_type=(
+            participation._meta.verbose_name
+        ),
         target_id=participation.pk,
         target_label=str(participation),
         old_value=old_value,
-        new_value=participant_values(participation),
+        new_value=participant_values(
+            participation
+        ),
         source=AuditLog.Source.WEB_APP,
         method=AuditLog.Method.MANUAL,
     )
@@ -368,7 +389,10 @@ def leave_conversation(request, conversation_id):
 
 @login_required
 @require_POST
-def block_user(request, user_id):
+def block_user(
+    request,
+    user_id,
+):
     if not is_member(request.user):
         return HttpResponseForbidden()
 
@@ -407,7 +431,10 @@ def block_user(request, user_id):
 
 @login_required
 @require_POST
-def unblock_user(request, user_id):
+def unblock_user(
+    request,
+    user_id,
+):
     if not is_member(request.user):
         return HttpResponseForbidden()
 
@@ -421,7 +448,9 @@ def unblock_user(request, user_id):
 
         target_id = block.pk
         target_label = str(block)
-        target_type = block._meta.verbose_name
+        target_type = (
+            block._meta.verbose_name
+        )
 
         block.delete()
 

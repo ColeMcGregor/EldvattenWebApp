@@ -3,3 +3,4 @@
 Django==5.2.16
 psycopg[binary]
 gunicorn
+pywebpush==2.4.0
