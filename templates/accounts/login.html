@@ -1,43 +1,76 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-</head>
-<body>
-    <main>
-        <h1>Login</h1>
+{% extends "base.html" %}
 
-        <form method="post">
-            {% csrf_token %}
+{% block title %}Login | EldVatten{% endblock %}
 
-            {{ form.non_field_errors }}
+{% block content %}
 
-            <div>
-                {{ form.username.errors }}
+<section class="page-section registration-page">
+    <div class="site-width">
 
-                <label for="{{ form.username.id_for_label }}">
-                    Username
-                </label>
+        <div class="registration-container">
 
-                {{ form.username }}
+            <div class="registration-heading">
+                <h1 class="section-heading">
+                    Member Login
+                </h1>
+
+                <p>
+                    Log in to access The Tavern and EldVatten member tools.
+                </p>
             </div>
 
-            <div>
-                {{ form.password.errors }}
+            <form
+                class="registration-form"
+                method="post"
+            >
+                {% csrf_token %}
 
-                <label for="{{ form.password.id_for_label }}">
-                    Password
-                </label>
+                {% if form.non_field_errors %}
+                    <div class="form-errors">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
 
-                {{ form.password }}
+                <div class="form-field">
+                    {{ form.username.errors }}
+
+                    <label for="{{ form.username.id_for_label }}">
+                        Username
+                    </label>
+
+                    {{ form.username }}
+                </div>
+
+                <div class="form-field">
+                    {{ form.password.errors }}
+
+                    <label for="{{ form.password.id_for_label }}">
+                        Password
+                    </label>
+
+                    {{ form.password }}
+                </div>
+
+                <button
+                    class="button button-primary registration-submit"
+                    type="submit"
+                >
+                    Login
+                </button>
+            </form>
+
+            <div class="registration-footer">
+                <p>
+                    Need an account?
+                    <a href="{% url 'register' %}">
+                        Register here.
+                    </a>
+                </p>
             </div>
 
-            <button type="submit">
-                Login
-            </button>
-        </form>
-    </main>
-</body>
-</html>
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}

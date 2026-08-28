@@ -2,9 +2,12 @@ from math import ceil
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import AccountStatus, User
+from notifications.models import Notification
+from notifications.services import create_notifications
 from organization.models import (
     CitizenshipRecord,
     GovernanceMembership,
@@ -283,6 +286,28 @@ def open_vote(vote):
             "closed_at",
             "updated_at",
         ]
+    )
+
+    recipients = User.objects.filter(
+        id__in=eligible_user_ids,
+    )
+
+    create_notifications(
+        recipients=recipients,
+        notification_type=Notification.Type.VOTE,
+        title=f"New vote: {vote.title}",
+        message=(
+            "A new vote is available for your response."
+        ),
+        source_type="Vote",
+        source_id=vote.id,
+        target_url=reverse(
+            "voting:vote_detail",
+            args=[
+                vote.id,
+            ],
+        ),
+        push_requested=vote.push_on_open,
     )
 
     return vote

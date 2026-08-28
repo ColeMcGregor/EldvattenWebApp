@@ -1,19 +1,25 @@
 {% load static %}
 
-  <!-- This is the base html file. it is to be used to reference for the other non blog files so that
-   their can be similar headers and footers on all pages. 
-   
-   CHANGES HERE REFLECT ON ALL OTHER HTML FILES...BE CAREFUL-->
+<!-- This is the base html file. it is to be used to reference for the other non blog files so that
+ their can be similar headers and footers on all pages. 
+ 
+ CHANGES HERE REFLECT ON ALL OTHER HTML FILES...BE CAREFUL-->
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>{% block title %}EldVatten{% endblock %}</title>
 
-    <link rel="stylesheet" href="{% static 'css/site.css' %}">
+    <link
+        rel="stylesheet"
+        href="{% static 'css/site.css' %}"
+    >
 </head>
 
 <body>
@@ -22,11 +28,17 @@
     <header class="site-header">
         <div class="site-width site-header-inner">
 
-            <a class="site-name" href="{% url 'home' %}">
+            <a
+                class="site-name"
+                href="{% url 'home' %}"
+            >
                 EldVatten
             </a>
 
-            <a class="site-logo-link" href="{% url 'home' %}">
+            <a
+                class="site-logo-link"
+                href="{% url 'home' %}"
+            >
                 <img
                     class="site-logo"
                     src="{% static 'images/Eldvatten_logo_black_rgb.png' %}"
@@ -34,12 +46,46 @@
                 >
             </a>
 
-            <nav class="site-nav" aria-label="Main navigation">
-                <a href="{% url 'about' %}">About</a>
-                <a href="{% url 'calendar' %}">Event Calendar</a>
-                <a href="{% url 'tavern' %}">The Tavern</a>
-                <a href="{% url 'contact' %}">Contact</a>
-                <a class="login-link" href="#">Login</a>
+            <nav
+                class="site-nav"
+                aria-label="Main navigation"
+            >
+                <a href="{% url 'about' %}">
+                    About
+                </a>
+
+                <a href="{% url 'calendar' %}">
+                    Calendar
+                </a>
+
+                <a href="{% url 'tavern' %}">
+                    Tavern
+                </a>
+
+                <a href="{% url 'contact' %}">
+                    Contact
+                </a>
+
+                {% if request.user.is_authenticated %}
+
+                    <a
+                        class="login-link"
+                        href="#"
+                        data-logout-link
+                    >
+                        Logout
+                    </a>
+
+                {% else %}
+
+                    <a
+                        class="login-link"
+                        href="{% url 'login' %}"
+                    >
+                        Login
+                    </a>
+
+                {% endif %}
             </nav>
 
         </div>
@@ -57,30 +103,67 @@
         <div class="site-width footer-main">
 
             <section>
-                <h2 class="footer-heading">Participate</h2>
+                <h2 class="footer-heading">
+                    Participate
+                </h2>
 
                 <div class="footer-links">
-                    <a href="{% url 'calendar' %}">Event Calendar</a>
-                    <a href="{% url 'about' %}">About EldVatten</a>
-                    <a href="{% url 'contact' %}">Contact</a>
+                    <a href="{% url 'calendar' %}">
+                        Event Calendar
+                    </a>
+
+                    <a href="{% url 'about' %}">
+                        About EldVatten
+                    </a>
+
+                    <a href="{% url 'contact' %}">
+                        Contact
+                    </a>
                 </div>
             </section>
 
             <section>
-                <h2 class="footer-heading">Community</h2>
+                <h2 class="footer-heading">
+                    Community
+                </h2>
 
                 <div class="footer-links">
-                    <a href="{% url 'tavern' %}">The Tavern</a>
-                    <a href="#">Member Login</a>
+                    <a href="{% url 'tavern' %}">
+                        The Tavern
+                    </a>
+
+                    {% if request.user.is_authenticated %}
+
+                        <a
+                            href="#"
+                            data-logout-link
+                        >
+                            Logout
+                        </a>
+
+                    {% else %}
+
+                        <a href="{% url 'login' %}">
+                            Member Login
+                        </a>
+
+                    {% endif %}
                 </div>
             </section>
 
             <section>
-                <h2 class="footer-heading">Information</h2>
+                <h2 class="footer-heading">
+                    Information
+                </h2>
 
                 <div class="footer-links">
-                    <a href="https://www.sca.org/">Society for Creative Anachronism</a>
-                    <a href="{% url 'privacy' %}">Privacy</a>
+                    <a href="https://www.sca.org/">
+                        Society for Creative Anachronism
+                    </a>
+
+                    <a href="{% url 'privacy' %}">
+                        Privacy
+                    </a>
                 </div>
             </section>
 
@@ -94,6 +177,110 @@
         </div>
 
     </footer>
+
+    {% if request.user.is_authenticated %}
+
+        <form
+            id="logout-form"
+            method="post"
+            action="{% url 'logout' %}"
+            hidden
+        >
+            {% csrf_token %}
+        </form>
+
+        <script>
+            const logoutForm =
+                document.getElementById(
+                    "logout-form"
+                );
+
+            const logoutLinks =
+                document.querySelectorAll(
+                    "[data-logout-link]"
+                );
+
+            async function deactivatePushBeforeLogout() {
+                if (
+                    !("serviceWorker" in navigator)
+                    || !("PushManager" in window)
+                ) {
+                    return;
+                }
+
+                const registration =
+                    await navigator.serviceWorker
+                        .getRegistration("/");
+
+                if (!registration) {
+                    return;
+                }
+
+                const subscription =
+                    await registration.pushManager
+                        .getSubscription();
+
+                if (!subscription) {
+                    return;
+                }
+
+                const csrfToken =
+                    logoutForm.querySelector(
+                        'input[name="csrfmiddlewaretoken"]'
+                    ).value;
+
+                const response =
+                    await fetch(
+                        "{% url 'notifications:push_set_active' %}",
+                        {
+                            method: "POST",
+                            credentials: "same-origin",
+                            headers: {
+                                "Content-Type":
+                                    "application/json",
+                                "X-CSRFToken":
+                                    csrfToken,
+                            },
+                            body: JSON.stringify({
+                                endpoint:
+                                    subscription.endpoint,
+                                active: false,
+                            }),
+                        }
+                    );
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Could not deactivate push notifications."
+                    );
+                }
+            }
+
+
+            logoutLinks.forEach(
+                function (logoutLink) {
+                    logoutLink.addEventListener(
+                        "click",
+                        async function (event) {
+                            event.preventDefault();
+
+                            try {
+                                await deactivatePushBeforeLogout();
+                            } catch (error) {
+                                console.error(
+                                    "Push deactivation failed during logout.",
+                                    error
+                                );
+                            }
+
+                            logoutForm.submit();
+                        }
+                    );
+                }
+            );
+        </script>
+
+    {% endif %}
 
 </body>
 </html>

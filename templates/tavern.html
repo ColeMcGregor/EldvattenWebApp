@@ -11,14 +11,16 @@
     style="background-image: url('{% static 'images/Eldvatten_Group_Bar_1.jpg' %}');"
 >
     <div class="hero-content">
-        <h1 class="hero-title">The Tavern</h1>
+        <h1 class="hero-title">
+            The Tavern
+        </h1>
 
         <p class="hero-text">
-            A community application for EldVatten members, 
+            A community application for EldVatten members,
             built for blogging, events, voting, messaging, and more.
             <br><br>
             The Tavern also connects with other parts of the site,
-             keeping relevant community information available to those curious about joining.
+            keeping relevant community information available to those curious about joining.
         </p>
     </div>
 </section>
@@ -29,10 +31,12 @@
     <div class="site-width two-column">
 
         <div>
-            <h2 class="section-heading">EldVatten Community</h2>
+            <h2 class="section-heading">
+                EldVatten Community
+            </h2>
 
             <p>
-                While Eldvatten has had various means of communication in the past and in the present, 
+                While Eldvatten has had various means of communication in the past and in the present,
                 there has always been a need for a centralized place to connect and share information.
                 So was born The Tavern.
             </p>
@@ -44,11 +48,31 @@
             </p>
 
             <div class="button-row">
-                <a class="button button-primary" href="#">
-                    Member Login
-                </a>
 
-                <a class="button button-secondary" href="{% url 'register' %}">
+                {% if request.user.is_authenticated %}
+
+                    <a
+                        class="button button-primary"
+                        href="{% url 'tavern' %}"
+                    >
+                        Enter The Tavern
+                    </a>
+
+                {% else %}
+
+                    <a
+                        class="button button-primary"
+                        href="{% url 'login' %}"
+                    >
+                        Member Login
+                    </a>
+
+                {% endif %}
+
+                <a
+                    class="button button-secondary"
+                    href="{% url 'register' %}"
+                >
                     Register
                 </a>
             </div>
@@ -72,13 +96,17 @@ Section showcasing the features and functionality of The Tavern. -->
 <section class="page-section page-section-alt">
     <div class="site-width">
 
-        <h2 class="section-heading">Inside The Tavern</h2>
+        <h2 class="section-heading">
+            Inside The Tavern
+        </h2>
 
-          <div class="card-grid">
+        <div class="card-grid">
 
             <article class="card">
                 <div class="card-body">
-                    <h3 class="card-title">Community Feed</h3>
+                    <h3 class="card-title">
+                        Community Feed
+                    </h3>
 
                     <p class="card-text">
                         A centralized place for community updates and discussions. Allows text and image posts, as well as commmenting.
@@ -88,7 +116,9 @@ Section showcasing the features and functionality of The Tavern. -->
 
             <article class="card">
                 <div class="card-body">
-                    <h3 class="card-title">Events</h3>
+                    <h3 class="card-title">
+                        Events
+                    </h3>
 
                     <p class="card-text">
                         Events can be made by members and posted, allowing for easy discovery and participation.
@@ -98,10 +128,12 @@ Section showcasing the features and functionality of The Tavern. -->
 
             <article class="card">
                 <div class="card-body">
-                    <h3 class="card-title">Member Tools</h3>
+                    <h3 class="card-title">
+                        Member Tools
+                    </h3>
 
                     <p class="card-text">
-                        Member profiles and messaging capabilities, as well as voting and poll features.
+                        Member profiles and messaging capabilities, as well as voting features.
                     </p>
                 </div>
             </article>
@@ -116,18 +148,26 @@ Section showcasing the features and functionality of The Tavern. -->
 <section class="page-section">
     <div class="site-width">
 
-        <h2 class="section-heading">Not a Member Yet?</h2>
+        <h2 class="section-heading">
+            Not a Member Yet?
+        </h2>
 
         <p class="section-intro">
             Register below to join the community, approval contingent on meeting membership requirements. Membership can be revoked, suspended, or changed to honorary based on participation, and lack of adherence to community guidelines.
         </p>
 
         <div class="button-row">
-            <a class="button button-primary" href="{% url 'register' %}">
+            <a
+                class="button button-primary"
+                href="{% url 'register' %}"
+            >
                 Register
             </a>
 
-            <a class="button button-secondary" href="{% url 'contact' %}">
+            <a
+                class="button button-secondary"
+                href="{% url 'contact' %}"
+            >
                 Contact EldVatten
             </a>
         </div>
