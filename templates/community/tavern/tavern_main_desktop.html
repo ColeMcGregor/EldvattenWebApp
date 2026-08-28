@@ -1,0 +1,130 @@
+{% extends "app/base_desktop.html" %}
+
+{% block title %}The Tavern | EldVatten{% endblock %}
+
+{% block nav_tavern %}active{% endblock %}
+
+{% block app_content %}
+
+<section class="tavern-main-header">
+    <h1 class="section-heading">
+        The Tavern
+    </h1>
+</section>
+
+
+<section class="tavern-post-composer">
+
+    <div class="tavern-composer-avatar">
+        {% if request.user.display_name %}
+            {{ request.user.display_name|first }}
+        {% else %}
+            {{ request.user.username|first }}
+        {% endif %}
+    </div>
+
+    <div class="tavern-composer-content">
+
+        <textarea
+            class="tavern-composer-input"
+            name="body"
+            rows="2"
+            placeholder="Share Something?"
+        ></textarea>
+
+        <div class="tavern-composer-footer">
+
+            <div class="tavern-composer-tools">
+                <button
+                    class="tavern-composer-tool"
+                    type="button"
+                    aria-label="Add image"
+                >
+                    Image
+                </button>
+
+                <button
+                    class="tavern-composer-tool"
+                    type="button"
+                    aria-label="Add link"
+                >
+                    Link
+                </button>
+            </div>
+
+            <button
+                class="button button-primary tavern-composer-submit"
+                type="button"
+            >
+                Post
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="tavern-feed">
+
+    <article class="tavern-post">
+        <header class="tavern-post-header">
+            <strong>
+                Lorem Ipsum
+            </strong>
+
+            <span>
+                Lorem ipsum
+            </span>
+        </header>
+
+        <div class="tavern-post-body">
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            </p>
+        </div>
+
+        <footer class="tavern-post-footer">
+            <a href="#">
+                Comment
+            </a>
+
+            <a href="#">
+                Bookmark
+            </a>
+        </footer>
+    </article>
+
+
+    <article class="tavern-post">
+        <header class="tavern-post-header">
+            <strong>
+                Lorem Ipsum
+            </strong>
+
+            <span>
+                Lorem ipsum
+            </span>
+        </header>
+
+        <div class="tavern-post-body">
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            </p>
+        </div>
+
+        <footer class="tavern-post-footer">
+            <a href="#">
+                Comment
+            </a>
+
+            <a href="#">
+                Bookmark
+            </a>
+        </footer>
+    </article>
+
+</section>
+
+{% endblock %}
