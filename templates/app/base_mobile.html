@@ -1,0 +1,148 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {% block title %}
+            The Tavern | EldVatten
+        {% endblock %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/site.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/app_mobile.css' %}"
+    >
+</head>
+
+<body class="app-mobile-body">
+
+    <header class="mobile-app-header">
+
+        <a
+            class="mobile-profile-link"
+            href="#"
+            aria-label="Profile"
+        >
+            <div class="mobile-profile-placeholder">
+                {% if request.user.display_name %}
+                    {{ request.user.display_name|first }}
+                {% else %}
+                    {{ request.user.username|first }}
+                {% endif %}
+            </div>
+        </a>
+
+        <a
+            class="mobile-app-wordmark"
+            href="{% url 'tavern' %}"
+        >
+            EldVatten
+        </a>
+
+        <a
+            class="mobile-notification-link"
+            href="{% url 'notifications:notification_list' %}"
+            aria-label="Notifications"
+        >
+            Bell
+        </a>
+
+    </header>
+
+
+    {% block mobile_primary_tabs %}
+
+        <nav
+            class="mobile-primary-tabs"
+            aria-label="Tavern views"
+        >
+            <a
+                class="mobile-primary-tab
+                {% block mobile_tab_feed %}{% endblock %}"
+                href="{% url 'tavern' %}"
+            >
+                Feed
+            </a>
+
+            <a
+                class="mobile-primary-tab
+                {% block mobile_tab_todo %}{% endblock %}"
+                href="#"
+            >
+                To-Do
+            </a>
+        </nav>
+
+    {% endblock %}
+
+
+    <main class="mobile-app-content">
+
+        {% block app_content %}
+        {% endblock %}
+
+    </main>
+
+
+    <nav
+        class="mobile-bottom-navigation"
+        aria-label="Primary application navigation"
+    >
+
+        <a
+            class="mobile-bottom-link
+            {% block mobile_nav_tavern %}{% endblock %}"
+            href="{% url 'tavern' %}"
+        >
+            Tavern
+        </a>
+
+        <a
+            class="mobile-bottom-link
+            {% block mobile_nav_events %}{% endblock %}"
+            href="#"
+        >
+            Events
+        </a>
+
+        <a
+            class="mobile-bottom-link
+            {% block mobile_nav_todo %}{% endblock %}"
+            href="#"
+        >
+            To-Do
+        </a>
+
+        <a
+            class="mobile-bottom-link
+            {% block mobile_nav_notifications %}{% endblock %}"
+            href="{% url 'notifications:notification_list' %}"
+        >
+            Bell
+        </a>
+
+        <a
+            class="mobile-bottom-link
+            {% block mobile_nav_messages %}{% endblock %}"
+            href="{% url 'messaging:conversation_list' %}"
+        >
+            Messages
+        </a>
+
+    </nav>
+
+</body>
+</html>

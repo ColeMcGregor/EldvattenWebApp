@@ -1,0 +1,85 @@
+{% extends "app/base_mobile.html" %}
+
+{% block title %}The Tavern | EldVatten{% endblock %}
+
+{% block mobile_tab_feed %}active{% endblock %}
+{% block mobile_nav_tavern %}active{% endblock %}
+
+{% block app_content %}
+
+<section class="mobile-content-card tavern-main-header">
+    <h1 class="section-heading">
+        The Tavern
+    </h1>
+
+    <a
+        class="button button-primary"
+        href="#"
+    >
+        Create Post
+    </a>
+</section>
+
+
+<section class="tavern-feed">
+
+    <article class="mobile-content-card tavern-post">
+        <header class="tavern-post-header">
+            <strong>
+                Lorem Ipsum
+            </strong>
+
+            <span>
+                Lorem ipsum
+            </span>
+        </header>
+
+        <div class="tavern-post-body">
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            </p>
+        </div>
+
+        <footer class="tavern-post-footer">
+            <a href="#">
+                Comment
+            </a>
+
+            <a href="#">
+                Bookmark
+            </a>
+        </footer>
+    </article>
+
+
+    <article class="mobile-content-card tavern-post">
+        <header class="tavern-post-header">
+            <strong>
+                Lorem Ipsum
+            </strong>
+
+            <span>
+                Lorem ipsum
+            </span>
+        </header>
+
+        <div class="tavern-post-body">
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            </p>
+        </div>
+
+        <footer class="tavern-post-footer">
+            <a href="#">
+                Comment
+            </a>
+
+            <a href="#">
+                Bookmark
+            </a>
+        </footer>
+    </article>
+
+</section>
+
+{% endblock %}

@@ -1,0 +1,359 @@
+/* Page */
+
+.app-body {
+    min-height: 100vh;
+
+    background: var(--page-background);
+}
+
+
+/* Application Layout */
+
+.app-desktop-shell {
+    min-height: 100vh;
+
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 2.6fr)
+        minmax(0, 1.25fr);
+
+    width: 100%;
+}
+
+
+/* Left Rail */
+
+.app-left-rail {
+    min-width: 0;
+
+    padding: 1.25rem 1.4rem;
+
+    background: var(--surface);
+
+    border-right: 1px solid var(--border-color);
+}
+
+
+/* Application Identity */
+
+.app-identity {
+    display: flex;
+    align-items: center;
+
+    gap: 0.75rem;
+
+    margin-bottom: 1.5rem;
+}
+
+.app-wordmark {
+    font-family: "EldVatten", Georgia, serif;
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.app-crest {
+    width: 44px;
+    height: 44px;
+
+    object-fit: contain;
+}
+
+
+/* Navigation */
+
+.app-navigation,
+.app-navigation-secondary {
+    display: grid;
+
+    gap: 0.15rem;
+}
+
+.app-navigation-secondary {
+    margin-top: 1.6rem;
+}
+
+.app-navigation-link {
+    display: block;
+
+    padding: 0.55rem 0.75rem;
+
+    border-radius: var(--radius-small);
+
+    font-size: 1rem;
+}
+
+.app-navigation-link:hover {
+    background: var(--surface-muted);
+
+    color: var(--eldvatten-red);
+}
+
+.app-navigation-link.active {
+    background: var(--surface-muted);
+
+    color: var(--eldvatten-red);
+
+    font-weight: 700;
+}
+
+
+/* Main Content */
+
+.app-main-content {
+    min-width: 0;
+
+    padding: 0;
+
+    background: var(--surface);
+
+    border-right: 1px solid var(--border-color);
+}
+
+
+/* Tavern Header */
+
+.tavern-main-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 1rem;
+
+    padding: 1rem 1.5rem;
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tavern-main-header .section-heading {
+    margin: 0;
+
+    font-size: 2.2rem;
+    line-height: 1;
+}
+
+
+/* Post Composer */
+
+.tavern-post-composer {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+
+    gap: 0.9rem;
+
+    padding: 1.1rem 1.5rem;
+
+    background: var(--surface);
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tavern-composer-avatar {
+    width: 46px;
+    height: 46px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--surface-muted);
+
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+
+    font-weight: 700;
+}
+
+.tavern-composer-content {
+    min-width: 0;
+}
+
+.tavern-composer-input {
+    width: 100%;
+    min-height: 70px;
+
+    padding: 0.6rem 0;
+
+    resize: vertical;
+
+    background: transparent;
+
+    border: 0;
+    outline: 0;
+
+    color: var(--text-main);
+
+    font: inherit;
+    font-size: 1.15rem;
+    line-height: 1.4;
+}
+
+.tavern-composer-input::placeholder {
+    color: var(--text-muted);
+}
+
+.tavern-composer-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 1rem;
+
+    padding-top: 0.65rem;
+
+    border-top: 1px solid var(--border-color);
+}
+
+.tavern-composer-tools {
+    display: flex;
+    align-items: center;
+
+    gap: 0.35rem;
+}
+
+.tavern-composer-tool {
+    padding: 0.35rem 0.5rem;
+
+    background: transparent;
+
+    border: 0;
+
+    color: var(--eldvatten-red);
+
+    font: inherit;
+    font-size: 0.9rem;
+
+    cursor: pointer;
+}
+
+.tavern-composer-tool:hover {
+    text-decoration: underline;
+}
+
+.tavern-composer-submit {
+    flex: 0 0 auto;
+}
+
+
+/* Tavern Feed */
+
+.tavern-feed {
+    width: 100%;
+}
+
+.tavern-post {
+    padding: 1.25rem 1.5rem;
+
+    background: var(--surface);
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tavern-post-header {
+    display: flex;
+    align-items: baseline;
+
+    gap: 0.4rem;
+
+    margin-bottom: 0.65rem;
+}
+
+.tavern-post-header strong {
+    font-size: 1rem;
+}
+
+.tavern-post-header span {
+    color: var(--text-muted);
+
+    font-size: 0.9rem;
+}
+
+.tavern-post-body p {
+    margin: 0 0 1rem;
+}
+
+.tavern-post-footer {
+    display: flex;
+
+    gap: 1.5rem;
+}
+
+.tavern-post-footer a {
+    color: var(--text-muted);
+
+    font-size: 0.9rem;
+}
+
+.tavern-post-footer a:hover {
+    color: var(--eldvatten-red);
+}
+
+
+/* Right Rail */
+
+.app-right-rail {
+    min-width: 0;
+
+    padding: 1.25rem 1.4rem;
+
+    background: var(--surface);
+}
+
+.app-rail-section {
+    display: grid;
+
+    gap: 0;
+}
+
+.app-rail-heading {
+    margin: 0 0 1rem;
+
+    font-family: "EldVatten", Georgia, serif;
+    font-size: 1.7rem;
+    font-weight: normal;
+}
+
+
+/* Right Rail Items */
+
+.app-placeholder-card {
+    display: grid;
+
+    gap: 0.2rem;
+
+    padding: 0.9rem 0;
+
+    background: transparent;
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.app-placeholder-card:first-of-type {
+    border-top: 1px solid var(--border-color);
+}
+
+.app-placeholder-card strong {
+    color: var(--eldvatten-red);
+}
+
+
+/* Cards */
+
+.app-content-card {
+    background: var(--surface);
+}
+
+
+/* Tablet Layout */
+
+@media (max-width: 1100px) {
+    .app-desktop-shell {
+        grid-template-columns:
+            minmax(210px, 0.8fr)
+            minmax(0, 2.4fr);
+    }
+
+    .app-right-rail {
+        display: none;
+    }
+}

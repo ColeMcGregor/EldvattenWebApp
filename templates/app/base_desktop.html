@@ -1,0 +1,186 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {% block title %}
+            The Tavern | EldVatten
+        {% endblock %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/site.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/app_desktop.css' %}"
+    >
+</head>
+
+<body class="app-body">
+
+    <div class="app-desktop-shell">
+
+        <aside class="app-left-rail">
+
+            <div class="app-identity">
+                <a
+                    class="app-wordmark"
+                    href="{% url 'tavern' %}"
+                >
+                    EldVatten
+                </a>
+
+                <img
+                    class="app-crest"
+                    src="{% static 'images/Eldvatten_logo_black_rgb.png' %}"
+                    alt=""
+                >
+            </div>
+
+            <nav
+                class="app-navigation"
+                aria-label="EldVatten application navigation"
+            >
+                <a
+                    class="app-navigation-link
+                    {% block nav_tavern %}{% endblock %}"
+                    href="{% url 'tavern' %}"
+                >
+                    The Tavern
+                </a>
+
+                <a
+                    class="app-navigation-link
+                    {% block nav_my_eldvatten %}{% endblock %}"
+                    href="#"
+                >
+                    My EldVatten
+                </a>
+
+                <a
+                    class="app-navigation-link
+                    {% block nav_todo %}{% endblock %}"
+                    href="#"
+                >
+                    To-Do
+                </a>
+
+                <a
+                    class="app-navigation-link
+                    {% block nav_events %}{% endblock %}"
+                    href="#"
+                >
+                    Events
+                </a>
+
+                <a
+                    class="app-navigation-link
+                    {% block nav_messages %}{% endblock %}"
+                    href="{% url 'messaging:conversation_list' %}"
+                >
+                    Messages
+                </a>
+
+                <a
+                    class="app-navigation-link
+                    {% block nav_resources %}{% endblock %}"
+                    href="#"
+                >
+                    Resources
+                </a>
+
+                <a
+                    class="app-navigation-link
+                    {% block nav_directory %}{% endblock %}"
+                    href="#"
+                >
+                    Directory
+                </a>
+            </nav>
+
+            <div class="app-navigation-secondary">
+
+                <a
+                    class="app-navigation-link
+                    {% block nav_notifications %}{% endblock %}"
+                    href="{% url 'notifications:notification_list' %}"
+                >
+                    Notifications
+                </a>
+
+                <a
+                    class="app-navigation-link
+                    {% block nav_profile %}{% endblock %}"
+                    href="#"
+                >
+                    Profile
+                </a>
+
+            </div>
+
+        </aside>
+
+
+        <main class="app-main-content">
+
+            {% block app_content %}
+            {% endblock %}
+
+        </main>
+
+
+        <aside class="app-right-rail">
+
+            {% block right_rail %}
+
+                <section class="app-rail-section">
+
+                    <h2 class="app-rail-heading">
+                        Needs Attention
+                    </h2>
+
+                    <div class="app-placeholder-card">
+                        <strong>Action</strong>
+
+                        <span>
+                            Lorem ipsum dolor sit amet.
+                        </span>
+                    </div>
+
+                    <div class="app-placeholder-card">
+                        <strong>Vote</strong>
+
+                        <span>
+                            Lorem ipsum dolor sit amet.
+                        </span>
+                    </div>
+
+                    <div class="app-placeholder-card">
+                        <strong>Event</strong>
+
+                        <span>
+                            Lorem ipsum dolor sit amet.
+                        </span>
+                    </div>
+
+                </section>
+
+            {% endblock %}
+
+        </aside>
+
+    </div>
+
+</body>
+</html>

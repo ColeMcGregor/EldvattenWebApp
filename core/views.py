@@ -1,7 +1,10 @@
 import calendar
 from datetime import date
 
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+
+from .device import get_app_template
 
 
 def home(request):
@@ -53,8 +56,27 @@ def tavern(request):
     return render(request, "tavern.html")
 
 
+@login_required
+def tavern_main(request):
+    template_name = get_app_template(
+        request,
+        desktop_template=(
+            "community/tavern/tavern_main_desktop.html"
+        ),
+        mobile_template=(
+            "community/tavern/tavern_main_mobile.html"
+        ),
+    )
+
+    return render(
+        request,
+        template_name,
+    )
+
+
 def contact(request):
     return render(request, "contact.html")
+
 
 def privacy(request):
     return render(request, "privacy.html")
