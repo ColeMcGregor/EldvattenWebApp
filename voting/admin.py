@@ -33,7 +33,6 @@ def vote_values(vote):
         "quorum_numerator": vote.quorum_numerator,
         "quorum_denominator": vote.quorum_denominator,
         "requires_all_responses": vote.requires_all_responses,
-        "push_on_open": vote.push_on_open,
         "opens_at": (
             vote.opens_at.isoformat()
             if vote.opens_at
@@ -200,7 +199,6 @@ class VoteAdmin(admin.ModelAdmin):
         "approval_rule",
         "requires_quorum",
         "requires_all_responses",
-        "push_on_open",
         "opens_at",
         "closes_at",
         "created_by",
@@ -212,7 +210,6 @@ class VoteAdmin(admin.ModelAdmin):
         "approval_rule",
         "requires_quorum",
         "requires_all_responses",
-        "push_on_open",
         "opens_at",
         "closes_at",
         "created_at",
@@ -264,7 +261,6 @@ class VoteAdmin(admin.ModelAdmin):
             and obj.status != Vote.Status.DRAFT
         ):
             fields.append("is_anonymous")
-            fields.append("push_on_open")
 
         return tuple(fields)
 

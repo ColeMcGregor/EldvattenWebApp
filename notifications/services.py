@@ -8,8 +8,25 @@ from pywebpush import WebPushException, webpush
 
 from .models import (
     Notification,
+    NotificationPreference,
     PushSubscription,
 )
+
+
+def user_allows_push(
+    *,
+    user_id,
+    notification_type,
+    preferences,
+):
+    preference = preferences.get(user_id)
+
+    if preference is None:
+        return True
+
+    return preference.allows_push(
+        notification_type,
+    )
 
 
 @transaction.atomic
@@ -22,7 +39,6 @@ def create_notifications(
     source_type="",
     source_id="",
     target_url="",
-    push_requested=False,
 ):
     recipient_ids = set()
 
@@ -34,6 +50,16 @@ def create_notifications(
             continue
 
         recipient_ids.add(recipient.pk)
+
+    if not recipient_ids:
+        return []
+
+    preferences = {
+        preference.user_id: preference
+        for preference in NotificationPreference.objects.filter(
+            user_id__in=recipient_ids,
+        )
+    }
 
     notifications = [
         Notification(
@@ -48,13 +74,14 @@ def create_notifications(
                 else ""
             ),
             target_url=target_url,
-            push_requested=push_requested,
+            push_requested=user_allows_push(
+                user_id=user_id,
+                notification_type=notification_type,
+                preferences=preferences,
+            ),
         )
         for user_id in recipient_ids
     ]
-
-    if not notifications:
-        return []
 
     created_notifications = (
         Notification.objects.bulk_create(
@@ -90,6 +117,7 @@ def send_push_notification(notification):
 
     subscriptions = PushSubscription.objects.filter(
         user_id=notification.user_id,
+        enabled=True,
         active=True,
     ).filter(
         Q(paused_until__isnull=True)

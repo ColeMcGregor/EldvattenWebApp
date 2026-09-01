@@ -187,6 +187,28 @@ class ActionAdmin(admin.ModelAdmin):
             method=AuditLog.Method.MANUAL,
         )
 
+    def save_related(
+        self,
+        request,
+        form,
+        formsets,
+        change,
+    ):
+        super().save_related(
+            request,
+            form,
+            formsets,
+            change,
+        )
+
+        sync_action_assignments(
+            form.instance,
+            actor=request.user,
+            request=request,
+            source=AuditLog.Source.ADMIN,
+            method=AuditLog.Method.MANUAL,
+        )
+
     def delete_model(self, request, obj):
         old_value = action_values(obj)
 
@@ -306,8 +328,17 @@ class ActionTargetAdmin(admin.ModelAdmin):
             method=AuditLog.Method.MANUAL,
         )
 
+        sync_action_assignments(
+            obj.action,
+            actor=request.user,
+            request=request,
+            source=AuditLog.Source.ADMIN,
+            method=AuditLog.Method.MANUAL,
+        )
+
     def delete_model(self, request, obj):
         old_value = target_values(obj)
+        action = obj.action
 
         record_audit_event(
             action=AuditLog.Action.DELETE,
@@ -325,6 +356,14 @@ class ActionTargetAdmin(admin.ModelAdmin):
         super().delete_model(
             request,
             obj,
+        )
+
+        sync_action_assignments(
+            action,
+            actor=request.user,
+            request=request,
+            source=AuditLog.Source.ADMIN,
+            method=AuditLog.Method.MANUAL,
         )
 
 

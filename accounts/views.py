@@ -31,7 +31,7 @@ def register(request):
 @login_required
 def notification_setup(request):
     if request.user.push_prompt_seen:
-        return redirect("tavern")
+        return redirect("tavern_main")
 
     if request.method == "POST":
         if request.POST.get("action") == "skip":
@@ -43,7 +43,7 @@ def notification_setup(request):
                 ],
             )
 
-            return redirect("tavern")
+            return redirect("tavern_main")
 
     return render(
         request,
@@ -53,7 +53,7 @@ def notification_setup(request):
 
 def user_login(request):
     if request.user.is_authenticated:
-        return redirect("tavern")
+        return redirect("tavern_main")
 
     if request.method == "POST":
         form = LoginForm(
@@ -64,7 +64,9 @@ def user_login(request):
         if form.is_valid():
             login(request, form.get_user())
 
-            return redirect("tavern")
+            return redirect(
+                "notifications:push_login_sync"
+            )
     else:
         form = LoginForm(request=request)
 

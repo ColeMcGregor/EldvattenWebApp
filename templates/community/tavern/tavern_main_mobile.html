@@ -7,24 +7,64 @@
 
 {% block app_content %}
 
-<section class="mobile-content-card tavern-main-header">
-    <h1 class="section-heading">
-        The Tavern
-    </h1>
+<section class="mobile-post-composer">
 
-    <a
-        class="button button-primary"
-        href="#"
-    >
-        Create Post
-    </a>
+    <div class="mobile-composer-avatar">
+        {% if request.user.display_name %}
+            {{ request.user.display_name|first }}
+        {% else %}
+            {{ request.user.username|first }}
+        {% endif %}
+    </div>
+
+    <div class="mobile-composer-content">
+
+        <textarea
+            class="mobile-composer-input"
+            name="body"
+            rows="2"
+            placeholder="Share something?"
+        ></textarea>
+
+        <div class="mobile-composer-footer">
+
+            <div class="mobile-composer-tools">
+                <button
+                    class="mobile-composer-tool"
+                    type="button"
+                    aria-label="Add image"
+                >
+                    Image
+                </button>
+
+                <button
+                    class="mobile-composer-tool"
+                    type="button"
+                    aria-label="Add link"
+                >
+                    Link
+                </button>
+            </div>
+
+            <button
+                class="button button-primary mobile-composer-submit"
+                type="button"
+            >
+                Post
+            </button>
+
+        </div>
+
+    </div>
+
 </section>
 
 
-<section class="tavern-feed">
+<section class="mobile-tavern-feed">
 
-    <article class="mobile-content-card tavern-post">
-        <header class="tavern-post-header">
+    <article class="mobile-tavern-post">
+
+        <header class="mobile-tavern-post-header">
             <strong>
                 Lorem Ipsum
             </strong>
@@ -34,13 +74,13 @@
             </span>
         </header>
 
-        <div class="tavern-post-body">
+        <div class="mobile-tavern-post-body">
             <p>
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
             </p>
         </div>
 
-        <footer class="tavern-post-footer">
+        <footer class="mobile-tavern-post-footer">
             <a href="#">
                 Comment
             </a>
@@ -49,11 +89,13 @@
                 Bookmark
             </a>
         </footer>
+
     </article>
 
 
-    <article class="mobile-content-card tavern-post">
-        <header class="tavern-post-header">
+    <article class="mobile-tavern-post">
+
+        <header class="mobile-tavern-post-header">
             <strong>
                 Lorem Ipsum
             </strong>
@@ -63,13 +105,13 @@
             </span>
         </header>
 
-        <div class="tavern-post-body">
+        <div class="mobile-tavern-post-body">
             <p>
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
             </p>
         </div>
 
-        <footer class="tavern-post-footer">
+        <footer class="mobile-tavern-post-footer">
             <a href="#">
                 Comment
             </a>
@@ -78,6 +120,7 @@
                 Bookmark
             </a>
         </footer>
+
     </article>
 
 </section>

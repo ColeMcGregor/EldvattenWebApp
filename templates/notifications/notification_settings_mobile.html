@@ -1,0 +1,147 @@
+{% extends "app/base_mobile.html" %}
+
+{% load static %}
+
+{% block title %}
+    Notification Settings | EldVatten
+{% endblock %}
+
+{% block mobile_primary_tabs %}
+{% endblock %}
+
+{% block app_content %}
+
+<section class="notification-settings">
+
+    <header class="notification-settings-header">
+
+        <h1>
+            Notification Settings
+        </h1>
+
+        <p>
+            Choose which EldVatten updates can send
+            push notifications.
+        </p>
+
+    </header>
+
+
+    {% if messages %}
+
+        <div class="notification-settings-messages">
+
+            {% for message in messages %}
+
+                <p>
+                    {{ message }}
+                </p>
+
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+
+    <section class="notification-settings-section">
+
+        <h2>
+            Push Preferences
+        </h2>
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            <div class="notification-setting-row">
+                {{ form.push_enabled }}
+                {{ form.push_enabled.label_tag }}
+            </div>
+
+            <h3>
+                Categories
+            </h3>
+
+            <div class="notification-setting-row">
+                {{ form.message_push }}
+                {{ form.message_push.label_tag }}
+            </div>
+
+            <div class="notification-setting-row">
+                {{ form.action_push }}
+                {{ form.action_push.label_tag }}
+            </div>
+
+            <div class="notification-setting-row">
+                {{ form.vote_push }}
+                {{ form.vote_push.label_tag }}
+            </div>
+
+            <div class="notification-setting-row">
+                {{ form.event_push }}
+                {{ form.event_push.label_tag }}
+            </div>
+
+            <div class="notification-setting-row">
+                {{ form.community_push }}
+                {{ form.community_push.label_tag }}
+            </div>
+
+            <div class="notification-setting-row">
+                {{ form.account_push }}
+                {{ form.account_push.label_tag }}
+            </div>
+
+            <div class="notification-setting-row">
+                {{ form.system_push }}
+                {{ form.system_push.label_tag }}
+            </div>
+
+            <button type="submit">
+                Save notification settings
+            </button>
+
+        </form>
+
+    </section>
+
+
+    <section class="notification-settings-section">
+
+        <h2>
+            This Device
+        </h2>
+
+        <p
+            id="device-push-status"
+            aria-live="polite"
+        >
+            Checking notification status...
+        </p>
+
+        <button
+            id="enable-device-push-button"
+            type="button"
+            hidden
+        >
+            Enable notifications on this device
+        </button>
+
+        <button
+            id="disable-device-push-button"
+            type="button"
+            hidden
+        >
+            Disable notifications on this device
+        </button>
+
+    </section>
+
+</section>
+
+<script
+    src="{% static 'js/notifications/push-settings.js' %}"
+></script>
+
+{% endblock %}

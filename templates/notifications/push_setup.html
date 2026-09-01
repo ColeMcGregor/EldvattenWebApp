@@ -7,7 +7,11 @@
 {% endblock %}
 
 {% block content %}
-<section class="push-setup">
+<section
+    id="push-setup"
+    class="push-setup"
+    data-redirect-url="{% url 'tavern_main' %}"
+>
     <div class="push-setup__content">
         <h1>Stay Connected</h1>
 

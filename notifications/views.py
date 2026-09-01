@@ -13,8 +13,10 @@ from django.shortcuts import (
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
+from .forms import NotificationPreferenceForm
 from .models import (
     Notification,
+    NotificationPreference,
     PushSubscription,
 )
 from .services import (
@@ -42,6 +44,71 @@ def notification_list(request):
         {
             "notifications": notifications,
             "unread_count": unread_count,
+        },
+    )
+
+
+@login_required
+def notification_settings(request):
+    preference, _ = (
+        NotificationPreference.objects.get_or_create(
+            user=request.user,
+        )
+    )
+
+    if request.method == "POST":
+        form = NotificationPreferenceForm(
+            request.POST,
+            instance=preference,
+        )
+
+        if form.is_valid():
+            form.save()
+
+            messages.success(
+                request,
+                "Notification settings saved.",
+            )
+
+            return redirect(
+                "notifications:notification_settings",
+            )
+    else:
+        form = NotificationPreferenceForm(
+            instance=preference,
+        )
+
+    user_agent = request.META.get(
+        "HTTP_USER_AGENT",
+        "",
+    ).lower()
+
+    is_mobile = any(
+        mobile_term in user_agent
+        for mobile_term in [
+            "android",
+            "iphone",
+            "ipod",
+            "mobile",
+        ]
+    )
+
+    if is_mobile:
+        template_name = (
+            "notifications/"
+            "notification_settings_mobile.html"
+        )
+    else:
+        template_name = (
+            "notifications/"
+            "notification_settings_desktop.html"
+        )
+
+    return render(
+        request,
+        template_name,
+        {
+            "form": form,
         },
     )
 
@@ -142,6 +209,15 @@ def notification_mark_all_read(request):
 
 @login_required
 @require_GET
+def push_login_sync(request):
+    return render(
+        request,
+        "notifications/push_login_sync.html",
+    )
+
+
+@login_required
+@require_GET
 def push_public_key(request):
     return JsonResponse(
         {
@@ -185,19 +261,21 @@ def push_subscribe(request):
         return JsonResponse(
             {
                 "success": False,
-                "error": "Push subscription data is incomplete.",
+                "error":
+                    "Push subscription data is incomplete.",
             },
             status=400,
         )
 
     subscription, created = (
         PushSubscription.objects.update_or_create(
+            user=request.user,
             endpoint=endpoint,
             defaults={
-                "user": request.user,
                 "p256dh_key": p256dh_key,
                 "auth_key": auth_key,
                 "device_name": device_name,
+                "enabled": True,
                 "active": True,
                 "paused_until": None,
             },
@@ -273,9 +351,69 @@ def push_status(request):
         {
             "success": True,
             "registered": True,
+            "enabled": subscription.enabled,
             "active": subscription.active,
             "paused": is_paused,
             "paused_until": subscription.paused_until,
+        },
+    )
+
+
+@login_required
+@require_POST
+def push_set_enabled(request):
+    try:
+        data = json.loads(
+            request.body,
+        )
+    except json.JSONDecodeError:
+        return JsonResponse(
+            {
+                "success": False,
+                "error": "Invalid request data.",
+            },
+            status=400,
+        )
+
+    endpoint = data.get("endpoint")
+    enabled = data.get("enabled")
+
+    if not endpoint or not isinstance(enabled, bool):
+        return JsonResponse(
+            {
+                "success": False,
+                "error":
+                    "Endpoint and enabled state are required.",
+            },
+            status=400,
+        )
+
+    subscription = get_object_or_404(
+        PushSubscription,
+        user=request.user,
+        endpoint=endpoint,
+    )
+
+    subscription.enabled = enabled
+
+    if enabled:
+        subscription.active = True
+    else:
+        subscription.active = False
+
+    subscription.save(
+        update_fields=[
+            "enabled",
+            "active",
+            "updated_at",
+        ],
+    )
+
+    return JsonResponse(
+        {
+            "success": True,
+            "enabled": subscription.enabled,
+            "active": subscription.active,
         },
     )
 
@@ -303,7 +441,8 @@ def push_set_active(request):
         return JsonResponse(
             {
                 "success": False,
-                "error": "Endpoint and active state are required.",
+                "error":
+                    "Endpoint and active state are required.",
             },
             status=400,
         )
@@ -313,6 +452,16 @@ def push_set_active(request):
         user=request.user,
         endpoint=endpoint,
     )
+
+    if active and not subscription.enabled:
+        return JsonResponse(
+            {
+                "success": False,
+                "error":
+                    "Push notifications are disabled on this device.",
+            },
+            status=409,
+        )
 
     subscription.active = active
 
@@ -354,7 +503,8 @@ def push_pause(request):
         return JsonResponse(
             {
                 "success": False,
-                "error": "Push subscription endpoint is required.",
+                "error":
+                    "Push subscription endpoint is required.",
             },
             status=400,
         )
@@ -363,7 +513,8 @@ def push_pause(request):
         return JsonResponse(
             {
                 "success": False,
-                "error": "Pause must be between 1 and 24 hours.",
+                "error":
+                    "Pause must be between 1 and 24 hours.",
             },
             status=400,
         )
@@ -418,7 +569,8 @@ def push_reset_pause(request):
         return JsonResponse(
             {
                 "success": False,
-                "error": "Push subscription endpoint is required.",
+                "error":
+                    "Push subscription endpoint is required.",
             },
             status=400,
         )

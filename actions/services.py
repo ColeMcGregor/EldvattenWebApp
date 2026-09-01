@@ -1,7 +1,10 @@
+from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import AccountStatus, User
 from audit.services import record_audit_event
+from notifications.models import Notification
+from notifications.services import create_notifications
 from organization.models import (
     CitizenshipRecord,
     GovernanceMembership,
@@ -284,18 +287,27 @@ def sync_action_assignments(
                 actor=actor,
                 request=request,
                 old_value=None,
-                new_value=assignment_audit_values(assignment),
+                new_value=assignment_audit_values(
+                    assignment
+                ),
                 effective_at=assignment.assigned_at,
                 source=source,
                 method=method,
-                notes="Action assignment created from current action targets.",
+                notes=(
+                    "Action assignment created from "
+                    "current action targets."
+                ),
             )
 
-            activated_assignments.append(assignment)
+            activated_assignments.append(
+                assignment
+            )
             continue
 
         if not assignment.is_active:
-            old_value = assignment_audit_values(assignment)
+            old_value = assignment_audit_values(
+                assignment
+            )
 
             assignment.is_active = True
             assignment.unassigned_at = None
@@ -316,23 +328,34 @@ def sync_action_assignments(
                 actor=actor,
                 request=request,
                 old_value=old_value,
-                new_value=assignment_audit_values(assignment),
+                new_value=assignment_audit_values(
+                    assignment
+                ),
                 effective_at=now,
                 source=source,
                 method=method,
-                notes="Action assignment reactivated from current action targets.",
+                notes=(
+                    "Action assignment reactivated "
+                    "from current action targets."
+                ),
             )
 
-            activated_assignments.append(assignment)
+            activated_assignments.append(
+                assignment
+            )
 
-    for user_id, assignment in existing_assignments.items():
+    for user_id, assignment in (
+        existing_assignments.items()
+    ):
         if user_id in resolved_user_ids:
             continue
 
         if not assignment.is_active:
             continue
 
-        old_value = assignment_audit_values(assignment)
+        old_value = assignment_audit_values(
+            assignment
+        )
 
         assignment.is_active = False
         assignment.unassigned_at = now
@@ -353,13 +376,71 @@ def sync_action_assignments(
             actor=actor,
             request=request,
             old_value=old_value,
-            new_value=assignment_audit_values(assignment),
+            new_value=assignment_audit_values(
+                assignment
+            ),
             effective_at=assignment.unassigned_at,
             source=source,
             method=method,
-            notes="Action assignment deactivated because the user no longer matches the current action targets.",
+            notes=(
+                "Action assignment deactivated "
+                "because the user no longer matches "
+                "the current action targets."
+            ),
         )
 
-        deactivated_assignments.append(assignment)
+        deactivated_assignments.append(
+            assignment
+        )
 
-    return activated_assignments, deactivated_assignments
+    if activated_assignments:
+        create_notifications(
+            recipients=[
+                assignment.user
+                for assignment in activated_assignments
+            ],
+            notification_type=(
+                Notification.Type.ACTION
+            ),
+            title=f"New action: {action.title}",
+            message=(
+                "You have a new EldVatten action."
+            ),
+            source_type="Action",
+            source_id=action.id,
+            target_url=reverse(
+                "actions:detail",
+                args=[
+                    action.id,
+                ],
+            ),
+        )
+
+    if deactivated_assignments:
+        create_notifications(
+            recipients=[
+                assignment.user
+                for assignment in deactivated_assignments
+            ],
+            notification_type=(
+                Notification.Type.ACTION
+            ),
+            title=(
+                "Action assignment removed: "
+                f"{action.title}"
+            ),
+            message=(
+                "This action is no longer assigned "
+                "to you."
+            ),
+            source_type="Action",
+            source_id=action.id,
+            target_url=reverse(
+                "actions:list",
+            ),
+        )
+
+    return (
+        activated_assignments,
+        deactivated_assignments,
+    )

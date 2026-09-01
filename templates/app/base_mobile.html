@@ -23,7 +23,7 @@
 
     <link
         rel="stylesheet"
-        href="{% static 'css/app_mobile.css' %}"
+        href="{% static 'css/app_mobile.css' %}?v=2"
     >
 </head>
 
@@ -34,15 +34,13 @@
         <a
             class="mobile-profile-link"
             href="#"
-            aria-label="Profile"
+            aria-label="EldVatten menu"
         >
-            <div class="mobile-profile-placeholder">
-                {% if request.user.display_name %}
-                    {{ request.user.display_name|first }}
-                {% else %}
-                    {{ request.user.username|first }}
-                {% endif %}
-            </div>
+            <img
+                class="mobile-app-logo"
+                src="{% static 'images/Eldvatten_logo_black_rgb.png' %}"
+                alt="EldVatten"
+            >
         </a>
 
         <a

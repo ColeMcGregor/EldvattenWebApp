@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}
+    Signing In
+{% endblock %}
+
+{% block content %}
+<section
+    id="push-login-sync"
+    data-redirect-url="{% url 'tavern_main' %}"
+>
+    <p>
+        Signing in...
+    </p>
+</section>
+
+<script src="{% static 'js/notifications/push-registration.js' %}"></script>
+{% endblock %}

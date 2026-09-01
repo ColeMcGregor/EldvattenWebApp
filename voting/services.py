@@ -307,7 +307,6 @@ def open_vote(vote):
                 vote.id,
             ],
         ),
-        push_requested=vote.push_on_open,
     )
 
     return vote

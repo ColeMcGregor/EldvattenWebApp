@@ -64,10 +64,6 @@ class Vote(models.Model):
         default=False,
     )
 
-    push_on_open = models.BooleanField(
-        default=False,
-    )
-
     opens_at = models.DateTimeField(
         blank=True,
         null=True,

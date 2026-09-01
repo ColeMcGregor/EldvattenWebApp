@@ -32,24 +32,25 @@
 
 /* Profile */
 
+/* Application Logo */
+
+/* Application Logo */
+
 .mobile-profile-link {
     justify-self: start;
-}
-
-.mobile-profile-placeholder {
-    width: 42px;
-    height: 42px;
 
     display: flex;
     align-items: center;
     justify-content: center;
+}
 
-    background: var(--surface-muted);
+.mobile-app-logo {
+    width: 42px;
+    height: 42px;
 
-    border: 1px solid var(--border-color);
-    border-radius: 50%;
+    object-fit: contain;
 
-    font-weight: 700;
+    border-radius: 6px;
 }
 
 
@@ -113,21 +114,167 @@
 .mobile-app-content {
     width: 100%;
 
-    padding: var(--space-small);
+    padding: 0;
+
+    background: var(--surface);
 }
 
 
-/* Cards */
+/* Post Composer */
 
-.mobile-content-card {
-    padding: var(--space-medium);
+.mobile-post-composer {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+
+    gap: 0.75rem;
+
+    padding: 1rem;
 
     background: var(--surface);
 
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-medium);
+    border-bottom: 1px solid var(--border-color);
+}
 
-    box-shadow: var(--shadow-light);
+.mobile-composer-avatar {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--surface-muted);
+
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+
+    font-weight: 700;
+}
+
+.mobile-composer-content {
+    min-width: 0;
+}
+
+.mobile-composer-input {
+    width: 100%;
+    min-height: 64px;
+
+    padding: 0.4rem 0;
+
+    resize: vertical;
+
+    background: transparent;
+
+    border: 0;
+    outline: 0;
+
+    color: var(--text-main);
+
+    font: inherit;
+    font-size: 1.05rem;
+    line-height: 1.4;
+}
+
+.mobile-composer-input::placeholder {
+    color: var(--text-muted);
+}
+
+.mobile-composer-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 0.75rem;
+
+    padding-top: 0.55rem;
+
+    border-top: 1px solid var(--border-color);
+}
+
+.mobile-composer-tools {
+    display: flex;
+    align-items: center;
+
+    gap: 0.2rem;
+}
+
+.mobile-composer-tool {
+    padding: 0.3rem 0.4rem;
+
+    background: transparent;
+
+    border: 0;
+
+    color: var(--eldvatten-red);
+
+    font: inherit;
+    font-size: 0.85rem;
+
+    cursor: pointer;
+}
+
+.mobile-composer-tool:hover {
+    text-decoration: underline;
+}
+
+.mobile-composer-submit {
+    flex: 0 0 auto;
+
+    padding: 0.55rem 0.9rem;
+}
+
+
+/* Tavern Feed */
+
+.mobile-tavern-feed {
+    width: 100%;
+}
+
+.mobile-tavern-post {
+    padding: 1rem;
+
+    background: var(--surface);
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.mobile-tavern-post-header {
+    display: flex;
+    align-items: baseline;
+
+    gap: 0.35rem;
+
+    margin-bottom: 0.6rem;
+}
+
+.mobile-tavern-post-header strong {
+    font-size: 1rem;
+}
+
+.mobile-tavern-post-header span {
+    color: var(--text-muted);
+
+    font-size: 0.85rem;
+}
+
+.mobile-tavern-post-body p {
+    margin: 0 0 0.9rem;
+}
+
+.mobile-tavern-post-footer {
+    display: flex;
+
+    gap: 1.25rem;
+}
+
+.mobile-tavern-post-footer a {
+    color: var(--text-muted);
+
+    font-size: 0.85rem;
+}
+
+.mobile-tavern-post-footer a:hover {
+    color: var(--eldvatten-red);
 }
 
 
@@ -178,5 +325,8 @@
         max-width: 680px;
 
         margin: 0 auto;
+
+        border-right: 1px solid var(--border-color);
+        border-left: 1px solid var(--border-color);
     }
 }

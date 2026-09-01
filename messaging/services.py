@@ -128,7 +128,6 @@ def send_conversation_message(
                     conversation.id,
                 ],
             ),
-            push_requested=True,
         )
 
     conversation.save()

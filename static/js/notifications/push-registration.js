@@ -4,6 +4,12 @@ const enablePushButton =
 const pushStatus =
     document.getElementById("push-status");
 
+const pushSetup =
+    document.getElementById("push-setup");
+
+const pushLoginSync =
+    document.getElementById("push-login-sync");
+
 
 function setPushStatus(message) {
     if (!pushStatus) {
@@ -33,7 +39,9 @@ function getCookie(name) {
 
         if (trimmedCookie.startsWith(`${name}=`)) {
             return decodeURIComponent(
-                trimmedCookie.substring(name.length + 1)
+                trimmedCookie.substring(
+                    name.length + 1
+                )
             );
         }
     }
@@ -101,11 +109,21 @@ async function registerServiceWorker() {
 }
 
 
+async function getExistingPushSubscription(
+    registration
+) {
+    return registration.pushManager
+        .getSubscription();
+}
+
+
 async function getOrCreatePushSubscription(
     registration
 ) {
     const existingSubscription =
-        await registration.pushManager.getSubscription();
+        await getExistingPushSubscription(
+            registration
+        );
 
     if (existingSubscription) {
         return existingSubscription;
@@ -136,7 +154,8 @@ async function savePushSubscription(
             method: "POST",
             credentials: "same-origin",
             headers: {
-                "Content-Type": "application/json",
+                "Content-Type":
+                    "application/json",
                 "X-CSRFToken":
                     getCookie("csrftoken"),
             },
@@ -158,6 +177,140 @@ async function savePushSubscription(
     }
 
     return response.json();
+}
+
+
+async function getPushSubscriptionStatus(
+    subscription
+) {
+    const response = await fetch(
+        "/notifications/push/status/",
+        {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type":
+                    "application/json",
+                "X-CSRFToken":
+                    getCookie("csrftoken"),
+            },
+            body: JSON.stringify({
+                endpoint:
+                    subscription.endpoint,
+            }),
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(
+            "Could not get push subscription status."
+        );
+    }
+
+    return response.json();
+}
+
+
+async function setPushSubscriptionActive(
+    subscription,
+    active
+) {
+    const response = await fetch(
+        "/notifications/push/active/",
+        {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type":
+                    "application/json",
+                "X-CSRFToken":
+                    getCookie("csrftoken"),
+            },
+            body: JSON.stringify({
+                endpoint:
+                    subscription.endpoint,
+                active:
+                    active,
+            }),
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(
+            "Could not change push subscription status."
+        );
+    }
+
+    return response.json();
+}
+
+
+async function syncExistingPushSubscription() {
+    if (!browserSupportsPush()) {
+        return;
+    }
+
+    if (Notification.permission !== "granted") {
+        return;
+    }
+
+    const registration =
+        await registerServiceWorker();
+
+    await navigator.serviceWorker.ready;
+
+    const subscription =
+        await getExistingPushSubscription(
+            registration
+        );
+
+    if (!subscription) {
+        return;
+    }
+
+    const status =
+        await getPushSubscriptionStatus(
+            subscription
+        );
+
+    if (!status.registered) {
+        return;
+    }
+
+    if (!status.enabled) {
+        return;
+    }
+
+    if (!status.active) {
+        await setPushSubscriptionActive(
+            subscription,
+            true
+        );
+    }
+}
+
+
+function getSetupRedirectUrl() {
+    if (!pushSetup) {
+        return "/tavern/main/";
+    }
+
+    return (
+        pushSetup.dataset.redirectUrl
+        || "/tavern/main/"
+    );
+}
+
+
+function getLoginRedirectUrl() {
+    if (!pushLoginSync) {
+        return "/tavern/main/";
+    }
+
+    return (
+        pushLoginSync.dataset.redirectUrl
+        || "/tavern/main/"
+    );
 }
 
 
@@ -246,7 +399,7 @@ async function requestPushPermission() {
         );
 
         window.location.href =
-            "/tavern/";
+            getSetupRedirectUrl();
     } catch (error) {
         console.error(
             "Push notification setup failed.",
@@ -262,6 +415,26 @@ async function requestPushPermission() {
 }
 
 
+async function runLoginPushSync() {
+    if (!pushLoginSync) {
+        return;
+    }
+
+    try {
+        await syncExistingPushSubscription();
+    } catch (error) {
+        console.error(
+            "Push notification login sync failed.",
+            error
+        );
+    }
+
+    window.location.replace(
+        getLoginRedirectUrl()
+    );
+}
+
+
 if (enablePushButton) {
     enablePushButton.addEventListener(
         "click",
@@ -271,3 +444,4 @@ if (enablePushButton) {
 
 
 updateInitialPushState();
+runLoginPushSync();
