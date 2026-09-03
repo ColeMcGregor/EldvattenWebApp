@@ -357,3 +357,136 @@
         display: none;
     }
 }
+
+/* My Eldvatten */
+
+.my-eldvatten-header {
+    display: flex;
+    align-items: center;
+
+    padding: 1rem 1.5rem;
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.my-eldvatten-header .section-heading {
+    margin: 0;
+
+    font-size: 2.2rem;
+    line-height: 1;
+}
+
+.my-eldvatten-layout {
+    display: grid;
+    grid-template-columns:
+        minmax(170px, 0.7fr)
+        minmax(0, 2.3fr);
+
+    min-height: calc(100vh - 73px);
+}
+
+.my-eldvatten-navigation {
+    display: flex;
+    flex-direction: column;
+
+    gap: 0.15rem;
+
+    padding: 1rem;
+
+    border-right: 1px solid var(--border-color);
+}
+
+.my-eldvatten-navigation-link {
+    display: block;
+
+    padding: 0.6rem 0.75rem;
+
+    border-radius: var(--radius-small);
+}
+
+.my-eldvatten-navigation-link:hover,
+.my-eldvatten-navigation-link.active {
+    background: var(--surface-muted);
+
+    color: var(--eldvatten-red);
+}
+
+.my-eldvatten-navigation-link.active {
+    font-weight: 700;
+}
+
+.my-eldvatten-content {
+    min-width: 0;
+}
+
+.my-eldvatten-section-header {
+    padding: 1rem 1.5rem;
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.my-eldvatten-section-header h2 {
+    margin: 0;
+
+    font-size: 1.5rem;
+}
+
+.my-eldvatten-section-body {
+    padding: 1.5rem;
+}
+
+.my-eldvatten-action-link {
+    color: var(--eldvatten-red);
+}
+
+.my-eldvatten-action-link:hover {
+    text-decoration: underline;
+}
+
+
+/* My Profile */
+
+.my-profile-details {
+    display: grid;
+
+    gap: 1rem;
+
+    margin: 0;
+}
+
+.my-profile-details div {
+    display: grid;
+
+    gap: 0.2rem;
+}
+
+.my-profile-details dt {
+    font-weight: 700;
+}
+
+.my-profile-details dd {
+    margin: 0;
+}
+
+
+/* Resources */
+
+.my-resource-list {
+    display: grid;
+}
+
+.my-resource-link {
+    display: block;
+
+    padding: 0.9rem 0;
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.my-resource-link:first-child {
+    border-top: 1px solid var(--border-color);
+}
+
+.my-resource-link:hover {
+    color: var(--eldvatten-red);
+}

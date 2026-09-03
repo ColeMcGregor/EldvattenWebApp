@@ -2,9 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
     <title>{{ event.title }}</title>
 </head>
+
 <body>
     <main>
         <p>
@@ -15,28 +21,61 @@
 
         <h1>{{ event.title }}</h1>
 
+        {% if event.status == "CANCELLED" %}
+            <section>
+                <h2>Cancelled</h2>
+
+                <p>
+                    This event has been cancelled.
+                </p>
+            </section>
+        {% endif %}
+
         <p>
-            {{ event.start_at }} to {{ event.end_at }}
+            Status:
+            {{ event.get_status_display }}
+        </p>
+
+        <p>
+            {{ event.start_at }}
+            to
+            {{ event.end_at }}
         </p>
 
         {% if event.location %}
             <p>
-                Location: {{ event.location }}
+                Location:
+                {{ event.location }}
             </p>
         {% endif %}
 
         <p>
-            Organizer: {{ event.organizer }}
+            Organizer:
+            {{ event.organizer }}
         </p>
 
         <p>
-            Visibility: {{ event.get_visibility_display }}
+            Visibility:
+            {{ event.get_visibility_display }}
         </p>
 
         {% if event.description %}
             <section>
                 <h2>Description</h2>
-                <p>{{ event.description|linebreaksbr }}</p>
+
+                <p>
+                    {{ event.description|linebreaksbr }}
+                </p>
+            </section>
+        {% endif %}
+
+        {% if is_invited %}
+            <section>
+                <h2>Invitation</h2>
+
+                <p>
+                    You are invited to this event.
+                </p>
             </section>
         {% endif %}
 
@@ -72,7 +111,9 @@
                         {{ participation.get_rsvp_status_display }}
                     </p>
                 {% else %}
-                    <p>You have not responded yet.</p>
+                    <p>
+                        You have not responded yet.
+                    </p>
                 {% endif %}
 
                 <form
@@ -81,13 +122,17 @@
                 >
                     {% csrf_token %}
 
-                    {{ rsvp_form.rsvp_status.errors }}
+                    {{ rsvp_form.non_field_errors }}
 
-                    <label for="{{ rsvp_form.rsvp_status.id_for_label }}">
-                        RSVP
-                    </label>
+                    <div>
+                        {{ rsvp_form.rsvp_status.errors }}
 
-                    {{ rsvp_form.rsvp_status }}
+                        <label for="{{ rsvp_form.rsvp_status.id_for_label }}">
+                            RSVP
+                        </label>
+
+                        {{ rsvp_form.rsvp_status }}
+                    </div>
 
                     <button type="submit">
                         Save RSVP
@@ -148,6 +193,7 @@
 
                             <p>
                                 RSVP:
+
                                 {% if event_participation.rsvp_status %}
                                     {{ event_participation.get_rsvp_status_display }}
                                 {% else %}
@@ -168,6 +214,7 @@
 
                                 <label>
                                     Attendance
+
                                     <select name="attendance_status">
                                         <option
                                             value="UNKNOWN"
@@ -204,7 +251,9 @@
                             </form>
                         </li>
                     {% empty %}
-                        <li>No participation records exist.</li>
+                        <li>
+                            No participation records exist.
+                        </li>
                     {% endfor %}
                 </ul>
             </section>

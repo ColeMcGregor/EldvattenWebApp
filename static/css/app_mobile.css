@@ -330,3 +330,110 @@
         border-left: 1px solid var(--border-color);
     }
 }
+
+/* My Eldvatten */
+
+.mobile-my-eldvatten-header {
+    padding: 1rem;
+
+    background: var(--surface);
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.mobile-my-eldvatten-header h1 {
+    margin: 0 0 1rem;
+
+    font-size: 1.8rem;
+}
+
+.mobile-my-eldvatten-label {
+    display: block;
+
+    margin-bottom: 0.35rem;
+
+    font-weight: 700;
+}
+
+.mobile-my-eldvatten-select {
+    width: 100%;
+
+    padding: 0.7rem;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+
+    color: var(--text-main);
+
+    font: inherit;
+}
+
+.mobile-my-eldvatten-content {
+    width: 100%;
+}
+
+.my-eldvatten-section-header {
+    padding: 1rem;
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.my-eldvatten-section-header h2 {
+    margin: 0;
+
+    font-size: 1.35rem;
+}
+
+.my-eldvatten-section-body {
+    padding: 1rem;
+}
+
+.my-eldvatten-action-link {
+    color: var(--eldvatten-red);
+}
+
+
+/* My Profile */
+
+.my-profile-details {
+    display: grid;
+
+    gap: 1rem;
+
+    margin: 0;
+}
+
+.my-profile-details div {
+    display: grid;
+
+    gap: 0.2rem;
+}
+
+.my-profile-details dt {
+    font-weight: 700;
+}
+
+.my-profile-details dd {
+    margin: 0;
+}
+
+
+/* Resources */
+
+.my-resource-list {
+    display: grid;
+}
+
+.my-resource-link {
+    display: block;
+
+    padding: 0.9rem 0;
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.my-resource-link:first-child {
+    border-top: 1px solid var(--border-color);
+}

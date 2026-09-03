@@ -33,8 +33,8 @@
 
         <a
             class="mobile-profile-link"
-            href="#"
-            aria-label="EldVatten menu"
+            href="{% url 'my_eldvatten' %}"
+            aria-label="My Eldvatten"
         >
             <img
                 class="mobile-app-logo"
@@ -78,7 +78,7 @@
             <a
                 class="mobile-primary-tab
                 {% block mobile_tab_todo %}{% endblock %}"
-                href="#"
+                href="{% url 'my_eldvatten' %}?section=todo"
             >
                 To-Do
             </a>
@@ -119,7 +119,7 @@
         <a
             class="mobile-bottom-link
             {% block mobile_nav_todo %}{% endblock %}"
-            href="#"
+            href="{% url 'my_eldvatten' %}?section=todo"
         >
             To-Do
         </a>

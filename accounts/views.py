@@ -6,6 +6,31 @@ from django.views.decorators.http import require_POST
 from .forms import LoginForm, RegistrationForm
 
 
+MY_ELDVATTEN_SECTIONS = (
+    "profile",
+    "todo",
+    "notifications",
+    "settings",
+)
+
+
+def is_mobile_request(request):
+    user_agent = request.META.get(
+        "HTTP_USER_AGENT",
+        "",
+    ).lower()
+
+    return any(
+        mobile_term in user_agent
+        for mobile_term in [
+            "android",
+            "iphone",
+            "ipod",
+            "mobile",
+        ]
+    )
+
+
 def register(request):
     if request.user.is_authenticated:
         return redirect("home")
@@ -48,6 +73,36 @@ def notification_setup(request):
     return render(
         request,
         "notifications/push_setup.html",
+    )
+
+
+@login_required
+def my_eldvatten(request):
+    active_section = request.GET.get(
+        "section",
+        "profile",
+    )
+
+    if active_section not in MY_ELDVATTEN_SECTIONS:
+        active_section = "profile"
+
+    context = {
+        "active_section": active_section,
+    }
+
+    if is_mobile_request(request):
+        template_name = (
+            "accounts/my_eldvatten_mobile.html"
+        )
+    else:
+        template_name = (
+            "accounts/my_eldvatten_desktop.html"
+        )
+
+    return render(
+        request,
+        template_name,
+        context,
     )
 
 

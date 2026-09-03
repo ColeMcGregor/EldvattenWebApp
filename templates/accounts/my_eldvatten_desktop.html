@@ -1,0 +1,84 @@
+{% extends "app/base_desktop.html" %}
+
+{% block title %}
+    My Eldvatten | EldVatten
+{% endblock %}
+
+{% block nav_my_eldvatten %}
+    active
+{% endblock %}
+
+{% block app_content %}
+
+<section class="my-eldvatten-header">
+    <h1 class="section-heading">
+        My Eldvatten
+    </h1>
+</section>
+
+
+<div class="my-eldvatten-layout">
+
+    <nav
+        class="my-eldvatten-navigation"
+        aria-label="My Eldvatten sections"
+    >
+        <a
+            class="my-eldvatten-navigation-link
+            {% if active_section == 'profile' %}active{% endif %}"
+            href="{% url 'my_eldvatten' %}?section=profile"
+        >
+            My Profile
+        </a>
+
+        <a
+            class="my-eldvatten-navigation-link
+            {% if active_section == 'todo' %}active{% endif %}"
+            href="{% url 'my_eldvatten' %}?section=todo"
+        >
+            To-Do
+        </a>
+
+        <a
+            class="my-eldvatten-navigation-link
+            {% if active_section == 'notifications' %}active{% endif %}"
+            href="{% url 'my_eldvatten' %}?section=notifications"
+        >
+            Notifications
+        </a>
+
+        <a
+            class="my-eldvatten-navigation-link
+            {% if active_section == 'settings' %}active{% endif %}"
+            href="{% url 'my_eldvatten' %}?section=settings"
+        >
+            Settings
+        </a>
+    </nav>
+
+
+    <section class="my-eldvatten-content">
+
+        {% if active_section == "profile" %}
+
+            {% include "accounts/my_eldvatten/profile.html" %}
+
+        {% elif active_section == "todo" %}
+
+            {% include "accounts/my_eldvatten/todo.html" %}
+
+        {% elif active_section == "notifications" %}
+
+            {% include "accounts/my_eldvatten/notifications.html" %}
+
+        {% elif active_section == "settings" %}
+
+            {% include "accounts/my_eldvatten/settings.html" %}
+
+        {% endif %}
+
+    </section>
+
+</div>
+
+{% endblock %}

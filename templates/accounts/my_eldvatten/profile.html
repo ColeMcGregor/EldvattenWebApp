@@ -1,0 +1,41 @@
+<section class="my-eldvatten-section">
+
+    <header class="my-eldvatten-section-header">
+        <h2>
+            My Profile
+        </h2>
+    </header>
+
+    <div class="my-eldvatten-section-body">
+
+        <dl class="my-profile-details">
+
+            <div>
+                <dt>
+                    Display Name
+                </dt>
+
+                <dd>
+                    {% if request.user.display_name %}
+                        {{ request.user.display_name }}
+                    {% else %}
+                        Lorem ipsum
+                    {% endif %}
+                </dd>
+            </div>
+
+            <div>
+                <dt>
+                    Username
+                </dt>
+
+                <dd>
+                    {{ request.user.username }}
+                </dd>
+            </div>
+
+        </dl>
+
+    </div>
+
+</section>

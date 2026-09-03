@@ -2,9 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
     <title>{{ page_title }}</title>
 </head>
+
 <body>
     <main>
         <h1>{{ page_title }}</h1>
@@ -14,65 +20,399 @@
 
             {{ form.non_field_errors }}
 
-            <div>
-                {{ form.title.errors }}
+            <section>
+                <h2>Event Details</h2>
 
-                <label for="{{ form.title.id_for_label }}">
-                    Title
-                </label>
+                <div>
+                    {{ form.title.errors }}
 
-                {{ form.title }}
-            </div>
+                    <label for="{{ form.title.id_for_label }}">
+                        Title
+                    </label>
 
-            <div>
-                {{ form.description.errors }}
+                    {{ form.title }}
+                </div>
 
-                <label for="{{ form.description.id_for_label }}">
-                    Description
-                </label>
+                <div>
+                    {{ form.description.errors }}
 
-                {{ form.description }}
-            </div>
+                    <label for="{{ form.description.id_for_label }}">
+                        Description
+                    </label>
 
-            <div>
-                {{ form.start_at.errors }}
+                    {{ form.description }}
+                </div>
 
-                <label for="{{ form.start_at.id_for_label }}">
-                    Start
-                </label>
+                <div>
+                    {{ form.start_at.errors }}
 
-                {{ form.start_at }}
-            </div>
+                    <label for="{{ form.start_at.id_for_label }}">
+                        Start
+                    </label>
 
-            <div>
-                {{ form.end_at.errors }}
+                    {{ form.start_at }}
+                </div>
 
-                <label for="{{ form.end_at.id_for_label }}">
-                    End
-                </label>
+                <div>
+                    {{ form.end_at.errors }}
 
-                {{ form.end_at }}
-            </div>
+                    <label for="{{ form.end_at.id_for_label }}">
+                        End
+                    </label>
 
-            <div>
-                {{ form.location.errors }}
+                    {{ form.end_at }}
+                </div>
 
-                <label for="{{ form.location.id_for_label }}">
-                    Location
-                </label>
+                <div>
+                    {{ form.location.errors }}
 
-                {{ form.location }}
-            </div>
+                    <label for="{{ form.location.id_for_label }}">
+                        Location
+                    </label>
 
-            <div>
-                {{ form.visibility.errors }}
+                    {{ form.location }}
+                </div>
 
-                <label for="{{ form.visibility.id_for_label }}">
-                    Visibility
-                </label>
+                {% if form.status %}
+                    <div>
+                        {{ form.status.errors }}
 
-                {{ form.visibility }}
-            </div>
+                        <label for="{{ form.status.id_for_label }}">
+                            Status
+                        </label>
+
+                        {{ form.status }}
+                    </div>
+                {% endif %}
+            </section>
+
+            <section>
+                <h2>Invitations</h2>
+
+                <p>
+                    Select who this event is for.
+                    Fields in one target are combined.
+                    Separate targets are alternatives.
+                </p>
+
+                {{ invitation_formset.management_form }}
+
+                {{ invitation_formset.non_form_errors }}
+
+                <div id="invitation-targets">
+                    {% for target_form in invitation_formset %}
+                        <fieldset class="event-target">
+                            <legend>
+                                Invitation Target
+                                {{ forloop.counter }}
+                            </legend>
+
+                            {{ target_form.non_field_errors }}
+
+                            {% for hidden_field in target_form.hidden_fields %}
+                                {{ hidden_field }}
+                            {% endfor %}
+
+                            <div>
+                                {{ target_form.user.errors }}
+
+                                <label for="{{ target_form.user.id_for_label }}">
+                                    User
+                                </label>
+
+                                {{ target_form.user }}
+                            </div>
+
+                            <div>
+                                {{ target_form.citizenship_class.errors }}
+
+                                <label for="{{ target_form.citizenship_class.id_for_label }}">
+                                    Citizenship Class
+                                </label>
+
+                                {{ target_form.citizenship_class }}
+                            </div>
+
+                            <div>
+                                {{ target_form.social_rank.errors }}
+
+                                <label for="{{ target_form.social_rank.id_for_label }}">
+                                    Social Rank
+                                </label>
+
+                                {{ target_form.social_rank }}
+                            </div>
+
+                            <div>
+                                {{ target_form.office.errors }}
+
+                                <label for="{{ target_form.office.id_for_label }}">
+                                    Office
+                                </label>
+
+                                {{ target_form.office }}
+                            </div>
+
+                            <div>
+                                {{ target_form.chapter.errors }}
+
+                                <label for="{{ target_form.chapter.id_for_label }}">
+                                    Chapter
+                                </label>
+
+                                {{ target_form.chapter }}
+                            </div>
+
+                            <div>
+                                {{ target_form.household.errors }}
+
+                                <label for="{{ target_form.household.id_for_label }}">
+                                    Household
+                                </label>
+
+                                {{ target_form.household }}
+                            </div>
+
+                            <div>
+                                {{ target_form.governance_body.errors }}
+
+                                <label for="{{ target_form.governance_body.id_for_label }}">
+                                    Governance Body
+                                </label>
+
+                                {{ target_form.governance_body }}
+                            </div>
+
+                            <div>
+                                {{ target_form.order.errors }}
+
+                                <label for="{{ target_form.order.id_for_label }}">
+                                    Order
+                                </label>
+
+                                {{ target_form.order }}
+                            </div>
+
+                            <div>
+                                {{ target_form.order_rank.errors }}
+
+                                <label for="{{ target_form.order_rank.id_for_label }}">
+                                    Order Rank
+                                </label>
+
+                                {{ target_form.order_rank }}
+                            </div>
+
+                            <div>
+                                {{ target_form.community_group.errors }}
+
+                                <label for="{{ target_form.community_group.id_for_label }}">
+                                    Community Group
+                                </label>
+
+                                {{ target_form.community_group }}
+                            </div>
+
+                            <div>
+                                {{ target_form.household_leadership_type.errors }}
+
+                                <label for="{{ target_form.household_leadership_type.id_for_label }}">
+                                    Household Leadership Type
+                                </label>
+
+                                {{ target_form.household_leadership_type }}
+                            </div>
+
+                            {% if target_form.DELETE %}
+                                <div>
+                                    {{ target_form.DELETE.errors }}
+
+                                    <label for="{{ target_form.DELETE.id_for_label }}">
+                                        Remove this target
+                                    </label>
+
+                                    {{ target_form.DELETE }}
+                                </div>
+                            {% endif %}
+                        </fieldset>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section>
+                <h2>Visibility</h2>
+
+                <div>
+                    {{ form.visible_to_invited_only.errors }}
+
+                    <label for="{{ form.visible_to_invited_only.id_for_label }}">
+                        {{ form.visible_to_invited_only }}
+                        Visible to invited users only?
+                    </label>
+                </div>
+
+                <div id="separate-visibility-controls">
+                    <div>
+                        {{ form.visibility.errors }}
+
+                        <label for="{{ form.visibility.id_for_label }}">
+                            Visibility
+                        </label>
+
+                        {{ form.visibility }}
+                    </div>
+
+                    <div id="custom-visibility-targets">
+                        <h3>Custom Visibility Targets</h3>
+
+                        <p>
+                            These targets are used only when
+                            Visibility is set to Custom.
+                        </p>
+
+                        {{ visibility_formset.management_form }}
+
+                        {{ visibility_formset.non_form_errors }}
+
+                        {% for target_form in visibility_formset %}
+                            <fieldset class="event-target">
+                                <legend>
+                                    Visibility Target
+                                    {{ forloop.counter }}
+                                </legend>
+
+                                {{ target_form.non_field_errors }}
+
+                                {% for hidden_field in target_form.hidden_fields %}
+                                    {{ hidden_field }}
+                                {% endfor %}
+
+                                <div>
+                                    {{ target_form.user.errors }}
+
+                                    <label for="{{ target_form.user.id_for_label }}">
+                                        User
+                                    </label>
+
+                                    {{ target_form.user }}
+                                </div>
+
+                                <div>
+                                    {{ target_form.citizenship_class.errors }}
+
+                                    <label for="{{ target_form.citizenship_class.id_for_label }}">
+                                        Citizenship Class
+                                    </label>
+
+                                    {{ target_form.citizenship_class }}
+                                </div>
+
+                                <div>
+                                    {{ target_form.social_rank.errors }}
+
+                                    <label for="{{ target_form.social_rank.id_for_label }}">
+                                        Social Rank
+                                    </label>
+
+                                    {{ target_form.social_rank }}
+                                </div>
+
+                                <div>
+                                    {{ target_form.office.errors }}
+
+                                    <label for="{{ target_form.office.id_for_label }}">
+                                        Office
+                                    </label>
+
+                                    {{ target_form.office }}
+                                </div>
+
+                                <div>
+                                    {{ target_form.chapter.errors }}
+
+                                    <label for="{{ target_form.chapter.id_for_label }}">
+                                        Chapter
+                                    </label>
+
+                                    {{ target_form.chapter }}
+                                </div>
+
+                                <div>
+                                    {{ target_form.household.errors }}
+
+                                    <label for="{{ target_form.household.id_for_label }}">
+                                        Household
+                                    </label>
+
+                                    {{ target_form.household }}
+                                </div>
+
+                                <div>
+                                    {{ target_form.governance_body.errors }}
+
+                                    <label for="{{ target_form.governance_body.id_for_label }}">
+                                        Governance Body
+                                    </label>
+
+                                    {{ target_form.governance_body }}
+                                </div>
+
+                                <div>
+                                    {{ target_form.order.errors }}
+
+                                    <label for="{{ target_form.order.id_for_label }}">
+                                        Order
+                                    </label>
+
+                                    {{ target_form.order }}
+                                </div>
+
+                                <div>
+                                    {{ target_form.order_rank.errors }}
+
+                                    <label for="{{ target_form.order_rank.id_for_label }}">
+                                        Order Rank
+                                    </label>
+
+                                    {{ target_form.order_rank }}
+                                </div>
+
+                                <div>
+                                    {{ target_form.community_group.errors }}
+
+                                    <label for="{{ target_form.community_group.id_for_label }}">
+                                        Community Group
+                                    </label>
+
+                                    {{ target_form.community_group }}
+                                </div>
+
+                                <div>
+                                    {{ target_form.household_leadership_type.errors }}
+
+                                    <label for="{{ target_form.household_leadership_type.id_for_label }}">
+                                        Household Leadership Type
+                                    </label>
+
+                                    {{ target_form.household_leadership_type }}
+                                </div>
+
+                                {% if target_form.DELETE %}
+                                    <div>
+                                        {{ target_form.DELETE.errors }}
+
+                                        <label for="{{ target_form.DELETE.id_for_label }}">
+                                            Remove this target
+                                        </label>
+
+                                        {{ target_form.DELETE }}
+                                    </div>
+                                {% endif %}
+                            </fieldset>
+                        {% endfor %}
+                    </div>
+                </div>
+            </section>
 
             <button type="submit">
                 Save Event
@@ -93,5 +433,47 @@
             </p>
         {% endif %}
     </main>
+
+    <script>
+        const visibleToInvitedOnly = document.getElementById(
+            "{{ form.visible_to_invited_only.id_for_label }}"
+        );
+
+        const visibilitySelect = document.getElementById(
+            "{{ form.visibility.id_for_label }}"
+        );
+
+        const separateVisibilityControls = document.getElementById(
+            "separate-visibility-controls"
+        );
+
+        const customVisibilityTargets = document.getElementById(
+            "custom-visibility-targets"
+        );
+
+        function updateVisibilityControls() {
+            const useInvitationVisibility =
+                visibleToInvitedOnly.checked;
+
+            separateVisibilityControls.hidden =
+                useInvitationVisibility;
+
+            customVisibilityTargets.hidden =
+                useInvitationVisibility
+                || visibilitySelect.value !== "CUSTOM";
+        }
+
+        visibleToInvitedOnly.addEventListener(
+            "change",
+            updateVisibilityControls
+        );
+
+        visibilitySelect.addEventListener(
+            "change",
+            updateVisibilityControls
+        );
+
+        updateVisibilityControls();
+    </script>
 </body>
 </html>

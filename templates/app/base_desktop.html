@@ -63,17 +63,9 @@
                 <a
                     class="app-navigation-link
                     {% block nav_my_eldvatten %}{% endblock %}"
-                    href="#"
+                    href="{% url 'my_eldvatten' %}"
                 >
                     My EldVatten
-                </a>
-
-                <a
-                    class="app-navigation-link
-                    {% block nav_todo %}{% endblock %}"
-                    href="#"
-                >
-                    To-Do
                 </a>
 
                 <a
@@ -108,26 +100,6 @@
                     Directory
                 </a>
             </nav>
-
-            <div class="app-navigation-secondary">
-
-                <a
-                    class="app-navigation-link
-                    {% block nav_notifications %}{% endblock %}"
-                    href="{% url 'notifications:notification_list' %}"
-                >
-                    Notifications
-                </a>
-
-                <a
-                    class="app-navigation-link
-                    {% block nav_profile %}{% endblock %}"
-                    href="#"
-                >
-                    Profile
-                </a>
-
-            </div>
 
         </aside>
 

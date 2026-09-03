@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "messaging",
     "voting",
     "notifications",
+    "resources",
     "audit",
 ]
 
@@ -139,6 +140,11 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
+
+
+# Private uploaded files
+
+PRIVATE_MEDIA_ROOT = BASE_DIR / "private_media"
 
 
 # Email

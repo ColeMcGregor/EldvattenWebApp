@@ -1,0 +1,84 @@
+{% extends "app/base_mobile.html" %}
+
+{% block title %}
+    My Eldvatten | EldVatten
+{% endblock %}
+
+{% block mobile_primary_tabs %}
+{% endblock %}
+
+{% block app_content %}
+
+<section class="mobile-my-eldvatten-header">
+
+    <h1>
+        My Eldvatten
+    </h1>
+
+    <label
+        class="mobile-my-eldvatten-label"
+        for="my-eldvatten-section"
+    >
+        Section
+    </label>
+
+    <select
+        id="my-eldvatten-section"
+        class="mobile-my-eldvatten-select"
+        onchange="window.location.href=this.value"
+    >
+        <option
+            value="{% url 'my_eldvatten' %}?section=profile"
+            {% if active_section == "profile" %}selected{% endif %}
+        >
+            My Profile
+        </option>
+
+        <option
+            value="{% url 'my_eldvatten' %}?section=todo"
+            {% if active_section == "todo" %}selected{% endif %}
+        >
+            To-Do
+        </option>
+
+        <option
+            value="{% url 'my_eldvatten' %}?section=notifications"
+            {% if active_section == "notifications" %}selected{% endif %}
+        >
+            Notifications
+        </option>
+
+        <option
+            value="{% url 'my_eldvatten' %}?section=settings"
+            {% if active_section == "settings" %}selected{% endif %}
+        >
+            Settings
+        </option>
+    </select>
+
+</section>
+
+
+<section class="mobile-my-eldvatten-content">
+
+    {% if active_section == "profile" %}
+
+        {% include "accounts/my_eldvatten/profile.html" %}
+
+    {% elif active_section == "todo" %}
+
+        {% include "accounts/my_eldvatten/todo.html" %}
+
+    {% elif active_section == "notifications" %}
+
+        {% include "accounts/my_eldvatten/notifications.html" %}
+
+    {% elif active_section == "settings" %}
+
+        {% include "accounts/my_eldvatten/settings.html" %}
+
+    {% endif %}
+
+</section>
+
+{% endblock %}

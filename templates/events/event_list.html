@@ -2,9 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
     <title>Events</title>
 </head>
+
 <body>
     <main>
         <h1>Events</h1>
@@ -21,28 +27,51 @@
             <ul>
                 {% for event in events %}
                     <li>
-                        <h2>
-                            <a href="{% url 'events:event_detail' event.id %}">
-                                {{ event.title }}
-                            </a>
-                        </h2>
+                        <article>
+                            <h2>
+                                <a href="{% url 'events:event_detail' event.id %}">
+                                    {{ event.title }}
+                                </a>
+                            </h2>
 
-                        <p>
-                            {{ event.start_at }} to {{ event.end_at }}
-                        </p>
+                            {% if event.status == "CANCELLED" %}
+                                <p>
+                                    <strong>
+                                        Cancelled
+                                    </strong>
+                                </p>
+                            {% endif %}
 
-                        {% if event.location %}
-                            <p>{{ event.location }}</p>
-                        {% endif %}
+                            <p>
+                                {{ event.start_at }}
+                                to
+                                {{ event.end_at }}
+                            </p>
 
-                        <p>
-                            Visibility: {{ event.get_visibility_display }}
-                        </p>
+                            {% if event.location %}
+                                <p>
+                                    Location:
+                                    {{ event.location }}
+                                </p>
+                            {% endif %}
+
+                            <p>
+                                Organizer:
+                                {{ event.organizer }}
+                            </p>
+
+                            <p>
+                                Visibility:
+                                {{ event.get_visibility_display }}
+                            </p>
+                        </article>
                     </li>
                 {% endfor %}
             </ul>
         {% else %}
-            <p>No events are available.</p>
+            <p>
+                No events are available.
+            </p>
         {% endif %}
     </main>
 </body>
