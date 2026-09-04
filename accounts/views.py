@@ -1,7 +1,12 @@
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.db.models import F, Q
 from django.shortcuts import redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
+
+from actions.models import ActionAssignment
+from voting.models import Vote, VoteEligibleUser
 
 from .forms import LoginForm, RegistrationForm
 
@@ -29,6 +34,192 @@ def is_mobile_request(request):
             "mobile",
         ]
     )
+
+
+def get_profile_context(user):
+    citizenship_record = (
+        user.citizenship_records
+        .filter(
+            ended_at__isnull=True,
+        )
+        .select_related(
+            "citizenship_class",
+            "chapter",
+        )
+        .first()
+    )
+
+    social_rank_record = (
+        user.social_rank_records
+        .filter(
+            ended_at__isnull=True,
+        )
+        .select_related(
+            "social_rank",
+        )
+        .first()
+    )
+
+    household_memberships = list(
+        user.household_memberships
+        .filter(
+            ended_at__isnull=True,
+        )
+        .select_related(
+            "household",
+        )
+        .order_by(
+            "household__name",
+        )
+    )
+
+    office_records = list(
+        user.office_records
+        .filter(
+            ended_at__isnull=True,
+        )
+        .select_related(
+            "office",
+            "chapter",
+        )
+        .order_by(
+            "office__name",
+            "chapter__name",
+        )
+    )
+
+    governance_memberships = list(
+        user.governance_memberships
+        .filter(
+            ended_at__isnull=True,
+        )
+        .select_related(
+            "governance_body",
+        )
+        .order_by(
+            "governance_body__name",
+        )
+    )
+
+    order_memberships = list(
+        user.order_memberships
+        .filter(
+            ended_at__isnull=True,
+        )
+        .select_related(
+            "order",
+            "order_rank",
+        )
+        .order_by(
+            "order__name",
+        )
+    )
+
+    household_leadership_records = list(
+        user.household_leadership_records
+        .filter(
+            ended_at__isnull=True,
+        )
+        .select_related(
+            "household",
+            "leadership_type",
+        )
+        .order_by(
+            "household__name",
+            "leadership_type__name",
+        )
+    )
+
+    community_group_memberships = list(
+        user.community_group_memberships
+        .filter(
+            ended_at__isnull=True,
+        )
+        .select_related(
+            "community_group",
+        )
+        .order_by(
+            "community_group__name",
+        )
+    )
+
+    return {
+        "profile_citizenship": citizenship_record,
+        "profile_social_rank": social_rank_record,
+        "profile_households": household_memberships,
+        "profile_offices": office_records,
+        "profile_governance_bodies": governance_memberships,
+        "profile_orders": order_memberships,
+        "profile_household_leadership": (
+            household_leadership_records
+        ),
+        "profile_community_groups": (
+            community_group_memberships
+        ),
+    }
+
+
+def get_todo_context(user):
+    now = timezone.now()
+
+    action_assignments = list(
+        ActionAssignment.objects
+        .filter(
+            user=user,
+            is_active=True,
+        )
+        .exclude(
+            status=ActionAssignment.Status.COMPLETED,
+        )
+        .select_related(
+            "action",
+        )
+        .order_by(
+            F("action__deadline").asc(
+                nulls_last=True,
+            ),
+            "-assigned_at",
+        )
+    )
+
+    vote_eligibilities = list(
+        VoteEligibleUser.objects
+        .filter(
+            user=user,
+            has_responded=False,
+            vote__status=Vote.Status.OPEN,
+        )
+        .filter(
+            Q(
+                vote__opens_at__isnull=True,
+            )
+            | Q(
+                vote__opens_at__lte=now,
+            )
+        )
+        .filter(
+            Q(
+                vote__closes_at__isnull=True,
+            )
+            | Q(
+                vote__closes_at__gt=now,
+            )
+        )
+        .select_related(
+            "vote",
+        )
+        .order_by(
+            F("vote__closes_at").asc(
+                nulls_last=True,
+            ),
+            "-vote__opened_at",
+        )
+    )
+
+    return {
+        "todo_actions": action_assignments,
+        "todo_votes": vote_eligibilities,
+    }
 
 
 def register(request):
@@ -89,6 +280,20 @@ def my_eldvatten(request):
     context = {
         "active_section": active_section,
     }
+
+    if active_section == "profile":
+        context.update(
+            get_profile_context(
+                request.user,
+            )
+        )
+
+    elif active_section == "todo":
+        context.update(
+            get_todo_context(
+                request.user,
+            )
+        )
 
     if is_mobile_request(request):
         template_name = (

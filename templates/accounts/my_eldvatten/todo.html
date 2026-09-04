@@ -8,9 +8,131 @@
 
     <div class="my-eldvatten-section-body">
 
-        <p>
-            Lorem ipsum dolor sit amet.
-        </p>
+        {% if todo_actions %}
+
+            <section class="todo-section">
+
+                <header class="todo-section-header">
+                    <h3>
+                        Actions
+                    </h3>
+                </header>
+
+                <div class="todo-section-content">
+
+                    {% for assignment in todo_actions %}
+
+                        <a
+                            class="todo-item"
+                            href="{% url 'actions:detail' assignment.action.id %}"
+                        >
+
+                            <div class="todo-item-main">
+
+                                <span class="todo-item-title">
+                                    {{ assignment.action.title }}
+                                </span>
+
+                                <span class="todo-item-status">
+                                    {{ assignment.get_status_display }}
+                                </span>
+
+                            </div>
+
+                            <div class="todo-item-meta">
+
+                                {% if assignment.action.is_required %}
+
+                                    <span class="todo-item-tag">
+                                        Required
+                                    </span>
+
+                                {% endif %}
+
+                                {% if assignment.action.deadline %}
+
+                                    <span>
+                                        Due
+                                        {{ assignment.action.deadline|date:"M j, Y g:i A" }}
+                                    </span>
+
+                                {% endif %}
+
+                            </div>
+
+                        </a>
+
+                    {% endfor %}
+
+                </div>
+
+            </section>
+
+        {% endif %}
+
+
+        {% if todo_votes %}
+
+            <section class="todo-section">
+
+                <header class="todo-section-header">
+                    <h3>
+                        Votes
+                    </h3>
+                </header>
+
+                <div class="todo-section-content">
+
+                    {% for eligibility in todo_votes %}
+
+                        <a
+                            class="todo-item"
+                            href="{% url 'voting:vote_detail' eligibility.vote.id %}"
+                        >
+
+                            <div class="todo-item-main">
+
+                                <span class="todo-item-title">
+                                    {{ eligibility.vote.title }}
+                                </span>
+
+                                <span class="todo-item-status">
+                                    Response Needed
+                                </span>
+
+                            </div>
+
+                            {% if eligibility.vote.closes_at %}
+
+                                <div class="todo-item-meta">
+
+                                    <span>
+                                        Closes
+                                        {{ eligibility.vote.closes_at|date:"M j, Y g:i A" }}
+                                    </span>
+
+                                </div>
+
+                            {% endif %}
+
+                        </a>
+
+                    {% endfor %}
+
+                </div>
+
+            </section>
+
+        {% endif %}
+
+
+        {% if not todo_actions and not todo_votes %}
+
+            <div class="todo-empty">
+                No current items.
+            </div>
+
+        {% endif %}
 
     </div>
 

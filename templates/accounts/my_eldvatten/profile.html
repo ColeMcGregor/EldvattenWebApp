@@ -19,7 +19,7 @@
                     {% if request.user.display_name %}
                         {{ request.user.display_name }}
                     {% else %}
-                        Lorem ipsum
+                        —
                     {% endif %}
                 </dd>
             </div>
@@ -33,6 +33,181 @@
                     {{ request.user.username }}
                 </dd>
             </div>
+
+            <div>
+                <dt>
+                    Account Status
+                </dt>
+
+                <dd>
+                    {{ request.user.get_account_status_display }}
+                </dd>
+            </div>
+
+            <div>
+                <dt>
+                    Citizenship
+                </dt>
+
+                <dd>
+                    {% if profile_citizenship %}
+                        {{ profile_citizenship.citizenship_class.name }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </dd>
+            </div>
+
+            <div>
+                <dt>
+                    Social Rank
+                </dt>
+
+                <dd>
+                    {% if profile_social_rank %}
+                        {{ profile_social_rank.social_rank.name }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </dd>
+            </div>
+
+            <div>
+                <dt>
+                    Chapter
+                </dt>
+
+                <dd>
+                    {% if profile_citizenship %}
+                        {{ profile_citizenship.chapter.name }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </dd>
+            </div>
+
+
+            {% if profile_households %}
+
+                <div>
+                    <dt>
+                        Household
+                    </dt>
+
+                    <dd>
+                        {% for membership in profile_households %}
+                            <span>
+                                {{ membership.household.name }}
+                            </span>
+                        {% endfor %}
+                    </dd>
+                </div>
+
+            {% endif %}
+
+
+            {% if profile_offices %}
+
+                <div>
+                    <dt>
+                        Offices
+                    </dt>
+
+                    <dd>
+                        {% for record in profile_offices %}
+                            <span>
+                                {{ record.office.name }}
+                                —
+                                {{ record.chapter.name }}
+                            </span>
+                        {% endfor %}
+                    </dd>
+                </div>
+
+            {% endif %}
+
+
+            {% if profile_governance_bodies %}
+
+                <div>
+                    <dt>
+                        Governance Bodies
+                    </dt>
+
+                    <dd>
+                        {% for membership in profile_governance_bodies %}
+                            <span>
+                                {{ membership.governance_body.name }}
+                            </span>
+                        {% endfor %}
+                    </dd>
+                </div>
+
+            {% endif %}
+
+
+            {% if profile_orders %}
+
+                <div>
+                    <dt>
+                        Orders
+                    </dt>
+
+                    <dd>
+                        {% for membership in profile_orders %}
+                            <span>
+                                {{ membership.order.name }}
+
+                                {% if membership.order_rank %}
+                                    —
+                                    {{ membership.order_rank.name }}
+                                {% endif %}
+                            </span>
+                        {% endfor %}
+                    </dd>
+                </div>
+
+            {% endif %}
+
+
+            {% if profile_household_leadership %}
+
+                <div>
+                    <dt>
+                        Household Leadership
+                    </dt>
+
+                    <dd>
+                        {% for record in profile_household_leadership %}
+                            <span>
+                                {{ record.leadership_type.name }}
+                                —
+                                {{ record.household.name }}
+                            </span>
+                        {% endfor %}
+                    </dd>
+                </div>
+
+            {% endif %}
+
+
+            {% if profile_community_groups %}
+
+                <div>
+                    <dt>
+                        Community Groups
+                    </dt>
+
+                    <dd>
+                        {% for membership in profile_community_groups %}
+                            <span>
+                                {{ membership.community_group.name }}
+                            </span>
+                        {% endfor %}
+                    </dd>
+                </div>
+
+            {% endif %}
 
         </dl>
 

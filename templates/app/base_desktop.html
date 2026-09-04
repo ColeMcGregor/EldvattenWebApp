@@ -29,7 +29,10 @@
 
 <body class="app-body">
 
-    <div class="app-desktop-shell">
+    <div
+        class="app-desktop-shell
+        {% block app_shell_class %}{% endblock %}"
+    >
 
         <aside class="app-left-rail">
 
@@ -112,45 +115,55 @@
         </main>
 
 
-        <aside class="app-right-rail">
+        {% block app_right_rail %}
 
-            {% block right_rail %}
+            <aside class="app-right-rail">
 
-                <section class="app-rail-section">
+                {% block right_rail %}
 
-                    <h2 class="app-rail-heading">
-                        Needs Attention
-                    </h2>
+                    <section class="app-rail-section">
 
-                    <div class="app-placeholder-card">
-                        <strong>Action</strong>
+                        <h2 class="app-rail-heading">
+                            Needs Attention
+                        </h2>
 
-                        <span>
-                            Lorem ipsum dolor sit amet.
-                        </span>
-                    </div>
+                        <div class="app-placeholder-card">
+                            <strong>
+                                Action
+                            </strong>
 
-                    <div class="app-placeholder-card">
-                        <strong>Vote</strong>
+                            <span>
+                                Lorem ipsum dolor sit amet.
+                            </span>
+                        </div>
 
-                        <span>
-                            Lorem ipsum dolor sit amet.
-                        </span>
-                    </div>
+                        <div class="app-placeholder-card">
+                            <strong>
+                                Vote
+                            </strong>
 
-                    <div class="app-placeholder-card">
-                        <strong>Event</strong>
+                            <span>
+                                Lorem ipsum dolor sit amet.
+                            </span>
+                        </div>
 
-                        <span>
-                            Lorem ipsum dolor sit amet.
-                        </span>
-                    </div>
+                        <div class="app-placeholder-card">
+                            <strong>
+                                Event
+                            </strong>
 
-                </section>
+                            <span>
+                                Lorem ipsum dolor sit amet.
+                            </span>
+                        </div>
 
-            {% endblock %}
+                    </section>
 
-        </aside>
+                {% endblock %}
+
+            </aside>
+
+        {% endblock %}
 
     </div>
 
