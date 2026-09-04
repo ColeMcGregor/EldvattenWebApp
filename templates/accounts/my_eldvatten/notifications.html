@@ -8,12 +8,267 @@
 
     <div class="my-eldvatten-section-body">
 
-        <a
-            class="my-eldvatten-action-link"
-            href="{% url 'notifications:notification_list' %}"
-        >
-            Open Notifications
-        </a>
+        <section class="notification-controls">
+
+            <div class="notification-filter-group">
+
+                <span class="notification-filter-label">
+                    State
+                </span>
+
+                <div class="notification-filter-options">
+
+                    <a
+                        class="notification-filter-link
+                        {% if notification_state_filter == 'all' %}active{% endif %}"
+                        href="{% url 'my_eldvatten' %}?section=notifications&state=all&type={{ notification_type_filter }}"
+                    >
+                        All
+                    </a>
+
+                    <a
+                        class="notification-filter-link
+                        {% if notification_state_filter == 'unread' %}active{% endif %}"
+                        href="{% url 'my_eldvatten' %}?section=notifications&state=unread&type={{ notification_type_filter }}"
+                    >
+                        Unread
+                    </a>
+
+                    <a
+                        class="notification-filter-link
+                        {% if notification_state_filter == 'read' %}active{% endif %}"
+                        href="{% url 'my_eldvatten' %}?section=notifications&state=read&type={{ notification_type_filter }}"
+                    >
+                        Read
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <div class="notification-filter-group">
+
+                <span class="notification-filter-label">
+                    Type
+                </span>
+
+                <div class="notification-filter-options">
+
+                    <a
+                        class="notification-filter-link
+                        {% if notification_type_filter == 'all' %}active{% endif %}"
+                        href="{% url 'my_eldvatten' %}?section=notifications&state={{ notification_state_filter }}&type=all"
+                    >
+                        All
+                    </a>
+
+                    {% for type_value, type_label in notification_type_choices %}
+
+                        <a
+                            class="notification-filter-link
+                            {% if notification_type_filter == type_value %}active{% endif %}"
+                            href="{% url 'my_eldvatten' %}?section=notifications&state={{ notification_state_filter }}&type={{ type_value }}"
+                        >
+                            {{ type_label }}
+                        </a>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+
+            <div class="notification-summary">
+
+                <span class="notification-unread-count">
+                    {{ unread_count }}
+                    unread
+                </span>
+
+                {% if unread_count %}
+
+                    <form
+                        method="post"
+                        action="{% url 'notifications:notification_mark_all_read' %}"
+                    >
+                        {% csrf_token %}
+
+                        <input
+                            type="hidden"
+                            name="next"
+                            value="{% url 'my_eldvatten' %}?section=notifications&state={{ notification_state_filter }}&type={{ notification_type_filter }}"
+                        >
+
+                        <button
+                            class="notification-text-button"
+                            type="submit"
+                        >
+                            Mark All Read
+                        </button>
+
+                    </form>
+
+                {% endif %}
+
+            </div>
+
+        </section>
+
+
+        {% if notifications %}
+
+            <section class="notification-feed">
+
+                {% for notification in notifications %}
+
+                    <article
+                        class="notification-item
+                        {% if not notification.is_read %}unread{% endif %}"
+                    >
+
+                        {% if notification.target_url %}
+
+                            <a
+                                class="notification-item-open"
+                                href="{% url 'notifications:notification_open' notification.id %}"
+                            >
+
+                                <div class="notification-item-header">
+
+                                    <span class="notification-item-title">
+                                        {{ notification.title }}
+                                    </span>
+
+                                    {% if not notification.is_read %}
+
+                                        <span class="notification-unread-indicator">
+                                            Unread
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                                <div class="notification-item-meta">
+
+                                    <span>
+                                        {{ notification.get_notification_type_display }}
+                                    </span>
+
+                                    <span>
+                                        {{ notification.created_at|date:"M j, Y g:i A" }}
+                                    </span>
+
+                                </div>
+
+                                {% if notification.message %}
+
+                                    <p class="notification-item-message">
+                                        {{ notification.message }}
+                                    </p>
+
+                                {% endif %}
+
+                            </a>
+
+                        {% else %}
+
+                            <a
+                                class="notification-item-open"
+                                href="{% url 'notifications:notification_open' notification.id %}?next={% url 'my_eldvatten' %}%3Fsection%3Dnotifications%26state%3D{{ notification_state_filter }}%26type%3D{{ notification_type_filter }}"
+                            >
+
+                                <div class="notification-item-header">
+
+                                    <span class="notification-item-title">
+                                        {{ notification.title }}
+                                    </span>
+
+                                    {% if not notification.is_read %}
+
+                                        <span class="notification-unread-indicator">
+                                            Unread
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                                <div class="notification-item-meta">
+
+                                    <span>
+                                        {{ notification.get_notification_type_display }}
+                                    </span>
+
+                                    <span>
+                                        {{ notification.created_at|date:"M j, Y g:i A" }}
+                                    </span>
+
+                                </div>
+
+                                {% if notification.message %}
+
+                                    <p class="notification-item-message">
+                                        {{ notification.message }}
+                                    </p>
+
+                                {% endif %}
+
+                            </a>
+
+                        {% endif %}
+
+
+                        {% if notification.is_read %}
+
+                            <div class="notification-item-actions">
+
+                                <form
+                                    method="post"
+                                    action="{% url 'notifications:notification_mark_unread' notification.id %}"
+                                >
+                                    {% csrf_token %}
+
+                                    <input
+                                        type="hidden"
+                                        name="next"
+                                        value="{% url 'my_eldvatten' %}?section=notifications&state={{ notification_state_filter }}&type={{ notification_type_filter }}"
+                                    >
+
+                                    <button
+                                        class="notification-text-button"
+                                        type="submit"
+                                    >
+                                        Mark Unread
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+                        {% endif %}
+
+                    </article>
+
+                {% endfor %}
+
+            </section>
+
+        {% else %}
+
+            <div class="notification-empty">
+
+                {% if notification_state_filter == "all" and notification_type_filter == "all" %}
+                    You do not have any notifications.
+                {% else %}
+                    No notifications match these filters.
+                {% endif %}
+
+            </div>
+
+        {% endif %}
 
     </div>
 

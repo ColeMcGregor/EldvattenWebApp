@@ -11,6 +11,7 @@ from django.shortcuts import (
     render,
 )
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_GET, require_POST
 
 from .forms import NotificationPreferenceForm
@@ -26,6 +27,31 @@ from .services import (
     mark_notification_read,
     mark_notification_unread,
 )
+
+
+def get_notification_return_url(request):
+    next_url = request.POST.get(
+        "next",
+    )
+
+    if next_url is None:
+        next_url = request.GET.get(
+            "next",
+        )
+
+    if not next_url:
+        return None
+
+    if not url_has_allowed_host_and_scheme(
+        url=next_url,
+        allowed_hosts={
+            request.get_host(),
+        },
+        require_https=request.is_secure(),
+    ):
+        return None
+
+    return next_url
 
 
 @login_required
@@ -130,6 +156,15 @@ def notification_open(request, notification_id):
             notification.target_url,
         )
 
+    return_url = get_notification_return_url(
+        request,
+    )
+
+    if return_url:
+        return redirect(
+            return_url,
+        )
+
     return redirect(
         "notifications:notification_list",
     )
@@ -154,6 +189,15 @@ def notification_mark_read(
     mark_notification_read(
         notification,
     )
+
+    return_url = get_notification_return_url(
+        request,
+    )
+
+    if return_url:
+        return redirect(
+            return_url,
+        )
 
     return redirect(
         "notifications:notification_list",
@@ -180,6 +224,15 @@ def notification_mark_unread(
         notification,
     )
 
+    return_url = get_notification_return_url(
+        request,
+    )
+
+    if return_url:
+        return redirect(
+            return_url,
+        )
+
     return redirect(
         "notifications:notification_list",
     )
@@ -200,6 +253,15 @@ def notification_mark_all_read(request):
         messages.success(
             request,
             f"Marked {updated_count} notification(s) as read.",
+        )
+
+    return_url = get_notification_return_url(
+        request,
+    )
+
+    if return_url:
+        return redirect(
+            return_url,
         )
 
     return redirect(

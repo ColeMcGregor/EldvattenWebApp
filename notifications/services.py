@@ -243,10 +243,36 @@ def get_unread_notification_count(user):
     ).count()
 
 
-def get_user_notifications(user):
-    return Notification.objects.filter(
+def get_user_notifications(
+    user,
+    *,
+    read_state="all",
+    notification_type="all",
+):
+    notifications = Notification.objects.filter(
         user=user,
-    ).order_by(
+    )
+
+    if read_state == "unread":
+        notifications = notifications.filter(
+            is_read=False,
+        )
+
+    elif read_state == "read":
+        notifications = notifications.filter(
+            is_read=True,
+        )
+
+    if (
+        notification_type != "all"
+        and notification_type
+        in Notification.Type.values
+    ):
+        notifications = notifications.filter(
+            notification_type=notification_type,
+        )
+
+    return notifications.order_by(
         "-created_at",
     )
 
