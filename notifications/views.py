@@ -10,6 +10,7 @@ from django.shortcuts import (
     redirect,
     render,
 )
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_GET, require_POST
@@ -137,6 +138,43 @@ def notification_settings(request):
             "form": form,
         },
     )
+
+
+@login_required
+@require_POST
+def notification_preferences_update(request):
+    preference, _ = (
+        NotificationPreference.objects.get_or_create(
+            user=request.user,
+        )
+    )
+
+    form = NotificationPreferenceForm(
+        request.POST,
+        instance=preference,
+    )
+
+    if form.is_valid():
+        form.save()
+
+        messages.success(
+            request,
+            "Notification settings saved.",
+        )
+    else:
+        for errors in form.errors.values():
+            for error in errors:
+                messages.error(
+                    request,
+                    error,
+                )
+
+    settings_url = (
+        f"{reverse('my_eldvatten')}"
+        "?section=settings"
+    )
+
+    return redirect(settings_url)
 
 
 @login_required

@@ -20,6 +20,16 @@ urlpatterns = [
         name="my_eldvatten",
     ),
     path(
+        "my-eldvatten/settings/account/",
+        views.my_eldvatten_account_update,
+        name="my_eldvatten_account_update",
+    ),
+    path(
+        "my-eldvatten/settings/password/",
+        views.my_eldvatten_password_change,
+        name="my_eldvatten_password_change",
+    ),
+    path(
         "login/",
         views.user_login,
         name="login",

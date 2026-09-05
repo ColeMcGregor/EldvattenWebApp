@@ -18,6 +18,11 @@ urlpatterns = [
         name="notification_settings",
     ),
     path(
+        "settings/update/",
+        views.notification_preferences_update,
+        name="notification_preferences_update",
+    ),
+    path(
         "<int:notification_id>/open/",
         views.notification_open,
         name="notification_open",

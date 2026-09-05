@@ -1,5 +1,9 @@
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import (
+    AuthenticationForm,
+    PasswordChangeForm,
+    UserCreationForm,
+)
 
 from .models import User
 
@@ -72,3 +76,47 @@ class LoginForm(AuthenticationForm):
             }
         ),
     )
+
+
+class AccountSettingsForm(forms.ModelForm):
+    class Meta:
+        model = User
+
+        fields = (
+            "display_name",
+        )
+
+        widgets = {
+            "display_name": forms.TextInput(
+                attrs={
+                    "class": "form-input",
+                    "autocomplete": "name",
+                }
+            ),
+        }
+
+
+class UserPasswordChangeForm(PasswordChangeForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["old_password"].widget.attrs.update(
+            {
+                "class": "form-input",
+                "autocomplete": "current-password",
+            }
+        )
+
+        self.fields["new_password1"].widget.attrs.update(
+            {
+                "class": "form-input",
+                "autocomplete": "new-password",
+            }
+        )
+
+        self.fields["new_password2"].widget.attrs.update(
+            {
+                "class": "form-input",
+                "autocomplete": "new-password",
+            }
+        )

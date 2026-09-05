@@ -1,4 +1,7 @@
 {% load static %}
+{% load notification_tags %}
+
+{% unread_notification_count as global_unread_notification_count %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -23,7 +26,7 @@
 
     <link
         rel="stylesheet"
-        href="{% static 'css/app_mobile.css' %}?v=2"
+        href="{% static 'css/app_mobile.css' %}?v=4"
     >
 </head>
 
@@ -52,10 +55,20 @@
 
         <a
             class="mobile-notification-link"
-            href="{% url 'notifications:notification_list' %}"
+            href="{% url 'my_eldvatten' %}?section=notifications"
             aria-label="Notifications"
         >
-            Bell
+            <img
+                class="mobile-notification-icon"
+                src="{% static 'images/bell.png' %}"
+                alt=""
+            >
+
+            {% if global_unread_notification_count %}
+                <span class="mobile-notification-count">
+                    {{ global_unread_notification_count }}
+                </span>
+            {% endif %}
         </a>
 
     </header>
@@ -118,18 +131,10 @@
 
         <a
             class="mobile-bottom-link
-            {% block mobile_nav_todo %}{% endblock %}"
-            href="{% url 'my_eldvatten' %}?section=todo"
+            {% block mobile_nav_my_eldvatten %}{% endblock %}"
+            href="{% url 'my_eldvatten' %}"
         >
-            To-Do
-        </a>
-
-        <a
-            class="mobile-bottom-link
-            {% block mobile_nav_notifications %}{% endblock %}"
-            href="{% url 'notifications:notification_list' %}"
-        >
-            Bell
+            My Eldvatten
         </a>
 
         <a

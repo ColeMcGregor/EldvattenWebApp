@@ -30,10 +30,6 @@
 }
 
 
-/* Profile */
-
-/* Application Logo */
-
 /* Application Logo */
 
 .mobile-profile-link {
@@ -68,11 +64,39 @@
 /* Notifications */
 
 .mobile-notification-link {
+    position: relative;
+
     justify-self: end;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     color: var(--eldvatten-red);
 
     font-weight: 700;
+}
+
+.mobile-notification-icon {
+    display: block;
+
+    width: 26px;
+    height: 26px;
+
+    object-fit: contain;
+}
+
+.mobile-notification-count {
+    position: absolute;
+
+    top: -6px;
+    right: -8px;
+
+    color: var(--eldvatten-red);
+
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
 }
 
 
@@ -290,7 +314,7 @@
     min-height: 64px;
 
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
 
     background: var(--surface);
 
@@ -318,19 +342,6 @@
 }
 
 
-/* Large Mobile Layout */
-
-@media (min-width: 700px) {
-    .mobile-app-content {
-        max-width: 680px;
-
-        margin: 0 auto;
-
-        border-right: 1px solid var(--border-color);
-        border-left: 1px solid var(--border-color);
-    }
-}
-
 /* My Eldvatten */
 
 .mobile-my-eldvatten-header {
@@ -342,32 +353,38 @@
 }
 
 .mobile-my-eldvatten-header h1 {
-    margin: 0 0 1rem;
+    margin: 0;
 
     font-size: 1.8rem;
 }
 
-.mobile-my-eldvatten-label {
-    display: block;
-
-    margin-bottom: 0.35rem;
-
-    font-weight: 700;
-}
-
-.mobile-my-eldvatten-select {
-    width: 100%;
-
-    padding: 0.7rem;
+.mobile-my-eldvatten-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
 
     background: var(--surface);
 
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-small);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.mobile-my-eldvatten-tab {
+    min-width: 0;
+
+    padding: 0.8rem 0.35rem;
+
+    border-bottom: 3px solid transparent;
 
     color: var(--text-main);
 
-    font: inherit;
+    font-weight: 700;
+    text-align: center;
+}
+
+.mobile-my-eldvatten-tab:hover,
+.mobile-my-eldvatten-tab.active {
+    color: var(--eldvatten-red);
+
+    border-bottom-color: var(--eldvatten-red);
 }
 
 .mobile-my-eldvatten-content {
@@ -419,6 +436,570 @@
     margin: 0;
 }
 
+.my-profile-details dd span {
+    display: block;
+}
+
+
+/* To-Do */
+
+.todo-section {
+    margin-bottom: 1rem;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border-color);
+}
+
+.todo-section:last-child {
+    margin-bottom: 0;
+}
+
+.todo-section-header {
+    padding: 0.8rem 0.9rem;
+
+    background: var(--surface-muted);
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.todo-section-header h3 {
+    margin: 0;
+
+    font-size: 1.15rem;
+}
+
+.todo-section-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.todo-item {
+    display: block;
+
+    padding: 0.9rem;
+
+    color: inherit;
+
+    border-bottom: 1px solid var(--border-color);
+
+    text-decoration: none;
+}
+
+.todo-item:last-child {
+    border-bottom: 0;
+}
+
+.todo-item:hover {
+    background: var(--surface-muted);
+}
+
+.todo-item-main {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+
+    gap: 0.75rem;
+}
+
+.todo-item-title {
+    min-width: 0;
+
+    font-weight: 700;
+}
+
+.todo-item-status {
+    flex-shrink: 0;
+
+    color: var(--text-muted);
+
+    font-size: 0.85rem;
+}
+
+.todo-item-meta {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 0.35rem 0.8rem;
+
+    margin-top: 0.4rem;
+
+    color: var(--text-muted);
+
+    font-size: 0.85rem;
+}
+
+.todo-item-tag {
+    color: var(--eldvatten-red);
+
+    font-weight: 700;
+}
+
+.todo-empty {
+    padding: 0.8rem 0;
+
+    color: var(--text-muted);
+}
+
+
+/* Notification Feed */
+
+.notification-controls {
+    display: grid;
+
+    gap: 1rem;
+
+    margin-bottom: 1rem;
+}
+
+.notification-filter-group {
+    display: grid;
+
+    gap: 0.4rem;
+}
+
+.notification-filter-label {
+    font-weight: 700;
+}
+
+.notification-filter-options {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 0.35rem;
+}
+
+.notification-filter-link {
+    padding: 0.4rem 0.6rem;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+
+    color: var(--text-main);
+
+    font-size: 0.85rem;
+}
+
+.notification-filter-link.active {
+    background: var(--surface-muted);
+
+    border-color: var(--eldvatten-red);
+
+    color: var(--eldvatten-red);
+
+    font-weight: 700;
+}
+
+.notification-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 0.75rem;
+
+    padding-top: 0.8rem;
+
+    border-top: 1px solid var(--border-color);
+}
+
+.notification-unread-count {
+    color: var(--text-muted);
+
+    font-size: 0.85rem;
+}
+
+.notification-text-button {
+    padding: 0;
+
+    background: transparent;
+
+    border: 0;
+
+    color: var(--eldvatten-red);
+
+    font: inherit;
+    font-size: 0.85rem;
+
+    cursor: pointer;
+}
+
+.notification-feed {
+    overflow: hidden;
+
+    border: 1px solid var(--border-color);
+}
+
+.notification-item {
+    position: relative;
+
+    background: var(--surface);
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.notification-item:last-child {
+    border-bottom: 0;
+}
+
+.notification-item.unread {
+    background: var(--surface-muted);
+
+    border-left: 3px solid var(--eldvatten-red);
+}
+
+.notification-item-open {
+    display: block;
+
+    padding: 0.9rem;
+
+    color: inherit;
+
+    text-decoration: none;
+}
+
+.notification-item-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+
+    gap: 0.75rem;
+}
+
+.notification-item-title {
+    min-width: 0;
+
+    font-weight: 500;
+}
+
+.notification-item.unread .notification-item-title {
+    font-weight: 700;
+}
+
+.notification-unread-indicator {
+    flex-shrink: 0;
+
+    color: var(--eldvatten-red);
+
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.notification-item-meta {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 0.3rem 0.8rem;
+
+    margin-top: 0.35rem;
+
+    color: var(--text-muted);
+
+    font-size: 0.8rem;
+}
+
+.notification-item-message {
+    margin: 0.6rem 0 0;
+
+    line-height: 1.4;
+}
+
+.notification-item:not(.unread) .notification-item-message {
+    color: var(--text-muted);
+}
+
+.notification-item-actions {
+    display: flex;
+    justify-content: flex-end;
+
+    padding: 0 0.9rem 0.8rem;
+}
+
+.notification-empty {
+    padding: 0.8rem 0;
+
+    color: var(--text-muted);
+}
+
+
+/* Settings */
+
+.settings-messages {
+    display: grid;
+
+    gap: 0.5rem;
+
+    margin-bottom: 1rem;
+}
+
+.settings-messages p {
+    margin: 0;
+
+    padding: 0.75rem 0.8rem;
+
+    background: var(--surface-muted);
+
+    border: 1px solid var(--border-color);
+}
+
+.settings-section {
+    margin-bottom: 1rem;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border-color);
+}
+
+.settings-section:last-child {
+    margin-bottom: 0;
+}
+
+.settings-section-header {
+    padding: 0.85rem 0.9rem;
+
+    background: var(--surface-muted);
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.settings-section-header h3 {
+    margin: 0;
+
+    font-size: 1.15rem;
+}
+
+.settings-section-header p {
+    margin: 0.35rem 0 0;
+
+    color: var(--text-muted);
+
+    font-size: 0.85rem;
+}
+
+.settings-section-body {
+    padding: 0.9rem;
+}
+
+.settings-field {
+    display: grid;
+
+    gap: 0.35rem;
+
+    margin-bottom: 1rem;
+}
+
+.settings-field label,
+.settings-field-label {
+    font-weight: 700;
+}
+
+.settings-field .form-input {
+    width: 100%;
+
+    padding: 0.6rem 0.65rem;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+
+    color: var(--text-main);
+
+    font: inherit;
+}
+
+.settings-readonly-value {
+    color: var(--text-muted);
+}
+
+.settings-password-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 0.75rem;
+}
+
+.settings-password-value {
+    color: var(--text-muted);
+
+    letter-spacing: 0.08em;
+}
+
+.settings-form-actions {
+    display: flex;
+    justify-content: flex-end;
+
+    padding-top: 0.8rem;
+
+    border-top: 1px solid var(--border-color);
+}
+
+.settings-primary-button,
+.settings-secondary-button {
+    padding: 0.55rem 0.75rem;
+
+    border-radius: var(--radius-small);
+
+    font: inherit;
+
+    cursor: pointer;
+}
+
+.settings-primary-button {
+    background: var(--eldvatten-red);
+
+    border: 1px solid var(--eldvatten-red);
+
+    color: white;
+}
+
+.settings-secondary-button {
+    background: var(--surface);
+
+    border: 1px solid var(--border-color);
+
+    color: var(--text-main);
+}
+
+.settings-category-heading {
+    margin: 1rem 0 0.35rem;
+
+    font-weight: 700;
+}
+
+.settings-toggle-row,
+.settings-device-row,
+.settings-session-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 0.75rem;
+
+    padding: 0.8rem 0;
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.settings-toggle-row p,
+.settings-device-row p,
+.settings-session-row p {
+    margin: 0.2rem 0 0;
+
+    color: var(--text-muted);
+
+    font-size: 0.85rem;
+}
+
+.settings-toggle-row input[type="checkbox"] {
+    flex-shrink: 0;
+
+    width: 1.15rem;
+    height: 1.15rem;
+}
+
+.settings-device-actions {
+    display: flex;
+    align-items: center;
+
+    gap: 0.5rem;
+}
+
+
+/* Settings Modal */
+
+.settings-modal {
+    position: fixed;
+    inset: 0;
+
+    z-index: 1000;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    padding: 1rem;
+}
+
+.settings-modal.open {
+    display: flex;
+}
+
+.settings-modal-backdrop {
+    position: absolute;
+    inset: 0;
+
+    background: rgb(0 0 0 / 45%);
+}
+
+.settings-modal-dialog {
+    position: relative;
+
+    z-index: 1;
+
+    width: 100%;
+    max-width: 34rem;
+    max-height: calc(100vh - 2rem);
+
+    overflow-y: auto;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+}
+
+.settings-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 1rem;
+
+    padding: 0.9rem;
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.settings-modal-header h2 {
+    margin: 0;
+
+    font-size: 1.25rem;
+}
+
+.settings-modal-close {
+    padding: 0.2rem 0.45rem;
+
+    background: transparent;
+
+    border: 0;
+
+    color: var(--text-muted);
+
+    font: inherit;
+    font-size: 1.5rem;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+.settings-modal-body {
+    padding: 0.9rem;
+}
+
+.settings-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+
+    gap: 0.5rem;
+
+    padding: 0.9rem;
+
+    border-top: 1px solid var(--border-color);
+}
+
 
 /* Resources */
 
@@ -436,4 +1017,60 @@
 
 .my-resource-link:first-child {
     border-top: 1px solid var(--border-color);
+}
+
+
+/* Small Mobile Layout */
+
+@media (max-width: 440px) {
+    .settings-password-row,
+    .settings-device-row,
+    .settings-session-row {
+        align-items: stretch;
+
+        flex-direction: column;
+    }
+
+    .settings-device-actions {
+        width: 100%;
+    }
+
+    .settings-device-actions button {
+        width: 100%;
+    }
+
+    .settings-session-row form,
+    .settings-session-row form button {
+        width: 100%;
+    }
+
+    .settings-modal-actions {
+        flex-direction: column-reverse;
+    }
+
+    .settings-modal-actions button {
+        width: 100%;
+    }
+
+    .todo-item-main {
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 0.25rem;
+    }
+}
+
+
+/* Large Mobile Layout */
+
+@media (min-width: 700px) {
+    .mobile-app-content {
+        max-width: 680px;
+
+        margin: 0 auto;
+
+        border-right: 1px solid var(--border-color);
+        border-left: 1px solid var(--border-color);
+    }
 }

@@ -7,6 +7,10 @@
 {% block mobile_primary_tabs %}
 {% endblock %}
 
+{% block mobile_nav_my_eldvatten %}
+    active
+{% endblock %}
+
 {% block app_content %}
 
 <section class="mobile-my-eldvatten-header">
@@ -15,48 +19,45 @@
         My Eldvatten
     </h1>
 
-    <label
-        class="mobile-my-eldvatten-label"
-        for="my-eldvatten-section"
-    >
-        Section
-    </label>
-
-    <select
-        id="my-eldvatten-section"
-        class="mobile-my-eldvatten-select"
-        onchange="window.location.href=this.value"
-    >
-        <option
-            value="{% url 'my_eldvatten' %}?section=profile"
-            {% if active_section == "profile" %}selected{% endif %}
-        >
-            My Profile
-        </option>
-
-        <option
-            value="{% url 'my_eldvatten' %}?section=todo"
-            {% if active_section == "todo" %}selected{% endif %}
-        >
-            To-Do
-        </option>
-
-        <option
-            value="{% url 'my_eldvatten' %}?section=notifications"
-            {% if active_section == "notifications" %}selected{% endif %}
-        >
-            Notifications
-        </option>
-
-        <option
-            value="{% url 'my_eldvatten' %}?section=settings"
-            {% if active_section == "settings" %}selected{% endif %}
-        >
-            Settings
-        </option>
-    </select>
-
 </section>
+
+
+<nav
+    class="mobile-my-eldvatten-tabs"
+    aria-label="My Eldvatten sections"
+>
+    <a
+        class="mobile-my-eldvatten-tab
+        {% if active_section == 'profile' %}active{% endif %}"
+        href="{% url 'my_eldvatten' %}?section=profile"
+    >
+        My Profile
+    </a>
+
+    <a
+        class="mobile-my-eldvatten-tab
+        {% if active_section == 'todo' %}active{% endif %}"
+        href="{% url 'my_eldvatten' %}?section=todo"
+    >
+        To-Do
+    </a>
+
+    <a
+        class="mobile-my-eldvatten-tab
+        {% if active_section == 'notifications' %}active{% endif %}"
+        href="{% url 'my_eldvatten' %}?section=notifications"
+    >
+        Notifications
+    </a>
+
+    <a
+        class="mobile-my-eldvatten-tab
+        {% if active_section == 'settings' %}active{% endif %}"
+        href="{% url 'my_eldvatten' %}?section=settings"
+    >
+        Settings
+    </a>
+</nav>
 
 
 <section class="mobile-my-eldvatten-content">

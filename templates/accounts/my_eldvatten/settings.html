@@ -1,3 +1,5 @@
+{% load static %}
+
 <section class="my-eldvatten-section">
 
     <header class="my-eldvatten-section-header">
@@ -8,13 +10,467 @@
 
     <div class="my-eldvatten-section-body">
 
-        <a
-            class="my-eldvatten-action-link"
-            href="{% url 'notifications:notification_settings' %}"
-        >
-            Notification Settings
-        </a>
+        {% if messages %}
+
+            <div class="settings-messages">
+
+                {% for message in messages %}
+
+                    <p>
+                        {{ message }}
+                    </p>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+
+        <section class="settings-section">
+
+            <header class="settings-section-header">
+
+                <h3>
+                    Account
+                </h3>
+
+            </header>
+
+            <div class="settings-section-body">
+
+                <form
+                    method="post"
+                    action="{% url 'my_eldvatten_account_update' %}"
+                >
+
+                    {% csrf_token %}
+
+                    <div class="settings-field">
+
+                        <label
+                            for="{{ account_settings_form.display_name.id_for_label }}"
+                        >
+                            Display Name
+                        </label>
+
+                        {{ account_settings_form.display_name }}
+
+                    </div>
+
+                    <div class="settings-field">
+
+                        <span class="settings-field-label">
+                            Username
+                        </span>
+
+                        <span class="settings-readonly-value">
+                            {{ request.user.username }}
+                        </span>
+
+                    </div>
+
+                    <div class="settings-field">
+
+                        <span class="settings-field-label">
+                            Password
+                        </span>
+
+                        <div class="settings-password-row">
+
+                            <span class="settings-password-value">
+                                ••••••••••••
+                            </span>
+
+                            <button
+                                class="settings-secondary-button"
+                                id="open-password-modal-button"
+                                type="button"
+                            >
+                                Change Password
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <div class="settings-form-actions">
+
+                        <button
+                            class="settings-primary-button"
+                            type="submit"
+                        >
+                            Save Account
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </section>
+
+
+        <section class="settings-section">
+
+            <header class="settings-section-header">
+
+                <h3>
+                    Notifications
+                </h3>
+
+                <p>
+                    Choose which EldVatten updates can
+                    send push notifications.
+                </p>
+
+            </header>
+
+            <div class="settings-section-body">
+
+                <form
+                    method="post"
+                    action="{% url 'notifications:notification_preferences_update' %}"
+                >
+
+                    {% csrf_token %}
+
+                    <div class="settings-toggle-row">
+
+                        <div>
+                            <strong>
+                                Push Notifications
+                            </strong>
+
+                            <p>
+                                Allow EldVatten to send
+                                push alerts.
+                            </p>
+                        </div>
+
+                        {{ notification_preference_form.push_enabled }}
+
+                    </div>
+
+
+                    <div class="settings-category-heading">
+                        Categories
+                    </div>
+
+
+                    <div class="settings-toggle-row">
+
+                        <span>
+                            Actions
+                        </span>
+
+                        {{ notification_preference_form.action_push }}
+
+                    </div>
+
+                    <div class="settings-toggle-row">
+
+                        <span>
+                            Votes
+                        </span>
+
+                        {{ notification_preference_form.vote_push }}
+
+                    </div>
+
+                    <div class="settings-toggle-row">
+
+                        <span>
+                            Events
+                        </span>
+
+                        {{ notification_preference_form.event_push }}
+
+                    </div>
+
+                    <div class="settings-toggle-row">
+
+                        <span>
+                            Messages
+                        </span>
+
+                        {{ notification_preference_form.message_push }}
+
+                    </div>
+
+                    <div class="settings-toggle-row">
+
+                        <span>
+                            Community
+                        </span>
+
+                        {{ notification_preference_form.community_push }}
+
+                    </div>
+
+                    <div class="settings-toggle-row">
+
+                        <span>
+                            Account
+                        </span>
+
+                        {{ notification_preference_form.account_push }}
+
+                    </div>
+
+                    <div class="settings-toggle-row">
+
+                        <span>
+                            System
+                        </span>
+
+                        {{ notification_preference_form.system_push }}
+
+                    </div>
+
+                    <div class="settings-form-actions">
+
+                        <button
+                            class="settings-primary-button"
+                            type="submit"
+                        >
+                            Save Notifications
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </section>
+
+
+        <section class="settings-section">
+
+            <header class="settings-section-header">
+
+                <h3>
+                    Push Devices
+                </h3>
+
+            </header>
+
+            <div class="settings-section-body">
+
+                <div class="settings-device-row">
+
+                    <div>
+
+                        <strong>
+                            This Device
+                        </strong>
+
+                        <p
+                            id="device-push-status"
+                            aria-live="polite"
+                        >
+                            Checking notification status...
+                        </p>
+
+                    </div>
+
+                    <div class="settings-device-actions">
+
+                        <button
+                            class="settings-secondary-button"
+                            id="enable-device-push-button"
+                            type="button"
+                            hidden
+                        >
+                            Enable
+                        </button>
+
+                        <button
+                            class="settings-secondary-button"
+                            id="disable-device-push-button"
+                            type="button"
+                            hidden
+                        >
+                            Disable
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="settings-section">
+
+            <header class="settings-section-header">
+
+                <h3>
+                    Privacy &amp; Session
+                </h3>
+
+            </header>
+
+            <div class="settings-section-body">
+
+                <div class="settings-session-row">
+
+                    <div>
+
+                        <strong>
+                            Current Session
+                        </strong>
+
+                        <p>
+                            Sign out of EldVatten on this browser.
+                        </p>
+
+                    </div>
+
+                    <form
+                        method="post"
+                        action="{% url 'logout' %}"
+                    >
+
+                        {% csrf_token %}
+
+                        <button
+                            class="settings-secondary-button"
+                            type="submit"
+                        >
+                            Sign Out
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </section>
 
     </div>
 
 </section>
+
+
+<div
+    class="settings-modal
+    {% if password_modal_open %}open{% endif %}"
+    id="password-change-modal"
+    aria-hidden="{% if password_modal_open %}false{% else %}true{% endif %}"
+>
+
+    <div
+        class="settings-modal-backdrop"
+        data-close-password-modal
+    ></div>
+
+    <section
+        class="settings-modal-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="password-change-title"
+    >
+
+        <header class="settings-modal-header">
+
+            <h2 id="password-change-title">
+                Change Password
+            </h2>
+
+            <button
+                class="settings-modal-close"
+                type="button"
+                aria-label="Close"
+                data-close-password-modal
+            >
+                ×
+            </button>
+
+        </header>
+
+        <form
+            method="post"
+            action="{% url 'my_eldvatten_password_change' %}"
+        >
+
+            {% csrf_token %}
+
+            <div class="settings-modal-body">
+
+                <div class="settings-field">
+
+                    <label
+                        for="{{ password_change_form.old_password.id_for_label }}"
+                    >
+                        Current Password
+                    </label>
+
+                    {{ password_change_form.old_password }}
+
+                </div>
+
+                <div class="settings-field">
+
+                    <label
+                        for="{{ password_change_form.new_password1.id_for_label }}"
+                    >
+                        New Password
+                    </label>
+
+                    {{ password_change_form.new_password1 }}
+
+                </div>
+
+                <div class="settings-field">
+
+                    <label
+                        for="{{ password_change_form.new_password2.id_for_label }}"
+                    >
+                        Confirm New Password
+                    </label>
+
+                    {{ password_change_form.new_password2 }}
+
+                </div>
+
+            </div>
+
+            <footer class="settings-modal-actions">
+
+                <button
+                    class="settings-secondary-button"
+                    type="button"
+                    data-close-password-modal
+                >
+                    Cancel
+                </button>
+
+                <button
+                    class="settings-primary-button"
+                    type="submit"
+                >
+                    Change Password
+                </button>
+
+            </footer>
+
+        </form>
+
+    </section>
+
+</div>
+
+
+<script
+    src="{% static 'js/notifications/push-settings.js' %}"
+></script>
+
+<script
+    src="{% static 'js/accounts/my-eldvatten-settings.js' %}"
+></script>

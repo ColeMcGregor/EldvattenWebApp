@@ -1,9 +1,20 @@
-from django.contrib.auth import login, logout
+from django.contrib import messages
+from django.contrib.auth import (
+    login,
+    logout,
+    update_session_auth_hash,
+)
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from .forms import LoginForm, RegistrationForm
+from .forms import (
+    AccountSettingsForm,
+    LoginForm,
+    RegistrationForm,
+    UserPasswordChangeForm,
+)
 from .my_eldvatten import (
     build_my_eldvatten_context,
     get_active_section,
@@ -79,6 +90,81 @@ def my_eldvatten(request):
         template_name,
         context,
     )
+
+
+@login_required
+@require_POST
+def my_eldvatten_account_update(request):
+    form = AccountSettingsForm(
+        request.POST,
+        instance=request.user,
+    )
+
+    if form.is_valid():
+        form.save()
+
+        messages.success(
+            request,
+            "Account settings saved.",
+        )
+    else:
+        for errors in form.errors.values():
+            for error in errors:
+                messages.error(
+                    request,
+                    error,
+                )
+
+    settings_url = (
+        f"{reverse('my_eldvatten')}"
+        "?section=settings"
+    )
+
+    return redirect(settings_url)
+
+
+@login_required
+@require_POST
+def my_eldvatten_password_change(request):
+    form = UserPasswordChangeForm(
+        user=request.user,
+        data=request.POST,
+    )
+
+    if form.is_valid():
+        user = form.save()
+
+        update_session_auth_hash(
+            request,
+            user,
+        )
+
+        messages.success(
+            request,
+            "Password changed.",
+        )
+
+        settings_url = (
+            f"{reverse('my_eldvatten')}"
+            "?section=settings"
+        )
+
+        return redirect(settings_url)
+
+    for errors in form.errors.values():
+        for error in errors:
+            messages.error(
+                request,
+                error,
+            )
+
+    settings_url = (
+        f"{reverse('my_eldvatten')}"
+        "?section=settings"
+        "&password=open"
+    )
+
+    return redirect(settings_url)
 
 
 def user_login(request):

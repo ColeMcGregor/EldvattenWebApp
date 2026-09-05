@@ -760,6 +760,282 @@
     color: var(--text-muted);
 }
 
+/* Settings */
+
+.settings-messages {
+    display: grid;
+
+    gap: 0.5rem;
+
+    margin-bottom: 1.5rem;
+}
+
+.settings-messages p {
+    margin: 0;
+
+    padding: 0.8rem 1rem;
+
+    background: var(--surface-muted);
+
+    border: 1px solid var(--border-color);
+}
+
+.settings-section {
+    margin-bottom: 1.5rem;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border-color);
+}
+
+.settings-section:last-child {
+    margin-bottom: 0;
+}
+
+.settings-section-header {
+    padding: 1rem 1.1rem;
+
+    background: var(--surface-muted);
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.settings-section-header h3 {
+    margin: 0;
+
+    font-size: 1.25rem;
+}
+
+.settings-section-header p {
+    margin: 0.35rem 0 0;
+
+    color: var(--text-muted);
+
+    font-size: 0.9rem;
+}
+
+.settings-section-body {
+    padding: 1.1rem;
+}
+
+.settings-field {
+    display: grid;
+
+    gap: 0.35rem;
+
+    margin-bottom: 1rem;
+}
+
+.settings-field label,
+.settings-field-label {
+    font-weight: 700;
+}
+
+.settings-field .form-input {
+    width: 100%;
+    max-width: 32rem;
+
+    padding: 0.6rem 0.7rem;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+
+    color: var(--text-main);
+
+    font: inherit;
+}
+
+.settings-readonly-value {
+    color: var(--text-muted);
+}
+
+.settings-password-row {
+    display: flex;
+    align-items: center;
+
+    gap: 1rem;
+}
+
+.settings-password-value {
+    color: var(--text-muted);
+
+    letter-spacing: 0.08em;
+}
+
+.settings-form-actions {
+    display: flex;
+    justify-content: flex-end;
+
+    padding-top: 0.9rem;
+
+    border-top: 1px solid var(--border-color);
+}
+
+.settings-primary-button,
+.settings-secondary-button {
+    padding: 0.55rem 0.85rem;
+
+    border-radius: var(--radius-small);
+
+    font: inherit;
+
+    cursor: pointer;
+}
+
+.settings-primary-button {
+    background: var(--eldvatten-red);
+
+    border: 1px solid var(--eldvatten-red);
+
+    color: white;
+}
+
+.settings-secondary-button {
+    background: var(--surface);
+
+    border: 1px solid var(--border-color);
+
+    color: var(--text-main);
+}
+
+.settings-secondary-button:hover {
+    border-color: var(--eldvatten-red);
+
+    color: var(--eldvatten-red);
+}
+
+.settings-category-heading {
+    margin: 1.2rem 0 0.4rem;
+
+    font-weight: 700;
+}
+
+.settings-toggle-row,
+.settings-device-row,
+.settings-session-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 1rem;
+
+    padding: 0.85rem 0;
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.settings-toggle-row p,
+.settings-device-row p,
+.settings-session-row p {
+    margin: 0.2rem 0 0;
+
+    color: var(--text-muted);
+
+    font-size: 0.9rem;
+}
+
+.settings-toggle-row input[type="checkbox"] {
+    flex-shrink: 0;
+
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.settings-device-actions {
+    display: flex;
+    align-items: center;
+
+    gap: 0.5rem;
+}
+
+.settings-modal {
+    position: fixed;
+    inset: 0;
+
+    z-index: 1000;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    padding: 1.5rem;
+}
+
+.settings-modal.open {
+    display: flex;
+}
+
+.settings-modal-backdrop {
+    position: absolute;
+    inset: 0;
+
+    background: rgb(0 0 0 / 45%);
+}
+
+.settings-modal-dialog {
+    position: relative;
+
+    z-index: 1;
+
+    width: min(100%, 34rem);
+
+    background: var(--surface);
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+}
+
+.settings-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 1rem;
+
+    padding: 1rem 1.1rem;
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.settings-modal-header h2 {
+    margin: 0;
+
+    font-size: 1.35rem;
+}
+
+.settings-modal-close {
+    padding: 0.2rem 0.45rem;
+
+    background: transparent;
+
+    border: 0;
+
+    color: var(--text-muted);
+
+    font: inherit;
+    font-size: 1.5rem;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+.settings-modal-body {
+    padding: 1.1rem;
+}
+
+.settings-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+
+    gap: 0.6rem;
+
+    padding: 1rem 1.1rem;
+
+    border-top: 1px solid var(--border-color);
+}
+
 
 /* Resources */
 
