@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
@@ -6,10 +7,15 @@ from django.views.decorators.http import require_POST
 from accounts.models import AccountStatus
 from audit.models import AuditLog
 from audit.services import record_audit_event
-from organization.models import GroupMembership
 
-from .forms import CommentForm, PostForm, ReplyForm
+from .forms import (
+    CommentForm,
+    PostForm,
+    PostTargetFormSet,
+    ReplyForm,
+)
 from .models import Comment, Post
+from .services import get_visible_posts, user_can_view_post
 
 
 def is_member(user):
@@ -20,56 +26,36 @@ def is_member(user):
     )
 
 
-def is_guest(user):
-    return (
-        user.is_authenticated
-        and user.is_active
-        and user.account_status == AccountStatus.PENDING
+def get_tavern_template(request):
+    user_agent = request.META.get(
+        "HTTP_USER_AGENT",
+        "",
+    ).lower()
+
+    is_mobile = any(
+        mobile_term in user_agent
+        for mobile_term in [
+            "android",
+            "iphone",
+            "ipod",
+            "mobile",
+        ]
     )
 
+    if is_mobile:
+        return "community/tavern/tavern_main_mobile.html"
 
-def get_user_group_ids(user):
-    if not is_member(user):
-        return []
-
-    return list(
-        GroupMembership.objects.filter(
-            user=user,
-            ended_at__isnull=True,
-        ).values_list(
-            "community_group_id",
-            flat=True,
-        )
-    )
+    return "community/tavern/tavern_main_desktop.html"
 
 
 def can_view_post(user, post):
-    if post.visibility == Post.Visibility.PUBLIC:
-        return True
-
     if (
         user.is_authenticated
         and user.has_perm("community.view_post")
     ):
         return True
 
-    if post.visibility == Post.Visibility.GUESTS:
-        return is_guest(user) or is_member(user)
-
-    if post.visibility == Post.Visibility.MEMBERS:
-        return is_member(user)
-
-    if post.visibility == Post.Visibility.SELECTED_GROUPS:
-        if not is_member(user):
-            return False
-
-        user_group_ids = get_user_group_ids(user)
-
-        return post.visible_to_groups.filter(
-            id__in=user_group_ids,
-        ).exists()
-
-    return False
+    return user_can_view_post(user, post)
 
 
 def can_edit_post(user, post):
@@ -112,17 +98,79 @@ def can_delete_comment(user, comment):
     )
 
 
+def post_target_values(post):
+    targets = []
+
+    for target in post.targets.all().order_by("id"):
+        targets.append(
+            {
+                "user": (
+                    str(target.user)
+                    if target.user
+                    else None
+                ),
+                "citizenship_class": (
+                    str(target.citizenship_class)
+                    if target.citizenship_class
+                    else None
+                ),
+                "social_rank": (
+                    str(target.social_rank)
+                    if target.social_rank
+                    else None
+                ),
+                "office": (
+                    str(target.office)
+                    if target.office
+                    else None
+                ),
+                "chapter": (
+                    str(target.chapter)
+                    if target.chapter
+                    else None
+                ),
+                "household": (
+                    str(target.household)
+                    if target.household
+                    else None
+                ),
+                "governance_body": (
+                    str(target.governance_body)
+                    if target.governance_body
+                    else None
+                ),
+                "order": (
+                    str(target.order)
+                    if target.order
+                    else None
+                ),
+                "order_rank": (
+                    str(target.order_rank)
+                    if target.order_rank
+                    else None
+                ),
+                "community_group": (
+                    str(target.community_group)
+                    if target.community_group
+                    else None
+                ),
+                "household_leadership_type": (
+                    str(target.household_leadership_type)
+                    if target.household_leadership_type
+                    else None
+                ),
+            }
+        )
+
+    return targets
+
+
 def post_values(post):
     return {
         "author": str(post.author),
         "body": post.body,
         "visibility": post.visibility,
-        "visible_to_groups": list(
-            post.visible_to_groups.values_list(
-                "name",
-                flat=True,
-            )
-        ),
+        "targets": post_target_values(post),
         "is_official": post.is_official,
         "is_pinned": post.is_pinned,
         "is_locked": post.is_locked,
@@ -142,70 +190,126 @@ def comment_values(comment):
     }
 
 
+def save_post_with_targets(
+    *,
+    form,
+    target_formset,
+):
+    with transaction.atomic():
+        post = form.save()
+
+        target_formset.instance = post
+
+        if (
+            post.visibility
+            == Post.Visibility.SELECTED_GROUPS
+        ):
+            target_formset.save()
+        else:
+            post.targets.all().delete()
+
+    return post
+
+
+@login_required
 def post_list(request):
-    posts = Post.objects.select_related(
-        "author",
-    ).prefetch_related(
-        "visible_to_groups",
-    )
+    composer_form = None
+    target_formset = None
 
-    if (
-        request.user.is_authenticated
-        and request.user.has_perm("community.view_post")
-    ):
-        visible_posts = posts
+    if request.method == "POST":
+        if not is_member(request.user):
+            return HttpResponseForbidden()
 
-    elif is_member(request.user):
-        user_group_ids = get_user_group_ids(request.user)
-
-        visible_posts = [
-            post
-            for post in posts
-            if (
-                post.visibility
-                in {
-                    Post.Visibility.PUBLIC,
-                    Post.Visibility.GUESTS,
-                    Post.Visibility.MEMBERS,
-                }
-                or (
-                    post.visibility
-                    == Post.Visibility.SELECTED_GROUPS
-                    and post.visible_to_groups.filter(
-                        id__in=user_group_ids,
-                    ).exists()
-                )
-            )
-        ]
-
-    elif is_guest(request.user):
-        visible_posts = posts.filter(
-            visibility__in=[
-                Post.Visibility.PUBLIC,
-                Post.Visibility.GUESTS,
-            ]
+        post = Post(
+            author=request.user,
         )
 
+        composer_form = PostForm(
+            request.POST,
+            instance=post,
+        )
+
+        target_formset = PostTargetFormSet(
+            request.POST,
+            instance=post,
+            prefix="targets",
+        )
+
+        form_is_valid = composer_form.is_valid()
+
+        target_formset_is_valid = (
+            target_formset.is_valid()
+        )
+
+        if form_is_valid and target_formset_is_valid:
+            post = save_post_with_targets(
+                form=composer_form,
+                target_formset=target_formset,
+            )
+
+            record_audit_event(
+                actor=request.user,
+                request=request,
+                action=AuditLog.Action.CREATE,
+                target_type=post._meta.verbose_name,
+                target_id=post.pk,
+                target_label=str(post),
+                new_value=post_values(post),
+                source=AuditLog.Source.WEB_APP,
+                method=AuditLog.Method.MANUAL,
+            )
+
+            return redirect(
+                "community:post_list",
+            )
+
+    elif is_member(request.user):
+        post = Post(
+            author=request.user,
+        )
+
+        composer_form = PostForm(
+            instance=post,
+            initial={
+                "visibility": Post.Visibility.MEMBERS,
+            },
+        )
+
+        target_formset = PostTargetFormSet(
+            instance=post,
+            prefix="targets",
+        )
+
+    if request.user.has_perm(
+        "community.view_post"
+    ):
+        visible_posts = (
+            Post.objects
+            .select_related("author")
+            .order_by("-created_at")
+        )
     else:
-        visible_posts = posts.filter(
-            visibility=Post.Visibility.PUBLIC
+        visible_posts = get_visible_posts(
+            request.user,
         )
 
     return render(
         request,
-        "community/post_list.html",
+        get_tavern_template(request),
         {
             "posts": visible_posts,
+            "composer_form": composer_form,
+            "target_formset": target_formset,
         },
     )
 
 
 def post_detail(request, post_id):
     post = get_object_or_404(
-        Post.objects.select_related(
-            "author",
-        ).prefetch_related(
-            "visible_to_groups",
+        Post.objects
+        .select_related("author")
+        .prefetch_related(
+            "targets",
             "comments__author",
             "comments__replies__author",
         ),
@@ -238,14 +342,33 @@ def post_create(request):
     if not is_member(request.user):
         return HttpResponseForbidden()
 
-    if request.method == "POST":
-        form = PostForm(request.POST)
+    post = Post(
+        author=request.user,
+    )
 
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            post.save()
-            form.save_m2m()
+    if request.method == "POST":
+        form = PostForm(
+            request.POST,
+            instance=post,
+        )
+
+        target_formset = PostTargetFormSet(
+            request.POST,
+            instance=post,
+            prefix="targets",
+        )
+
+        form_is_valid = form.is_valid()
+
+        target_formset_is_valid = (
+            target_formset.is_valid()
+        )
+
+        if form_is_valid and target_formset_is_valid:
+            post = save_post_with_targets(
+                form=form,
+                target_formset=target_formset,
+            )
 
             record_audit_event(
                 actor=request.user,
@@ -263,14 +386,26 @@ def post_create(request):
                 "community:post_detail",
                 post_id=post.pk,
             )
+
     else:
-        form = PostForm()
+        form = PostForm(
+            instance=post,
+            initial={
+                "visibility": Post.Visibility.MEMBERS,
+            },
+        )
+
+        target_formset = PostTargetFormSet(
+            instance=post,
+            prefix="targets",
+        )
 
     return render(
         request,
         "community/post_form.html",
         {
             "form": form,
+            "target_formset": target_formset,
             "page_title": "Create Post",
         },
     )
@@ -278,7 +413,12 @@ def post_create(request):
 
 @login_required
 def post_edit(request, post_id):
-    post = get_object_or_404(Post, pk=post_id)
+    post = get_object_or_404(
+        Post.objects.prefetch_related(
+            "targets",
+        ),
+        pk=post_id,
+    )
 
     if not can_edit_post(request.user, post):
         return HttpResponseForbidden()
@@ -291,8 +431,23 @@ def post_edit(request, post_id):
             instance=post,
         )
 
-        if form.is_valid():
-            post = form.save()
+        target_formset = PostTargetFormSet(
+            request.POST,
+            instance=post,
+            prefix="targets",
+        )
+
+        form_is_valid = form.is_valid()
+
+        target_formset_is_valid = (
+            target_formset.is_valid()
+        )
+
+        if form_is_valid and target_formset_is_valid:
+            post = save_post_with_targets(
+                form=form,
+                target_formset=target_formset,
+            )
 
             record_audit_event(
                 actor=request.user,
@@ -311,14 +466,23 @@ def post_edit(request, post_id):
                 "community:post_detail",
                 post_id=post.pk,
             )
+
     else:
-        form = PostForm(instance=post)
+        form = PostForm(
+            instance=post,
+        )
+
+        target_formset = PostTargetFormSet(
+            instance=post,
+            prefix="targets",
+        )
 
     return render(
         request,
         "community/post_form.html",
         {
             "form": form,
+            "target_formset": target_formset,
             "post": post,
             "page_title": "Edit Post",
         },
@@ -327,7 +491,12 @@ def post_edit(request, post_id):
 
 @login_required
 def post_delete(request, post_id):
-    post = get_object_or_404(Post, pk=post_id)
+    post = get_object_or_404(
+        Post.objects.prefetch_related(
+            "targets",
+        ),
+        pk=post_id,
+    )
 
     if not can_delete_post(request.user, post):
         return HttpResponseForbidden()
@@ -352,7 +521,9 @@ def post_delete(request, post_id):
             method=AuditLog.Method.MANUAL,
         )
 
-        return redirect("community:post_list")
+        return redirect(
+            "community:post_list",
+        )
 
     return render(
         request,
@@ -372,7 +543,10 @@ def add_comment(request, post_id):
     if not is_member(request.user):
         return HttpResponseForbidden()
 
-    post = get_object_or_404(Post, pk=post_id)
+    post = get_object_or_404(
+        Post,
+        pk=post_id,
+    )
 
     if not can_view_post(request.user, post):
         return HttpResponseForbidden()
@@ -380,10 +554,15 @@ def add_comment(request, post_id):
     if post.is_locked:
         return HttpResponseForbidden()
 
-    form = CommentForm(request.POST)
+    form = CommentForm(
+        request.POST,
+    )
 
     if form.is_valid():
-        comment = form.save(commit=False)
+        comment = form.save(
+            commit=False,
+        )
+
         comment.post = post
         comment.author = request.user
         comment.save()
@@ -413,7 +592,9 @@ def add_reply(request, comment_id):
         return HttpResponseForbidden()
 
     parent = get_object_or_404(
-        Comment.objects.select_related("post"),
+        Comment.objects.select_related(
+            "post",
+        ),
         pk=comment_id,
     )
 
@@ -428,13 +609,19 @@ def add_reply(request, comment_id):
     if parent.parent_id is not None:
         return HttpResponseForbidden()
 
-    form = ReplyForm(request.POST)
+    form = ReplyForm(
+        request.POST,
+    )
 
     if form.is_valid():
-        reply = form.save(commit=False)
+        reply = form.save(
+            commit=False,
+        )
+
         reply.post = post
         reply.author = request.user
         reply.parent = parent
+
         reply.full_clean()
         reply.save()
 
@@ -460,17 +647,24 @@ def add_reply(request, comment_id):
 @require_POST
 def comment_edit(request, comment_id):
     comment = get_object_or_404(
-        Comment.objects.select_related("post"),
+        Comment.objects.select_related(
+            "post",
+        ),
         pk=comment_id,
     )
 
-    if not can_edit_comment(request.user, comment):
+    if not can_edit_comment(
+        request.user,
+        comment,
+    ):
         return HttpResponseForbidden()
 
     if comment.post.is_locked:
         return HttpResponseForbidden()
 
-    old_value = comment_values(comment)
+    old_value = comment_values(
+        comment,
+    )
 
     form = CommentForm(
         request.POST,
@@ -502,20 +696,30 @@ def comment_edit(request, comment_id):
 @login_required
 def comment_delete(request, comment_id):
     comment = get_object_or_404(
-        Comment.objects.select_related("post"),
+        Comment.objects.select_related(
+            "post",
+        ),
         pk=comment_id,
     )
 
-    if not can_delete_comment(request.user, comment):
+    if not can_delete_comment(
+        request.user,
+        comment,
+    ):
         return HttpResponseForbidden()
 
     post_id = comment.post_id
 
     if request.method == "POST":
-        old_value = comment_values(comment)
+        old_value = comment_values(
+            comment,
+        )
+
         target_id = comment.pk
         target_label = str(comment)
-        target_type = comment._meta.verbose_name
+        target_type = (
+            comment._meta.verbose_name
+        )
 
         comment.delete()
 
@@ -542,7 +746,8 @@ def comment_delete(request, comment_id):
         {
             "object_type": "comment",
             "body": comment.body,
-            "cancel_url": "community:post_detail",
+            "cancel_url":
+                "community:post_detail",
             "cancel_id": post_id,
         },
     )

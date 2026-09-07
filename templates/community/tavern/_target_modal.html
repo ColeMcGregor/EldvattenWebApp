@@ -1,0 +1,120 @@
+<div
+    class="tavern-target-modal"
+    data-target-modal
+    aria-hidden="true"
+>
+
+    <div
+        class="tavern-target-modal-backdrop"
+        data-close-target-modal
+    ></div>
+
+
+    <div
+        class="tavern-target-modal-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tavern-target-modal-title"
+    >
+
+        <header class="tavern-target-modal-header">
+
+            <div>
+
+                <h2 id="tavern-target-modal-title">
+                    Choose Audience
+                </h2>
+
+                <p>
+                    Criteria in one target must all match.
+                    Separate targets are alternatives.
+                </p>
+
+            </div>
+
+
+            <button
+                class="tavern-target-modal-close"
+                type="button"
+                aria-label="Close audience selection"
+                data-close-target-modal
+            >
+                ×
+            </button>
+
+        </header>
+
+
+        <div class="tavern-target-modal-body">
+
+            {{ target_formset.management_form }}
+
+
+            {% if target_formset.non_form_errors %}
+
+                <div class="tavern-target-errors">
+                    {{ target_formset.non_form_errors }}
+                </div>
+
+            {% endif %}
+
+
+            <div
+                class="tavern-target-list"
+                data-target-list
+            >
+
+                {% for target_form in target_formset %}
+
+                    {% include "community/tavern/_target_row.html" with target_form=target_form %}
+
+                {% endfor %}
+
+            </div>
+
+
+            <template data-empty-target-form>
+
+                {% include "community/tavern/_target_row.html" with target_form=target_formset.empty_form %}
+
+            </template>
+
+        </div>
+
+
+        <footer class="tavern-target-modal-actions">
+
+            <button
+                class="tavern-target-add"
+                type="button"
+                data-add-target
+            >
+                Add Another Group
+            </button>
+
+
+            <div class="tavern-target-modal-action-buttons">
+
+                <button
+                    class="button"
+                    type="button"
+                    data-close-target-modal
+                >
+                    Cancel
+                </button>
+
+                <button
+                    class="button button-primary"
+                    type="button"
+                    data-use-targets
+                >
+                    Use Audience
+                </button>
+
+            </div>
+
+        </footer>
+
+    </div>
+
+</div>

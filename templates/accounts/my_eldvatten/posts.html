@@ -1,0 +1,77 @@
+<section class="my-eldvatten-section">
+
+    <header class="my-eldvatten-section-header">
+        <h2>
+            My Posts
+        </h2>
+    </header>
+
+    {% if my_posts %}
+
+        <div class="my-posts-list">
+
+            {% for post in my_posts %}
+
+                <article class="my-post-item">
+
+                    <header class="my-post-item-header">
+
+                        <span class="my-post-item-date">
+                            {{ post.created_at|date:"M j, Y" }}
+                        </span>
+
+                        <span class="my-post-item-visibility">
+                            {{ post.get_visibility_display }}
+                        </span>
+
+                    </header>
+
+                    <div class="my-post-item-body">
+                        {{ post.body|linebreaks }}
+                    </div>
+
+                    {% if post.is_official or post.is_pinned or post.is_locked %}
+
+                        <footer class="my-post-item-meta">
+
+                            {% if post.is_official %}
+                                <span>
+                                    Official
+                                </span>
+                            {% endif %}
+
+                            {% if post.is_pinned %}
+                                <span>
+                                    Pinned
+                                </span>
+                            {% endif %}
+
+                            {% if post.is_locked %}
+                                <span>
+                                    Locked
+                                </span>
+                            {% endif %}
+
+                        </footer>
+
+                    {% endif %}
+
+                </article>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <div class="my-eldvatten-section-body">
+
+            <p class="my-posts-empty">
+                You have not posted anything yet.
+            </p>
+
+        </div>
+
+    {% endif %}
+
+</section>

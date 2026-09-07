@@ -1,4 +1,5 @@
 {% extends "app/base_mobile.html" %}
+{% load static %}
 
 {% block title %}The Tavern | EldVatten{% endblock %}
 
@@ -7,122 +8,106 @@
 
 {% block app_content %}
 
-<section class="mobile-post-composer">
 
-    <div class="mobile-composer-avatar">
-        {% if request.user.display_name %}
-            {{ request.user.display_name|first }}
-        {% else %}
-            {{ request.user.username|first }}
-        {% endif %}
-    </div>
+{% if request.user.account_status == "MEMBER" %}
 
-    <div class="mobile-composer-content">
+    {% include "community/tavern/_composer.html" with mobile=True %}
 
-        <textarea
-            class="mobile-composer-input"
-            name="body"
-            rows="2"
-            placeholder="Share something?"
-        ></textarea>
-
-        <div class="mobile-composer-footer">
-
-            <div class="mobile-composer-tools">
-                <button
-                    class="mobile-composer-tool"
-                    type="button"
-                    aria-label="Add image"
-                >
-                    Image
-                </button>
-
-                <button
-                    class="mobile-composer-tool"
-                    type="button"
-                    aria-label="Add link"
-                >
-                    Link
-                </button>
-            </div>
-
-            <button
-                class="button button-primary mobile-composer-submit"
-                type="button"
-            >
-                Post
-            </button>
-
-        </div>
-
-    </div>
-
-</section>
+{% endif %}
 
 
 <section class="mobile-tavern-feed">
 
-    <article class="mobile-tavern-post">
+    {% for post in posts %}
 
-        <header class="mobile-tavern-post-header">
-            <strong>
-                Lorem Ipsum
-            </strong>
+        <article class="mobile-tavern-post">
 
-            <span>
-                Lorem ipsum
-            </span>
-        </header>
+            <header class="mobile-tavern-post-header">
 
-        <div class="mobile-tavern-post-body">
+                <strong>
+                    {% if post.author.display_name %}
+                        {{ post.author.display_name }}
+                    {% else %}
+                        {{ post.author.username }}
+                    {% endif %}
+                </strong>
+
+                <span>
+                    {{ post.created_at|date:"M j, Y" }}
+                </span>
+
+            </header>
+
+            <div class="mobile-tavern-post-body">
+                {{ post.body|linebreaks }}
+            </div>
+
+            {% if post.is_official or post.is_pinned or post.is_locked %}
+
+                <div class="mobile-tavern-post-meta">
+
+                    {% if post.is_official %}
+                        <span>
+                            Official
+                        </span>
+                    {% endif %}
+
+                    {% if post.is_pinned %}
+                        <span>
+                            Pinned
+                        </span>
+                    {% endif %}
+
+                    {% if post.is_locked %}
+                        <span>
+                            Locked
+                        </span>
+                    {% endif %}
+
+                </div>
+
+            {% endif %}
+
+            <footer class="mobile-tavern-post-footer">
+
+                <a
+                    href="{% url 'community:post_detail' post.id %}"
+                >
+                    {% if post.is_locked %}
+                        View
+                    {% else %}
+                        Comment
+                    {% endif %}
+                </a>
+
+                <span>
+                    {{ post.get_visibility_display }}
+                </span>
+
+            </footer>
+
+        </article>
+
+    {% empty %}
+
+        <div class="mobile-tavern-feed-empty">
             <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                There are no posts to show.
             </p>
         </div>
 
-        <footer class="mobile-tavern-post-footer">
-            <a href="#">
-                Comment
-            </a>
-
-            <a href="#">
-                Bookmark
-            </a>
-        </footer>
-
-    </article>
-
-
-    <article class="mobile-tavern-post">
-
-        <header class="mobile-tavern-post-header">
-            <strong>
-                Lorem Ipsum
-            </strong>
-
-            <span>
-                Lorem ipsum
-            </span>
-        </header>
-
-        <div class="mobile-tavern-post-body">
-            <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-            </p>
-        </div>
-
-        <footer class="mobile-tavern-post-footer">
-            <a href="#">
-                Comment
-            </a>
-
-            <a href="#">
-                Bookmark
-            </a>
-        </footer>
-
-    </article>
+    {% endfor %}
 
 </section>
+
+
+{% if request.user.account_status == "MEMBER" %}
+
+    <script
+        src="{% static 'js/community/tavern-composer.js' %}"
+        defer
+    ></script>
+
+{% endif %}
 
 {% endblock %}

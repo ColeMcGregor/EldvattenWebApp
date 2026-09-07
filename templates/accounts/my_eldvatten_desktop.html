@@ -38,6 +38,14 @@
 
     <a
         class="my-eldvatten-navigation-link
+        {% if active_section == 'posts' %}active{% endif %}"
+        href="{% url 'my_eldvatten' %}?section=posts"
+    >
+        My Posts
+    </a>
+
+    <a
+        class="my-eldvatten-navigation-link
         {% if active_section == 'todo' %}active{% endif %}"
         href="{% url 'my_eldvatten' %}?section=todo"
     >
@@ -67,6 +75,10 @@
     {% if active_section == "profile" %}
 
         {% include "accounts/my_eldvatten/profile.html" %}
+
+    {% elif active_section == "posts" %}
+
+        {% include "accounts/my_eldvatten/posts.html" %}
 
     {% elif active_section == "todo" %}
 

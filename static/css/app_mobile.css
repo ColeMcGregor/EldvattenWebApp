@@ -179,7 +179,7 @@
     min-width: 0;
 }
 
-.mobile-composer-input {
+.mobile-post-composer .post-form-textarea {
     width: 100%;
     min-height: 64px;
 
@@ -199,7 +199,7 @@
     line-height: 1.4;
 }
 
-.mobile-composer-input::placeholder {
+.mobile-post-composer .post-form-textarea::placeholder {
     color: var(--text-muted);
 }
 
@@ -215,19 +215,266 @@
     border-top: 1px solid var(--border-color);
 }
 
-.mobile-composer-tools {
+.mobile-composer-audience {
+    min-width: 0;
+
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
 
-    gap: 0.2rem;
+    gap: 0.4rem;
 }
 
-.mobile-composer-tool {
-    padding: 0.3rem 0.4rem;
+.mobile-composer-audience-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.mobile-post-composer .post-form-select {
+    min-width: 0;
+    max-width: 9rem;
+
+    padding: 0.4rem 0.45rem;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+
+    color: var(--text-main);
+
+    font: inherit;
+    font-size: 0.85rem;
+}
+
+.mobile-composer-target-button {
+    padding: 0.4rem 0.5rem;
+
+    background: transparent;
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+
+    color: var(--eldvatten-red);
+
+    font: inherit;
+    font-size: 0.8rem;
+
+    cursor: pointer;
+}
+
+.mobile-composer-submit {
+    flex: 0 0 auto;
+
+    padding: 0.55rem 0.9rem;
+}
+
+.mobile-composer-errors,
+.tavern-target-errors {
+    color: var(--eldvatten-red);
+
+    font-size: 0.8rem;
+}
+
+.mobile-composer-errors ul,
+.tavern-target-errors ul {
+    margin: 0.35rem 0 0;
+    padding-left: 1.1rem;
+}
+
+
+/* Tavern Audience Modal */
+
+.tavern-target-modal {
+    position: fixed;
+    inset: 0;
+
+    z-index: 1000;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    padding: 1rem;
+}
+
+.tavern-target-modal.open {
+    display: flex;
+}
+
+.tavern-target-modal-backdrop {
+    position: absolute;
+    inset: 0;
+
+    background: rgb(0 0 0 / 45%);
+}
+
+.tavern-target-modal-dialog {
+    position: relative;
+    z-index: 1;
+
+    width: 100%;
+    max-width: 38rem;
+    max-height: calc(100vh - 2rem);
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+}
+
+.tavern-target-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 0.75rem;
+
+    padding: 0.9rem;
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tavern-target-modal-header h2 {
+    margin: 0;
+
+    font-size: 1.25rem;
+}
+
+.tavern-target-modal-header p {
+    margin: 0.3rem 0 0;
+
+    color: var(--text-muted);
+
+    font-size: 0.8rem;
+    line-height: 1.35;
+}
+
+.tavern-target-modal-close {
+    flex: 0 0 auto;
+
+    padding: 0.2rem 0.4rem;
 
     background: transparent;
 
     border: 0;
+
+    color: var(--text-muted);
+
+    font: inherit;
+    font-size: 1.5rem;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+.tavern-target-modal-body {
+    min-height: 0;
+
+    overflow-y: auto;
+
+    padding: 0.9rem;
+}
+
+.tavern-target-list {
+    display: grid;
+
+    gap: 0.8rem;
+}
+
+.tavern-target-row {
+    padding: 0.85rem;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+}
+
+.tavern-target-row-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 0.75rem;
+
+    margin-bottom: 0.8rem;
+}
+
+.tavern-target-remove {
+    padding: 0;
+
+    background: transparent;
+
+    border: 0;
+
+    color: var(--eldvatten-red);
+
+    font: inherit;
+    font-size: 0.8rem;
+
+    cursor: pointer;
+}
+
+.tavern-target-fields {
+    display: grid;
+
+    gap: 0.75rem;
+}
+
+.tavern-target-field {
+    min-width: 0;
+
+    display: grid;
+
+    gap: 0.25rem;
+}
+
+.tavern-target-field label {
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.tavern-target-field .post-target-select {
+    width: 100%;
+    min-width: 0;
+
+    padding: 0.5rem;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+
+    color: var(--text-main);
+
+    font: inherit;
+}
+
+.tavern-target-modal-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 0.75rem;
+
+    padding: 0.9rem;
+
+    border-top: 1px solid var(--border-color);
+}
+
+.tavern-target-add {
+    padding: 0.45rem 0.55rem;
+
+    background: transparent;
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
 
     color: var(--eldvatten-red);
 
@@ -237,14 +484,11 @@
     cursor: pointer;
 }
 
-.mobile-composer-tool:hover {
-    text-decoration: underline;
-}
+.tavern-target-modal-action-buttons {
+    display: flex;
+    align-items: center;
 
-.mobile-composer-submit {
-    flex: 0 0 auto;
-
-    padding: 0.55rem 0.9rem;
+    gap: 0.5rem;
 }
 
 
@@ -285,20 +529,46 @@
     margin: 0 0 0.9rem;
 }
 
-.mobile-tavern-post-footer {
+.mobile-tavern-post-meta {
     display: flex;
+    flex-wrap: wrap;
 
-    gap: 1.25rem;
+    gap: 0.35rem 0.8rem;
+
+    margin-bottom: 0.7rem;
+
+    color: var(--text-muted);
+
+    font-size: 0.8rem;
 }
 
-.mobile-tavern-post-footer a {
+.mobile-tavern-post-footer {
+    display: flex;
+    justify-content: space-between;
+
+    gap: 1.25rem;
+
     color: var(--text-muted);
 
     font-size: 0.85rem;
 }
 
+.mobile-tavern-post-footer a {
+    color: var(--text-muted);
+}
+
 .mobile-tavern-post-footer a:hover {
     color: var(--eldvatten-red);
+}
+
+.mobile-tavern-feed-empty {
+    padding: 1rem;
+
+    color: var(--text-muted);
+}
+
+.mobile-tavern-feed-empty p {
+    margin: 0;
 }
 
 
@@ -360,7 +630,12 @@
 
 .mobile-my-eldvatten-tabs {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1fr)
+        minmax(0, 1fr)
+        minmax(0, 1.4fr)
+        minmax(44px, 0.65fr);
 
     background: var(--surface);
 
@@ -370,12 +645,17 @@
 .mobile-my-eldvatten-tab {
     min-width: 0;
 
-    padding: 0.8rem 0.35rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0.8rem 0.25rem;
 
     border-bottom: 3px solid transparent;
 
     color: var(--text-main);
 
+    font-size: 0.9rem;
     font-weight: 700;
     text-align: center;
 }
@@ -385,6 +665,20 @@
     color: var(--eldvatten-red);
 
     border-bottom-color: var(--eldvatten-red);
+}
+
+.mobile-my-eldvatten-settings-tab {
+    padding-right: 0.4rem;
+    padding-left: 0.4rem;
+}
+
+.mobile-my-eldvatten-settings-icon {
+    display: block;
+
+    width: 22px;
+    height: 22px;
+
+    object-fit: contain;
 }
 
 .mobile-my-eldvatten-content {
@@ -438,6 +732,80 @@
 
 .my-profile-details dd span {
     display: block;
+}
+
+
+/* My Posts */
+
+.my-posts-list {
+    display: grid;
+}
+
+.my-post-item {
+    padding: 1rem;
+
+    background: var(--surface);
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.my-post-item-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+
+    gap: 0.75rem;
+
+    margin-bottom: 0.65rem;
+}
+
+.my-post-item-date {
+    color: var(--text-muted);
+
+    font-size: 0.85rem;
+}
+
+.my-post-item-visibility {
+    flex-shrink: 0;
+
+    color: var(--eldvatten-red);
+
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.my-post-item-body {
+    line-height: 1.45;
+}
+
+.my-post-item-body p {
+    margin: 0 0 0.7rem;
+}
+
+.my-post-item-body p:last-child {
+    margin-bottom: 0;
+}
+
+.my-post-item-meta {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 0.35rem 0.8rem;
+
+    margin-top: 0.8rem;
+    padding-top: 0.65rem;
+
+    border-top: 1px solid var(--border-color);
+
+    color: var(--text-muted);
+
+    font-size: 0.8rem;
+}
+
+.my-posts-empty {
+    margin: 0;
+
+    color: var(--text-muted);
 }
 
 
@@ -1023,6 +1391,44 @@
 /* Small Mobile Layout */
 
 @media (max-width: 440px) {
+    .tavern-target-modal {
+        padding: 0.5rem;
+    }
+
+    .tavern-target-modal-dialog {
+        max-height: calc(100vh - 1rem);
+    }
+
+    .tavern-target-modal-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .tavern-target-add {
+        width: 100%;
+    }
+
+    .tavern-target-modal-action-buttons {
+        width: 100%;
+    }
+
+    .tavern-target-modal-action-buttons button {
+        flex: 1;
+    }
+
+    .mobile-composer-footer {
+        align-items: flex-end;
+    }
+
+    .mobile-composer-audience {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .mobile-post-composer .post-form-select {
+        max-width: 100%;
+    }
+
     .settings-password-row,
     .settings-device-row,
     .settings-session-row {
@@ -1059,6 +1465,18 @@
 
         gap: 0.25rem;
     }
+
+    .mobile-my-eldvatten-tab {
+        padding-right: 0.15rem;
+        padding-left: 0.15rem;
+
+        font-size: 0.82rem;
+    }
+
+    .mobile-my-eldvatten-settings-icon {
+        width: 20px;
+        height: 20px;
+    }
 }
 
 
@@ -1072,5 +1490,10 @@
 
         border-right: 1px solid var(--border-color);
         border-left: 1px solid var(--border-color);
+    }
+
+    .tavern-target-fields {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
     }
 }

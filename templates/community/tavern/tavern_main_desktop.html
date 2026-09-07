@@ -1,4 +1,5 @@
 {% extends "app/base_desktop.html" %}
+{% load static %}
 
 {% block title %}The Tavern | EldVatten{% endblock %}
 
@@ -13,118 +14,105 @@
 </section>
 
 
-<section class="tavern-post-composer">
+{% if request.user.account_status == "MEMBER" %}
 
-    <div class="tavern-composer-avatar">
-        {% if request.user.display_name %}
-            {{ request.user.display_name|first }}
-        {% else %}
-            {{ request.user.username|first }}
-        {% endif %}
-    </div>
+    {% include "community/tavern/_composer.html" with mobile=False %}
 
-    <div class="tavern-composer-content">
-
-        <textarea
-            class="tavern-composer-input"
-            name="body"
-            rows="2"
-            placeholder="Share Something?"
-        ></textarea>
-
-        <div class="tavern-composer-footer">
-
-            <div class="tavern-composer-tools">
-                <button
-                    class="tavern-composer-tool"
-                    type="button"
-                    aria-label="Add image"
-                >
-                    Image
-                </button>
-
-                <button
-                    class="tavern-composer-tool"
-                    type="button"
-                    aria-label="Add link"
-                >
-                    Link
-                </button>
-            </div>
-
-            <button
-                class="button button-primary tavern-composer-submit"
-                type="button"
-            >
-                Post
-            </button>
-
-        </div>
-
-    </div>
-
-</section>
+{% endif %}
 
 
 <section class="tavern-feed">
 
-    <article class="tavern-post">
-        <header class="tavern-post-header">
-            <strong>
-                Lorem Ipsum
-            </strong>
+    {% for post in posts %}
 
-            <span>
-                Lorem ipsum
-            </span>
-        </header>
+        <article class="tavern-post">
 
-        <div class="tavern-post-body">
+            <header class="tavern-post-header">
+
+                <strong>
+                    {% if post.author.display_name %}
+                        {{ post.author.display_name }}
+                    {% else %}
+                        {{ post.author.username }}
+                    {% endif %}
+                </strong>
+
+                <span>
+                    {{ post.created_at|date:"M j, Y" }}
+                </span>
+
+            </header>
+
+            <div class="tavern-post-body">
+                {{ post.body|linebreaks }}
+            </div>
+
+            {% if post.is_official or post.is_pinned or post.is_locked %}
+
+                <div class="tavern-post-meta">
+
+                    {% if post.is_official %}
+                        <span>
+                            Official
+                        </span>
+                    {% endif %}
+
+                    {% if post.is_pinned %}
+                        <span>
+                            Pinned
+                        </span>
+                    {% endif %}
+
+                    {% if post.is_locked %}
+                        <span>
+                            Locked
+                        </span>
+                    {% endif %}
+
+                </div>
+
+            {% endif %}
+
+            <footer class="tavern-post-footer">
+
+                <a
+                    href="{% url 'community:post_detail' post.id %}"
+                >
+                    {% if post.is_locked %}
+                        View
+                    {% else %}
+                        Comment
+                    {% endif %}
+                </a>
+
+                <span>
+                    {{ post.get_visibility_display }}
+                </span>
+
+            </footer>
+
+        </article>
+
+    {% empty %}
+
+        <div class="tavern-feed-empty">
             <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                There are no posts to show.
             </p>
         </div>
 
-        <footer class="tavern-post-footer">
-            <a href="#">
-                Comment
-            </a>
-
-            <a href="#">
-                Bookmark
-            </a>
-        </footer>
-    </article>
-
-
-    <article class="tavern-post">
-        <header class="tavern-post-header">
-            <strong>
-                Lorem Ipsum
-            </strong>
-
-            <span>
-                Lorem ipsum
-            </span>
-        </header>
-
-        <div class="tavern-post-body">
-            <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-            </p>
-        </div>
-
-        <footer class="tavern-post-footer">
-            <a href="#">
-                Comment
-            </a>
-
-            <a href="#">
-                Bookmark
-            </a>
-        </footer>
-    </article>
+    {% endfor %}
 
 </section>
+
+
+{% if request.user.account_status == "MEMBER" %}
+
+    <script
+        src="{% static 'js/community/tavern-composer.js' %}"
+        defer
+    ></script>
+
+{% endif %}
 
 {% endblock %}

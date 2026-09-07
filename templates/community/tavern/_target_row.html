@@ -1,0 +1,247 @@
+<section
+    class="tavern-target-row"
+    data-target-row
+>
+
+    {% for hidden_field in target_form.hidden_fields %}
+        {{ hidden_field }}
+    {% endfor %}
+
+
+    <header class="tavern-target-row-header">
+
+        <strong>
+            Target
+        </strong>
+
+        <button
+            class="tavern-target-remove"
+            type="button"
+            data-remove-target
+        >
+            Remove
+        </button>
+
+    </header>
+
+
+    {% if target_form.non_field_errors %}
+
+        <div class="tavern-target-errors">
+            {{ target_form.non_field_errors }}
+        </div>
+
+    {% endif %}
+
+
+    <div class="tavern-target-fields">
+
+        <div class="tavern-target-field">
+
+            <label for="{{ target_form.user.id_for_label }}">
+                User
+            </label>
+
+            {{ target_form.user }}
+
+            {% if target_form.user.errors %}
+                <div class="tavern-target-errors">
+                    {{ target_form.user.errors }}
+                </div>
+            {% endif %}
+
+        </div>
+
+
+        <div class="tavern-target-field">
+
+            <label
+                for="{{ target_form.citizenship_class.id_for_label }}"
+            >
+                Citizenship
+            </label>
+
+            {{ target_form.citizenship_class }}
+
+            {% if target_form.citizenship_class.errors %}
+                <div class="tavern-target-errors">
+                    {{ target_form.citizenship_class.errors }}
+                </div>
+            {% endif %}
+
+        </div>
+
+
+        <div class="tavern-target-field">
+
+            <label
+                for="{{ target_form.social_rank.id_for_label }}"
+            >
+                Social Rank
+            </label>
+
+            {{ target_form.social_rank }}
+
+            {% if target_form.social_rank.errors %}
+                <div class="tavern-target-errors">
+                    {{ target_form.social_rank.errors }}
+                </div>
+            {% endif %}
+
+        </div>
+
+
+        <div class="tavern-target-field">
+
+            <label for="{{ target_form.office.id_for_label }}">
+                Office
+            </label>
+
+            {{ target_form.office }}
+
+            {% if target_form.office.errors %}
+                <div class="tavern-target-errors">
+                    {{ target_form.office.errors }}
+                </div>
+            {% endif %}
+
+        </div>
+
+
+        <div class="tavern-target-field">
+
+            <label for="{{ target_form.chapter.id_for_label }}">
+                Chapter
+            </label>
+
+            {{ target_form.chapter }}
+
+            {% if target_form.chapter.errors %}
+                <div class="tavern-target-errors">
+                    {{ target_form.chapter.errors }}
+                </div>
+            {% endif %}
+
+        </div>
+
+
+        <div class="tavern-target-field">
+
+            <label for="{{ target_form.household.id_for_label }}">
+                Household
+            </label>
+
+            {{ target_form.household }}
+
+            {% if target_form.household.errors %}
+                <div class="tavern-target-errors">
+                    {{ target_form.household.errors }}
+                </div>
+            {% endif %}
+
+        </div>
+
+
+        <div class="tavern-target-field">
+
+            <label
+                for="{{ target_form.governance_body.id_for_label }}"
+            >
+                Governance Body
+            </label>
+
+            {{ target_form.governance_body }}
+
+            {% if target_form.governance_body.errors %}
+                <div class="tavern-target-errors">
+                    {{ target_form.governance_body.errors }}
+                </div>
+            {% endif %}
+
+        </div>
+
+
+        <div class="tavern-target-field">
+
+            <label for="{{ target_form.order.id_for_label }}">
+                Order
+            </label>
+
+            {{ target_form.order }}
+
+            {% if target_form.order.errors %}
+                <div class="tavern-target-errors">
+                    {{ target_form.order.errors }}
+                </div>
+            {% endif %}
+
+        </div>
+
+
+        <div class="tavern-target-field">
+
+            <label
+                for="{{ target_form.order_rank.id_for_label }}"
+            >
+                Order Rank
+            </label>
+
+            {{ target_form.order_rank }}
+
+            {% if target_form.order_rank.errors %}
+                <div class="tavern-target-errors">
+                    {{ target_form.order_rank.errors }}
+                </div>
+            {% endif %}
+
+        </div>
+
+
+        <div class="tavern-target-field">
+
+            <label
+                for="{{ target_form.community_group.id_for_label }}"
+            >
+                Community Group
+            </label>
+
+            {{ target_form.community_group }}
+
+            {% if target_form.community_group.errors %}
+                <div class="tavern-target-errors">
+                    {{ target_form.community_group.errors }}
+                </div>
+            {% endif %}
+
+        </div>
+
+
+        <div class="tavern-target-field">
+
+            <label
+                for="{{ target_form.household_leadership_type.id_for_label }}"
+            >
+                Household Leadership
+            </label>
+
+            {{ target_form.household_leadership_type }}
+
+            {% if target_form.household_leadership_type.errors %}
+                <div class="tavern-target-errors">
+                    {{ target_form.household_leadership_type.errors }}
+                </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <div
+        class="tavern-target-delete-field"
+        hidden
+    >
+        {{ target_form.DELETE }}
+    </div>
+
+</section>

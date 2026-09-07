@@ -1,8 +1,26 @@
 from django import forms
+from django.forms import BaseInlineFormSet, inlineformset_factory
 
-from organization.models import CommunityGroup
+from .models import (
+    Comment,
+    Post,
+    PostTarget,
+)
 
-from .models import Comment, Post
+
+POST_TARGET_FIELDS = (
+    "user",
+    "citizenship_class",
+    "social_rank",
+    "office",
+    "chapter",
+    "household",
+    "governance_body",
+    "order",
+    "order_rank",
+    "community_group",
+    "household_leadership_type",
+)
 
 
 class PostForm(forms.ModelForm):
@@ -11,7 +29,6 @@ class PostForm(forms.ModelForm):
         fields = (
             "body",
             "visibility",
-            "visible_to_groups",
         )
         widgets = {
             "body": forms.Textarea(
@@ -25,35 +42,67 @@ class PostForm(forms.ModelForm):
                     "class": "post-form-select",
                 }
             ),
-            "visible_to_groups": forms.SelectMultiple(
-                attrs={
-                    "class": "post-form-groups",
-                }
-            ),
         }
 
-    def clean(self):
-        cleaned_data = super().clean()
 
-        visibility = cleaned_data.get("visibility")
-        visible_to_groups = cleaned_data.get("visible_to_groups")
+class PostTargetForm(forms.ModelForm):
+    class Meta:
+        model = PostTarget
+        fields = POST_TARGET_FIELDS
+        widgets = {
+            field_name: forms.Select(
+                attrs={
+                    "class": "post-target-select",
+                }
+            )
+            for field_name in POST_TARGET_FIELDS
+        }
+
+
+class BasePostTargetFormSet(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+
+        if any(self.errors):
+            return
 
         if (
-            visibility == Post.Visibility.SELECTED_GROUPS
-            and not visible_to_groups
+            self.instance.visibility
+            != Post.Visibility.SELECTED_GROUPS
         ):
-            self.add_error(
-                "visible_to_groups",
-                "Select at least one group for this visibility.",
+            return
+
+        has_target = False
+
+        for form in self.forms:
+            if not hasattr(form, "cleaned_data"):
+                continue
+
+            if form.cleaned_data.get("DELETE"):
+                continue
+
+            for field_name in POST_TARGET_FIELDS:
+                if form.cleaned_data.get(field_name) is not None:
+                    has_target = True
+                    break
+
+            if has_target:
+                break
+
+        if not has_target:
+            raise forms.ValidationError(
+                "Add at least one audience target."
             )
 
-        if (
-            visibility != Post.Visibility.SELECTED_GROUPS
-            and visible_to_groups
-        ):
-            cleaned_data["visible_to_groups"] = CommunityGroup.objects.none()
 
-        return cleaned_data
+PostTargetFormSet = inlineformset_factory(
+    Post,
+    PostTarget,
+    form=PostTargetForm,
+    formset=BasePostTargetFormSet,
+    extra=1,
+    can_delete=True,
+)
 
 
 class CommentForm(forms.ModelForm):

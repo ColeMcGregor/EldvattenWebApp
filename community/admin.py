@@ -3,7 +3,7 @@ from django.contrib import admin
 from audit.models import AuditLog
 from audit.services import record_audit_event
 
-from .models import Comment, Post
+from .models import Comment, Post, PostTarget
 
 
 def get_audit_values(obj):
@@ -24,6 +24,11 @@ def get_audit_values(obj):
             values[field.name] = value
 
     return values
+
+
+class PostTargetInline(admin.StackedInline):
+    model = PostTarget
+    extra = 0
 
 
 @admin.register(Post)
@@ -51,12 +56,12 @@ class PostAdmin(admin.ModelAdmin):
         "body",
     )
 
-    filter_horizontal = (
-        "visible_to_groups",
-    )
-
     ordering = (
         "-created_at",
+    )
+
+    inlines = (
+        PostTargetInline,
     )
 
     def save_model(self, request, obj, form, change):
@@ -85,59 +90,8 @@ class PostAdmin(admin.ModelAdmin):
             method=AuditLog.Method.MANUAL,
         )
 
-    def save_related(self, request, form, formsets, change):
-        obj = form.instance
-
-        old_groups = set()
-
-        if obj.pk:
-            old_groups = set(
-                obj.visible_to_groups.values_list(
-                    "name",
-                    flat=True,
-                )
-            )
-
-        super().save_related(
-            request,
-            form,
-            formsets,
-            change,
-        )
-
-        new_groups = set(
-            obj.visible_to_groups.values_list(
-                "name",
-                flat=True,
-            )
-        )
-
-        if old_groups != new_groups:
-            record_audit_event(
-                actor=request.user,
-                request=request,
-                action=AuditLog.Action.UPDATE,
-                target_type=obj._meta.verbose_name,
-                target_id=obj.pk,
-                target_label=str(obj),
-                old_value={
-                    "visible_to_groups": sorted(old_groups),
-                },
-                new_value={
-                    "visible_to_groups": sorted(new_groups),
-                },
-                source=AuditLog.Source.ADMIN,
-                method=AuditLog.Method.MANUAL,
-            )
-
     def delete_model(self, request, obj):
         old_value = get_audit_values(obj)
-        old_value["visible_to_groups"] = list(
-            obj.visible_to_groups.values_list(
-                "name",
-                flat=True,
-            )
-        )
 
         target_id = obj.pk
         target_label = str(obj)
@@ -156,6 +110,51 @@ class PostAdmin(admin.ModelAdmin):
             source=AuditLog.Source.ADMIN,
             method=AuditLog.Method.MANUAL,
         )
+
+
+@admin.register(PostTarget)
+class PostTargetAdmin(admin.ModelAdmin):
+    list_display = (
+        "post",
+        "user",
+        "citizenship_class",
+        "social_rank",
+        "office",
+        "chapter",
+        "household",
+        "governance_body",
+        "order",
+        "order_rank",
+        "community_group",
+        "household_leadership_type",
+        "created_at",
+    )
+
+    list_filter = (
+        "citizenship_class",
+        "social_rank",
+        "office",
+        "chapter",
+        "household",
+        "governance_body",
+        "order",
+        "order_rank",
+        "community_group",
+        "household_leadership_type",
+        "created_at",
+    )
+
+    search_fields = (
+        "post__body",
+        "post__author__username",
+        "post__author__display_name",
+        "user__username",
+        "user__display_name",
+    )
+
+    ordering = (
+        "-created_at",
+    )
 
 
 @admin.register(Comment)

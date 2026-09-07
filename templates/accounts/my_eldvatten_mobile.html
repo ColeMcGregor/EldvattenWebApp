@@ -1,4 +1,5 @@
 {% extends "app/base_mobile.html" %}
+{% load static %}
 
 {% block title %}
     My Eldvatten | EldVatten
@@ -31,7 +32,15 @@
         {% if active_section == 'profile' %}active{% endif %}"
         href="{% url 'my_eldvatten' %}?section=profile"
     >
-        My Profile
+        Profile
+    </a>
+
+    <a
+        class="mobile-my-eldvatten-tab
+        {% if active_section == 'posts' %}active{% endif %}"
+        href="{% url 'my_eldvatten' %}?section=posts"
+    >
+        Posts
     </a>
 
     <a
@@ -52,10 +61,16 @@
 
     <a
         class="mobile-my-eldvatten-tab
+        mobile-my-eldvatten-settings-tab
         {% if active_section == 'settings' %}active{% endif %}"
         href="{% url 'my_eldvatten' %}?section=settings"
+        aria-label="Settings"
     >
-        Settings
+        <img
+            class="mobile-my-eldvatten-settings-icon"
+            src="{% static 'images/gear.png' %}"
+            alt=""
+        >
     </a>
 </nav>
 
@@ -65,6 +80,10 @@
     {% if active_section == "profile" %}
 
         {% include "accounts/my_eldvatten/profile.html" %}
+
+    {% elif active_section == "posts" %}
+
+        {% include "accounts/my_eldvatten/posts.html" %}
 
     {% elif active_section == "todo" %}
 

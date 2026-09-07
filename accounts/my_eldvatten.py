@@ -2,6 +2,7 @@ from django.db.models import F, Q
 from django.utils import timezone
 
 from actions.models import ActionAssignment
+from community.models import Post
 from notifications.forms import NotificationPreferenceForm
 from notifications.models import (
     Notification,
@@ -21,6 +22,7 @@ from .forms import (
 
 MY_ELDVATTEN_SECTIONS = (
     "profile",
+    "posts",
     "todo",
     "notifications",
     "settings",
@@ -136,6 +138,21 @@ def get_profile_context(user):
             household_leadership_records,
         "profile_community_groups":
             community_group_memberships,
+    }
+
+
+def get_posts_context(user):
+    posts = list(
+        Post.objects
+        .filter(
+            author=user,
+        )
+        .select_related("author")
+        .order_by("-created_at")
+    )
+
+    return {
+        "my_posts": posts,
     }
 
 
@@ -290,6 +307,11 @@ def build_my_eldvatten_context(
     if active_section == "profile":
         context.update(
             get_profile_context(user)
+        )
+
+    elif active_section == "posts":
+        context.update(
+            get_posts_context(user)
         )
 
     elif active_section == "todo":
