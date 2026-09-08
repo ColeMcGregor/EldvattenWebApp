@@ -146,6 +146,7 @@ def get_posts_context(user):
         Post.objects
         .filter(
             author=user,
+            is_deleted=False,
         )
         .select_related("author")
         .order_by("-created_at")

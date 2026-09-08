@@ -1,67 +1,156 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page_title }}</title>
-</head>
-<body>
-    <main>
-        <h1>{{ page_title }}</h1>
+{% extends "app/base_desktop.html" %}
+{% load static %}
 
-        <form method="post">
-            {% csrf_token %}
+{% block title %}
+    {{ page_title }} | EldVatten
+{% endblock %}
 
-            {{ form.non_field_errors }}
+{% block nav_tavern %}active{% endblock %}
 
-            <div>
+{% block app_shell_class %}app-two-column{% endblock %}
+
+
+{% block app_content %}
+
+<section class="tavern-main-header">
+
+    <h1 class="section-heading">
+        {{ page_title }}
+    </h1>
+
+</section>
+
+
+<form
+    class="tavern-post-composer"
+    method="post"
+    data-post-form
+>
+    {% csrf_token %}
+
+
+    <div class="tavern-composer-avatar">
+
+        {% if form.instance.author.display_name %}
+            {{ form.instance.author.display_name|first }}
+        {% else %}
+            {{ form.instance.author.username|first }}
+        {% endif %}
+
+    </div>
+
+
+    <div class="tavern-composer-content">
+
+        {{ form.body }}
+
+
+        {% if form.body.errors %}
+
+            <div class="tavern-composer-errors">
                 {{ form.body.errors }}
-
-                <label for="{{ form.body.id_for_label }}">
-                    Post
-                </label>
-
-                {{ form.body }}
             </div>
 
-            <div>
-                {{ form.visibility.errors }}
+        {% endif %}
 
-                <label for="{{ form.visibility.id_for_label }}">
-                    Visibility
+
+        <div class="tavern-composer-footer">
+
+            <div class="tavern-composer-audience">
+
+                <label
+                    class="tavern-composer-audience-label"
+                    for="{{ form.visibility.id_for_label }}"
+                >
+                    Audience
                 </label>
 
                 {{ form.visibility }}
+
+
+                <button
+                    class="tavern-composer-target-button"
+                    type="button"
+                    data-open-target-modal
+                    hidden
+                >
+                    Choose Audience
+                </button>
+
             </div>
 
-            <div>
-                {{ form.visible_to_groups.errors }}
 
-                <label for="{{ form.visible_to_groups.id_for_label }}">
-                    Visible to Groups
-                </label>
+            <div class="tavern-target-modal-action-buttons">
 
-                {{ form.visible_to_groups }}
+                {% if post %}
+
+                    <a
+                        class="button"
+                        href="{% url 'community:post_detail' post.id %}"
+                    >
+                        Cancel
+                    </a>
+
+                {% else %}
+
+                    <a
+                        class="button"
+                        href="{% url 'community:post_list' %}"
+                    >
+                        Cancel
+                    </a>
+
+                {% endif %}
+
+
+                <button
+                    class="button button-primary tavern-composer-submit"
+                    type="submit"
+                >
+                    {% if post %}
+                        Save Changes
+                    {% else %}
+                        Post
+                    {% endif %}
+                </button>
+
             </div>
 
-            <button type="submit">
-                Save Post
-            </button>
-        </form>
+        </div>
 
-        {% if post %}
-            <p>
-                <a href="{% url 'community:post_detail' post.id %}">
-                    Cancel
-                </a>
-            </p>
-        {% else %}
-            <p>
-                <a href="{% url 'community:post_list' %}">
-                    Cancel
-                </a>
-            </p>
+
+        {% if form.visibility.errors %}
+
+            <div class="tavern-composer-errors">
+                {{ form.visibility.errors }}
+            </div>
+
         {% endif %}
-    </main>
-</body>
-</html>
+
+
+        {% if form.non_field_errors %}
+
+            <div class="tavern-composer-errors">
+                {{ form.non_field_errors }}
+            </div>
+
+        {% endif %}
+
+    </div>
+
+
+    {% include "community/tavern/_target_modal.html" %}
+
+</form>
+
+
+<script
+    src="{% static 'js/community/tavern-composer.js' %}"
+    defer
+></script>
+
+{% endblock %}
+
+
+{% block app_right_rail %}
+{% endblock %}

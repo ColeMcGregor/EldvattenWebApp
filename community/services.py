@@ -219,6 +219,9 @@ def user_can_view_post(user, post):
     if user.account_status not in TAVERN_ACCOUNT_STATUSES:
         return False
 
+    if post.is_deleted:
+        return False
+
     if post.author_id == user.id:
         return True
 
@@ -279,6 +282,7 @@ def get_visible_posts(user):
         Post.objects
         .filter(
             visibility=Post.Visibility.SELECTED_GROUPS,
+            is_deleted=False,
         )
         .prefetch_related(
             Prefetch(
@@ -317,7 +321,10 @@ def get_visible_posts(user):
 
     return (
         Post.objects
-        .filter(visibility_query)
+        .filter(
+            visibility_query,
+            is_deleted=False,
+        )
         .select_related("author")
         .distinct()
         .order_by("-created_at")

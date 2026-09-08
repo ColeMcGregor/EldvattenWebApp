@@ -2,7 +2,7 @@
     class="{% if mobile %}mobile-post-composer{% else %}tavern-post-composer{% endif %}"
     method="post"
     action="{% url 'community:post_list' %}"
-    data-tavern-composer
+    data-post-form
 >
     {% csrf_token %}
 

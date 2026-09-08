@@ -32,6 +32,14 @@ class Post(models.Model):
         related_name="community_posts",
     )
 
+    previous_version = models.OneToOneField(
+        "self",
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name="next_version",
+    )
+
     body = models.TextField()
 
     visibility = models.CharField(
@@ -50,6 +58,15 @@ class Post(models.Model):
 
     is_locked = models.BooleanField(
         default=False,
+    )
+
+    is_deleted = models.BooleanField(
+        default=False,
+    )
+
+    deleted_at = models.DateTimeField(
+        blank=True,
+        null=True,
     )
 
     created_at = models.DateTimeField(

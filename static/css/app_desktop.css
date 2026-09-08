@@ -16,7 +16,7 @@
     grid-template-columns:
         minmax(0, 1fr)
         minmax(0, 2.6fr)
-        minmax(0, 1.25fr);
+        minmax(0, 1fr);
 
     width: 100%;
 }
@@ -24,7 +24,15 @@
 .app-desktop-shell.app-two-column {
     grid-template-columns:
         minmax(0, 1fr)
-        minmax(0, 3.85fr);
+        minmax(0, 3.6fr);
+}
+
+.app-desktop-shell.tavern-scroll-shell {
+    height: 100vh;
+    min-height: 0;
+    min-width: 1100px;
+
+    overflow-y: hidden;
 }
 
 
@@ -38,6 +46,12 @@
     background: var(--surface);
 
     border-right: 1px solid var(--border-color);
+}
+
+.tavern-scroll-shell .app-left-rail {
+    height: 100vh;
+
+    overflow: hidden;
 }
 
 
@@ -68,15 +82,10 @@
 
 /* Navigation */
 
-.app-navigation,
-.app-navigation-secondary {
+.app-navigation {
     display: grid;
 
     gap: 0.15rem;
-}
-
-.app-navigation-secondary {
-    margin-top: 1.6rem;
 }
 
 .app-navigation-link {
@@ -116,6 +125,16 @@
     border-right: 1px solid var(--border-color);
 }
 
+.tavern-scroll-shell .app-main-content {
+    height: 100vh;
+    min-height: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+}
+
 
 /* Tavern Header */
 
@@ -129,6 +148,10 @@
     padding: 1rem 1.5rem;
 
     border-bottom: 1px solid var(--border-color);
+}
+
+.tavern-scroll-shell .tavern-main-header {
+    flex: 0 0 auto;
 }
 
 .tavern-main-header .section-heading {
@@ -145,13 +168,17 @@
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
 
-    gap: 0.9rem;
+    gap: 0.8rem;
 
-    padding: 1.1rem 1.5rem;
+    padding: 0.8rem 1.5rem;
 
     background: var(--surface);
 
     border-bottom: 1px solid var(--border-color);
+}
+
+.tavern-scroll-shell .tavern-post-composer {
+    flex: 0 0 auto;
 }
 
 .tavern-composer-avatar {
@@ -176,9 +203,9 @@
 
 .tavern-post-composer .post-form-textarea {
     width: 100%;
-    min-height: 70px;
+    min-height: 58px;
 
-    padding: 0.6rem 0;
+    padding: 0.4rem 0;
 
     resize: vertical;
 
@@ -205,7 +232,7 @@
 
     gap: 1rem;
 
-    padding-top: 0.65rem;
+    padding-top: 0.55rem;
 
     border-top: 1px solid var(--border-color);
 }
@@ -505,7 +532,48 @@
     width: 100%;
 }
 
+.tavern-scroll-shell .tavern-feed {
+    flex: 1 1 auto;
+
+    min-height: 0;
+
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    scrollbar-width: thin;
+    scrollbar-color:
+        transparent
+        transparent;
+}
+
+.tavern-scroll-shell .tavern-feed.is-scrolling {
+    scrollbar-color:
+        var(--text-muted)
+        transparent;
+}
+
+.tavern-scroll-shell .tavern-feed::-webkit-scrollbar {
+    width: 5px;
+}
+
+.tavern-scroll-shell .tavern-feed::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.tavern-scroll-shell .tavern-feed::-webkit-scrollbar-thumb {
+    background: transparent;
+
+    border-radius: 999px;
+}
+
+.tavern-scroll-shell
+.tavern-feed.is-scrolling::-webkit-scrollbar-thumb {
+    background: var(--text-muted);
+}
+
 .tavern-post {
+    position: relative;
+
     padding: 1.25rem 1.5rem;
 
     background: var(--surface);
@@ -515,21 +583,136 @@
 
 .tavern-post-header {
     display: flex;
-    align-items: baseline;
+    align-items: flex-start;
+    justify-content: space-between;
 
-    gap: 0.4rem;
+    gap: 1rem;
 
-    margin-bottom: 0.65rem;
+    margin-bottom: 0.8rem;
 }
 
-.tavern-post-header strong {
+.tavern-post-author {
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+
+    gap: 0.7rem;
+}
+
+.tavern-post-avatar {
+    width: 40px;
+    height: 40px;
+
+    flex: 0 0 auto;
+
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+}
+
+.tavern-post-author-line {
+    min-width: 0;
+
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+
+    gap: 0.4rem;
+}
+
+.tavern-post-author-line strong {
     font-size: 1rem;
 }
 
-.tavern-post-header span {
+.tavern-post-author-line span {
     color: var(--text-muted);
 
     font-size: 0.9rem;
+}
+
+.tavern-post-menu {
+    position: relative;
+
+    flex: 0 0 auto;
+}
+
+.tavern-post-menu summary {
+    width: 2rem;
+    height: 2rem;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    background: transparent;
+
+    border: 0;
+    border-radius: var(--radius-small);
+
+    color: var(--text-muted);
+
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1;
+
+    cursor: pointer;
+
+    list-style: none;
+}
+
+.tavern-post-menu summary::-webkit-details-marker {
+    display: none;
+}
+
+.tavern-post-menu summary:hover,
+.tavern-post-menu[open] summary {
+    background: var(--surface-muted);
+
+    color: var(--text-main);
+}
+
+.tavern-post-menu-panel {
+    position: absolute;
+    top: calc(100% + 0.25rem);
+    right: 0;
+
+    z-index: 20;
+
+    min-width: 8rem;
+
+    display: grid;
+
+    overflow: hidden;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+
+    box-shadow:
+        0 4px 12px rgb(0 0 0 / 12%);
+}
+
+.tavern-post-menu-panel a {
+    display: block;
+
+    padding: 0.6rem 0.8rem;
+
+    color: var(--text-main);
+
+    font-size: 0.9rem;
+}
+
+.tavern-post-menu-panel a:hover {
+    background: var(--surface-muted);
+
+    color: var(--eldvatten-red);
+}
+
+.tavern-post-menu-panel .tavern-post-menu-delete {
+    color: var(--eldvatten-red);
 }
 
 .tavern-post-body p {
@@ -551,7 +734,7 @@
 
 .tavern-post-footer {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
 
     gap: 1.5rem;
 
@@ -592,10 +775,12 @@
     background: var(--surface);
 }
 
-.app-rail-section {
-    display: grid;
 
-    gap: 0;
+/* Needs Attention */
+
+.app-rail-section,
+.needs-attention-list {
+    display: grid;
 }
 
 .app-rail-heading {
@@ -604,15 +789,6 @@
     font-family: "EldVatten", Georgia, serif;
     font-size: 1.7rem;
     font-weight: normal;
-}
-
-
-/* Needs Attention */
-
-.needs-attention-list {
-    display: grid;
-
-    gap: 0;
 }
 
 .needs-attention-card {
@@ -672,13 +848,6 @@
 
 .needs-attention-empty p {
     margin: 0;
-}
-
-
-/* Cards */
-
-.app-content-card {
-    background: var(--surface);
 }
 
 
@@ -1441,48 +1610,4 @@
     padding: 1rem 1.1rem;
 
     border-top: 1px solid var(--border-color);
-}
-
-
-/* Resources */
-
-.my-resource-list {
-    display: grid;
-}
-
-.my-resource-link {
-    display: block;
-
-    padding: 0.9rem 0;
-
-    border-bottom: 1px solid var(--border-color);
-}
-
-.my-resource-link:first-child {
-    border-top: 1px solid var(--border-color);
-}
-
-.my-resource-link:hover {
-    color: var(--eldvatten-red);
-}
-
-
-/* Tablet Layout */
-
-@media (max-width: 1100px) {
-    .app-desktop-shell {
-        grid-template-columns:
-            minmax(210px, 0.8fr)
-            minmax(0, 2.4fr);
-    }
-
-    .app-desktop-shell.app-two-column {
-        grid-template-columns:
-            minmax(210px, 0.8fr)
-            minmax(0, 2.4fr);
-    }
-
-    .app-right-rail {
-        display: none;
-    }
 }

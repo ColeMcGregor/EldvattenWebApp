@@ -1,45 +1,50 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const composer = document.querySelector(
-        "[data-tavern-composer]"
+    const postForms = document.querySelectorAll(
+        "[data-post-form]"
     );
 
-    if (!composer) {
-        return;
-    }
+    postForms.forEach((postForm) => {
+        initializePostForm(postForm);
+    });
 
-    const visibilitySelect = composer.querySelector(
+    initializeTavernFeedScrollbar();
+});
+
+
+function initializePostForm(postForm) {
+    const visibilitySelect = postForm.querySelector(
         'select[name="visibility"]'
     );
 
-    const openTargetButton = composer.querySelector(
+    const openTargetButton = postForm.querySelector(
         "[data-open-target-modal]"
     );
 
-    const modal = composer.querySelector(
+    const modal = postForm.querySelector(
         "[data-target-modal]"
     );
 
-    const targetList = composer.querySelector(
+    const targetList = postForm.querySelector(
         "[data-target-list]"
     );
 
-    const emptyTargetTemplate = composer.querySelector(
+    const emptyTargetTemplate = postForm.querySelector(
         "[data-empty-target-form]"
     );
 
-    const totalFormsInput = composer.querySelector(
+    const totalFormsInput = postForm.querySelector(
         'input[name="targets-TOTAL_FORMS"]'
     );
 
-    const closeTargetButtons = composer.querySelectorAll(
+    const closeTargetButtons = postForm.querySelectorAll(
         "[data-close-target-modal]"
     );
 
-    const useTargetsButton = composer.querySelector(
+    const useTargetsButton = postForm.querySelector(
         "[data-use-targets]"
     );
 
-    const addTargetButton = composer.querySelector(
+    const addTargetButton = postForm.querySelector(
         "[data-add-target]"
     );
 
@@ -69,6 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         modal.classList.add("open");
+
         modal.setAttribute(
             "aria-hidden",
             "false"
@@ -84,6 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         modal.classList.remove("open");
+
         modal.setAttribute(
             "aria-hidden",
             "true"
@@ -109,6 +116,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     function targetCount() {
+        if (!targetList) {
+            return 0;
+        }
+
         const rows = targetList.querySelectorAll(
             "[data-target-row]"
         );
@@ -264,6 +275,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     function ensureVisibleTargetRow() {
+        if (!targetList) {
+            return;
+        }
+
         const rows = targetList.querySelectorAll(
             "[data-target-row]"
         );
@@ -302,8 +317,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    function clearTargetsWhenNotSelected() {
-        if (isSelectedGroups()) {
+    function prepareTargetsForNonSelectedSubmission() {
+        if (!targetList) {
             return;
         }
 
@@ -316,22 +331,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 'input[name$="-DELETE"]'
             );
 
-            const idInput = row.querySelector(
-                'input[name$="-id"]'
-            );
-
-            clearRowFields(row);
-
-            if (
-                idInput
-                && idInput.value
-                && deleteInput
-            ) {
+            if (deleteInput) {
                 deleteInput.checked = true;
             }
         });
-
-        updateTargetButtonText();
     }
 
 
@@ -345,7 +348,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     ensureVisibleTargetRow();
                     openModal();
                 } else {
-                    clearTargetsWhenNotSelected();
                     closeModal();
                 }
             }
@@ -422,18 +424,21 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
 
-    composer.addEventListener(
+    postForm.addEventListener(
         "submit",
         (event) => {
-            if (
-                isSelectedGroups()
-                && targetCount() === 0
-            ) {
-                event.preventDefault();
+            if (isSelectedGroups()) {
+                if (targetCount() === 0) {
+                    event.preventDefault();
 
-                ensureVisibleTargetRow();
-                openModal();
+                    ensureVisibleTargetRow();
+                    openModal();
+                }
+
+                return;
             }
+
+            prepareTargetsForNonSelectedSubmission();
         }
     );
 
@@ -447,4 +452,45 @@ document.addEventListener("DOMContentLoaded", () => {
     ) {
         ensureVisibleTargetRow();
     }
-});
+}
+
+
+function initializeTavernFeedScrollbar() {
+    const feed = document.querySelector(
+        ".tavern-feed"
+    );
+
+    if (!feed) {
+        return;
+    }
+
+    let hideScrollbarTimeout = null;
+
+    feed.addEventListener(
+        "scroll",
+        () => {
+            feed.classList.add(
+                "is-scrolling"
+            );
+
+            if (hideScrollbarTimeout) {
+                clearTimeout(
+                    hideScrollbarTimeout
+                );
+            }
+
+            hideScrollbarTimeout =
+                setTimeout(
+                    () => {
+                        feed.classList.remove(
+                            "is-scrolling"
+                        );
+                    },
+                    2000
+                );
+        },
+        {
+            passive: true,
+        }
+    );
+}

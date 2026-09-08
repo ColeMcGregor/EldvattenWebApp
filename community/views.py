@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from accounts.models import AccountStatus
@@ -11,11 +12,12 @@ from audit.services import record_audit_event
 
 from .forms import (
     CommentForm,
+    POST_TARGET_FIELDS,
     PostForm,
     PostTargetFormSet,
     ReplyForm,
 )
-from .models import Comment, Post
+from .models import Comment, Post, PostTarget
 from .services import (
     get_visible_posts,
     user_can_view_post,
@@ -59,6 +61,9 @@ def get_tavern_template(request):
 
 
 def can_view_post(user, post):
+    if post.is_deleted:
+        return False
+
     if (
         user.is_authenticated
         and user.has_perm("community.view_post")
@@ -72,6 +77,9 @@ def can_view_post(user, post):
 
 
 def can_edit_post(user, post):
+    if post.is_deleted:
+        return False
+
     if not is_member(user):
         return False
 
@@ -84,6 +92,9 @@ def can_edit_post(user, post):
 
 
 def can_delete_post(user, post):
+    if post.is_deleted:
+        return False
+
     if not is_member(user):
         return False
 
@@ -96,6 +107,9 @@ def can_delete_post(user, post):
 
 
 def can_edit_comment(user, comment):
+    if comment.post.is_deleted:
+        return False
+
     if not is_member(user):
         return False
 
@@ -108,6 +122,9 @@ def can_edit_comment(user, comment):
 
 
 def can_delete_comment(user, comment):
+    if comment.post.is_deleted:
+        return False
+
     if not is_member(user):
         return False
 
@@ -190,13 +207,22 @@ def post_target_values(post):
 
 def post_values(post):
     return {
+        "id": post.pk,
         "author": str(post.author),
+        "previous_version_id":
+            post.previous_version_id,
         "body": post.body,
         "visibility": post.visibility,
         "targets": post_target_values(post),
         "is_official": post.is_official,
         "is_pinned": post.is_pinned,
         "is_locked": post.is_locked,
+        "is_deleted": post.is_deleted,
+        "deleted_at": (
+            post.deleted_at.isoformat()
+            if post.deleted_at
+            else None
+        ),
     }
 
 
@@ -234,12 +260,101 @@ def save_post_with_targets(
     return post
 
 
+def create_post_targets_from_formset(
+    *,
+    post,
+    target_formset,
+):
+    for target_form in target_formset.forms:
+        if not hasattr(
+            target_form,
+            "cleaned_data",
+        ):
+            continue
+
+        if target_form.cleaned_data.get(
+            "DELETE"
+        ):
+            continue
+
+        target_values = {
+            field_name:
+                target_form.cleaned_data.get(
+                    field_name
+                )
+            for field_name
+            in POST_TARGET_FIELDS
+        }
+
+        if not any(
+            value is not None
+            for value in target_values.values()
+        ):
+            continue
+
+        PostTarget.objects.create(
+            post=post,
+            **target_values,
+        )
+
+
+def create_replacement_post(
+    *,
+    old_post,
+    form,
+    target_formset,
+):
+    with transaction.atomic():
+        replacement_post = form.save()
+
+        replacement_post.created_at = (
+            old_post.created_at
+        )
+
+        replacement_post.save(
+            update_fields=[
+                "created_at",
+            ]
+        )
+
+        if (
+            replacement_post.visibility
+            == Post.Visibility.SELECTED_GROUPS
+        ):
+            create_post_targets_from_formset(
+                post=replacement_post,
+                target_formset=target_formset,
+            )
+
+        Comment.objects.filter(
+            post=old_post,
+        ).update(
+            post=replacement_post,
+        )
+
+        old_post.is_deleted = True
+        old_post.deleted_at = timezone.now()
+
+        old_post.save(
+            update_fields=[
+                "is_deleted",
+                "deleted_at",
+                "updated_at",
+            ]
+        )
+
+    return replacement_post
+
+
 def get_tavern_posts(user):
     if user.has_perm(
         "community.view_post"
     ):
         return (
             Post.objects
+            .filter(
+                is_deleted=False,
+            )
             .select_related("author")
             .order_by("-created_at")
         )
@@ -350,6 +465,9 @@ def post_list(request):
 def post_detail(request, post_id):
     post = get_object_or_404(
         Post.objects
+        .filter(
+            is_deleted=False,
+        )
         .select_related("author")
         .prefetch_related(
             "targets",
@@ -465,7 +583,11 @@ def post_create(request):
 @login_required
 def post_edit(request, post_id):
     post = get_object_or_404(
-        Post.objects.prefetch_related(
+        Post.objects
+        .filter(
+            is_deleted=False,
+        )
+        .prefetch_related(
             "targets",
         ),
         pk=post_id,
@@ -480,9 +602,18 @@ def post_edit(request, post_id):
     old_value = post_values(post)
 
     if request.method == "POST":
+        replacement_post = Post(
+            author=post.author,
+            visibility=post.visibility,
+            is_official=post.is_official,
+            is_pinned=post.is_pinned,
+            is_locked=post.is_locked,
+            previous_version=post,
+        )
+
         form = PostForm(
             request.POST,
-            instance=post,
+            instance=replacement_post,
         )
 
         target_formset = PostTargetFormSet(
@@ -492,17 +623,34 @@ def post_edit(request, post_id):
         )
 
         form_is_valid = form.is_valid()
+
+        original_visibility = (
+            post.visibility
+        )
+
+        if form_is_valid:
+            post.visibility = (
+                form.cleaned_data[
+                    "visibility"
+                ]
+            )
+
         formset_is_valid = (
             target_formset.is_valid()
         )
+
+        post.visibility = original_visibility
 
         if (
             form_is_valid
             and formset_is_valid
         ):
-            post = save_post_with_targets(
-                form=form,
-                target_formset=target_formset,
+            replacement_post = (
+                create_replacement_post(
+                    old_post=post,
+                    form=form,
+                    target_formset=target_formset,
+                )
             )
 
             record_audit_event(
@@ -515,14 +663,16 @@ def post_edit(request, post_id):
                 target_id=post.pk,
                 target_label=str(post),
                 old_value=old_value,
-                new_value=post_values(post),
+                new_value=post_values(
+                    replacement_post,
+                ),
                 source=AuditLog.Source.WEB_APP,
                 method=AuditLog.Method.MANUAL,
             )
 
             return redirect(
                 "community:post_detail",
-                post_id=post.pk,
+                post_id=replacement_post.pk,
             )
 
     else:
@@ -550,7 +700,11 @@ def post_edit(request, post_id):
 @login_required
 def post_delete(request, post_id):
     post = get_object_or_404(
-        Post.objects.prefetch_related(
+        Post.objects
+        .filter(
+            is_deleted=False,
+        )
+        .prefetch_related(
             "targets",
         ),
         pk=post_id,
@@ -565,22 +719,28 @@ def post_delete(request, post_id):
     if request.method == "POST":
         old_value = post_values(post)
 
-        target_id = post.pk
-        target_label = str(post)
-        target_type = (
-            post._meta.verbose_name
-        )
+        post.is_deleted = True
+        post.deleted_at = timezone.now()
 
-        post.delete()
+        post.save(
+            update_fields=[
+                "is_deleted",
+                "deleted_at",
+                "updated_at",
+            ]
+        )
 
         record_audit_event(
             actor=request.user,
             request=request,
             action=AuditLog.Action.DELETE,
-            target_type=target_type,
-            target_id=target_id,
-            target_label=target_label,
+            target_type=(
+                post._meta.verbose_name
+            ),
+            target_id=post.pk,
+            target_label=str(post),
             old_value=old_value,
+            new_value=post_values(post),
             source=AuditLog.Source.WEB_APP,
             method=AuditLog.Method.MANUAL,
         )
@@ -609,7 +769,9 @@ def add_comment(request, post_id):
         return HttpResponseForbidden()
 
     post = get_object_or_404(
-        Post,
+        Post.objects.filter(
+            is_deleted=False,
+        ),
         pk=post_id,
     )
 

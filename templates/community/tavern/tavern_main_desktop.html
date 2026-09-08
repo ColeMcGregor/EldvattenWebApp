@@ -5,6 +5,8 @@
 
 {% block nav_tavern %}active{% endblock %}
 
+{% block app_shell_class %}tavern-scroll-shell{% endblock %}
+
 {% block app_content %}
 
 <section class="tavern-main-header">
@@ -29,23 +31,83 @@
 
             <header class="tavern-post-header">
 
-                <strong>
-                    {% if post.author.display_name %}
-                        {{ post.author.display_name }}
-                    {% else %}
-                        {{ post.author.username }}
-                    {% endif %}
-                </strong>
+                <div class="tavern-post-author">
 
-                <span>
-                    {{ post.created_at|date:"M j, Y" }}
-                </span>
+                    <div
+                        class="tavern-post-avatar"
+                        aria-hidden="true"
+                    ></div>
+
+                    <div class="tavern-post-author-line">
+
+                        <strong>
+                            {% if post.author.display_name %}
+                                {{ post.author.display_name }}
+                            {% else %}
+                                {{ post.author.username }}
+                            {% endif %}
+                        </strong>
+
+                        <span>
+                            {{ post.created_at|date:"M j, Y" }}
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                {% if request.user.account_status == "MEMBER" %}
+
+                    {% if request.user.id == post.author_id or perms.community.change_post or perms.community.delete_post %}
+
+                        <details class="tavern-post-menu">
+
+                            <summary
+                                aria-label="Post actions"
+                            >
+                                ...
+                            </summary>
+
+                            <div class="tavern-post-menu-panel">
+
+                                {% if request.user.id == post.author_id or perms.community.change_post %}
+
+                                    <a
+                                        href="{% url 'community:post_edit' post.id %}"
+                                    >
+                                        Edit
+                                    </a>
+
+                                {% endif %}
+
+
+                                {% if request.user.id == post.author_id or perms.community.delete_post %}
+
+                                    <a
+                                        class="tavern-post-menu-delete"
+                                        href="{% url 'community:post_delete' post.id %}"
+                                    >
+                                        Delete
+                                    </a>
+
+                                {% endif %}
+
+                            </div>
+
+                        </details>
+
+                    {% endif %}
+
+                {% endif %}
 
             </header>
+
 
             <div class="tavern-post-body">
                 {{ post.body|linebreaks }}
             </div>
+
 
             {% if post.is_official or post.is_pinned or post.is_locked %}
 
@@ -73,6 +135,7 @@
 
             {% endif %}
 
+
             <footer class="tavern-post-footer">
 
                 <a
@@ -84,10 +147,6 @@
                         Comment
                     {% endif %}
                 </a>
-
-                <span>
-                    {{ post.get_visibility_display }}
-                </span>
 
             </footer>
 
@@ -106,14 +165,10 @@
 </section>
 
 
-{% if request.user.account_status == "MEMBER" %}
-
-    <script
-        src="{% static 'js/community/tavern-composer.js' %}"
-        defer
-    ></script>
-
-{% endif %}
+<script
+    src="{% static 'js/community/tavern-composer.js' %}"
+    defer
+></script>
 
 {% endblock %}
 
