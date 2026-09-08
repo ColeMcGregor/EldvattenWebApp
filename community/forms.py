@@ -34,7 +34,10 @@ class PostForm(forms.ModelForm):
             "body": forms.Textarea(
                 attrs={
                     "class": "post-form-textarea",
-                    "rows": 6,
+                    "rows": 4,
+                    "placeholder": (
+                        "Share something with EldVatten..."
+                    ),
                 }
             ),
             "visibility": forms.Select(

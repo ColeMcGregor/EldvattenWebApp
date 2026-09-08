@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from accounts.models import AccountStatus
+from accounts.needs_attention import get_needs_attention_items
 from audit.models import AuditLog
 from audit.services import record_audit_event
 
@@ -15,7 +16,10 @@ from .forms import (
     ReplyForm,
 )
 from .models import Comment, Post
-from .services import get_visible_posts, user_can_view_post
+from .services import (
+    get_visible_posts,
+    user_can_view_post,
+)
 
 
 def is_member(user):
@@ -34,18 +38,24 @@ def get_tavern_template(request):
 
     is_mobile = any(
         mobile_term in user_agent
-        for mobile_term in [
+        for mobile_term in (
             "android",
             "iphone",
             "ipod",
             "mobile",
-        ]
+        )
     )
 
     if is_mobile:
-        return "community/tavern/tavern_main_mobile.html"
+        return (
+            "community/tavern/"
+            "tavern_main_mobile.html"
+        )
 
-    return "community/tavern/tavern_main_desktop.html"
+    return (
+        "community/tavern/"
+        "tavern_main_desktop.html"
+    )
 
 
 def can_view_post(user, post):
@@ -55,7 +65,10 @@ def can_view_post(user, post):
     ):
         return True
 
-    return user_can_view_post(user, post)
+    return user_can_view_post(
+        user,
+        post,
+    )
 
 
 def can_edit_post(user, post):
@@ -64,7 +77,9 @@ def can_edit_post(user, post):
 
     return (
         post.author_id == user.id
-        or user.has_perm("community.change_post")
+        or user.has_perm(
+            "community.change_post"
+        )
     )
 
 
@@ -74,7 +89,9 @@ def can_delete_post(user, post):
 
     return (
         post.author_id == user.id
-        or user.has_perm("community.delete_post")
+        or user.has_perm(
+            "community.delete_post"
+        )
     )
 
 
@@ -84,7 +101,9 @@ def can_edit_comment(user, comment):
 
     return (
         comment.author_id == user.id
-        or user.has_perm("community.change_comment")
+        or user.has_perm(
+            "community.change_comment"
+        )
     )
 
 
@@ -94,7 +113,9 @@ def can_delete_comment(user, comment):
 
     return (
         comment.author_id == user.id
-        or user.has_perm("community.delete_comment")
+        or user.has_perm(
+            "community.delete_comment"
+        )
     )
 
 
@@ -155,7 +176,9 @@ def post_target_values(post):
                     else None
                 ),
                 "household_leadership_type": (
-                    str(target.household_leadership_type)
+                    str(
+                        target.household_leadership_type
+                    )
                     if target.household_leadership_type
                     else None
                 ),
@@ -211,6 +234,21 @@ def save_post_with_targets(
     return post
 
 
+def get_tavern_posts(user):
+    if user.has_perm(
+        "community.view_post"
+    ):
+        return (
+            Post.objects
+            .select_related("author")
+            .order_by("-created_at")
+        )
+
+    return get_visible_posts(
+        user,
+    )
+
+
 @login_required
 def post_list(request):
     composer_form = None
@@ -222,6 +260,7 @@ def post_list(request):
 
         post = Post(
             author=request.user,
+            visibility=Post.Visibility.MEMBERS,
         )
 
         composer_form = PostForm(
@@ -235,13 +274,18 @@ def post_list(request):
             prefix="targets",
         )
 
-        form_is_valid = composer_form.is_valid()
+        composer_is_valid = (
+            composer_form.is_valid()
+        )
 
         target_formset_is_valid = (
             target_formset.is_valid()
         )
 
-        if form_is_valid and target_formset_is_valid:
+        if (
+            composer_is_valid
+            and target_formset_is_valid
+        ):
             post = save_post_with_targets(
                 form=composer_form,
                 target_formset=target_formset,
@@ -251,7 +295,9 @@ def post_list(request):
                 actor=request.user,
                 request=request,
                 action=AuditLog.Action.CREATE,
-                target_type=post._meta.verbose_name,
+                target_type=(
+                    post._meta.verbose_name
+                ),
                 target_id=post.pk,
                 target_label=str(post),
                 new_value=post_values(post),
@@ -266,13 +312,11 @@ def post_list(request):
     elif is_member(request.user):
         post = Post(
             author=request.user,
+            visibility=Post.Visibility.MEMBERS,
         )
 
         composer_form = PostForm(
             instance=post,
-            initial={
-                "visibility": Post.Visibility.MEMBERS,
-            },
         )
 
         target_formset = PostTargetFormSet(
@@ -280,18 +324,15 @@ def post_list(request):
             prefix="targets",
         )
 
-    if request.user.has_perm(
-        "community.view_post"
-    ):
-        visible_posts = (
-            Post.objects
-            .select_related("author")
-            .order_by("-created_at")
-        )
-    else:
-        visible_posts = get_visible_posts(
+    visible_posts = get_tavern_posts(
+        request.user,
+    )
+
+    needs_attention_items = (
+        get_needs_attention_items(
             request.user,
         )
+    )
 
     return render(
         request,
@@ -300,6 +341,8 @@ def post_list(request):
             "posts": visible_posts,
             "composer_form": composer_form,
             "target_formset": target_formset,
+            "needs_attention_items":
+                needs_attention_items,
         },
     )
 
@@ -316,13 +359,19 @@ def post_detail(request, post_id):
         pk=post_id,
     )
 
-    if not can_view_post(request.user, post):
+    if not can_view_post(
+        request.user,
+        post,
+    ):
         return HttpResponseForbidden()
 
     comment_form = None
     reply_form = None
 
-    if is_member(request.user) and not post.is_locked:
+    if (
+        is_member(request.user)
+        and not post.is_locked
+    ):
         comment_form = CommentForm()
         reply_form = ReplyForm()
 
@@ -344,6 +393,7 @@ def post_create(request):
 
     post = Post(
         author=request.user,
+        visibility=Post.Visibility.MEMBERS,
     )
 
     if request.method == "POST":
@@ -359,12 +409,14 @@ def post_create(request):
         )
 
         form_is_valid = form.is_valid()
-
-        target_formset_is_valid = (
+        formset_is_valid = (
             target_formset.is_valid()
         )
 
-        if form_is_valid and target_formset_is_valid:
+        if (
+            form_is_valid
+            and formset_is_valid
+        ):
             post = save_post_with_targets(
                 form=form,
                 target_formset=target_formset,
@@ -374,7 +426,9 @@ def post_create(request):
                 actor=request.user,
                 request=request,
                 action=AuditLog.Action.CREATE,
-                target_type=post._meta.verbose_name,
+                target_type=(
+                    post._meta.verbose_name
+                ),
                 target_id=post.pk,
                 target_label=str(post),
                 new_value=post_values(post),
@@ -390,9 +444,6 @@ def post_create(request):
     else:
         form = PostForm(
             instance=post,
-            initial={
-                "visibility": Post.Visibility.MEMBERS,
-            },
         )
 
         target_formset = PostTargetFormSet(
@@ -420,7 +471,10 @@ def post_edit(request, post_id):
         pk=post_id,
     )
 
-    if not can_edit_post(request.user, post):
+    if not can_edit_post(
+        request.user,
+        post,
+    ):
         return HttpResponseForbidden()
 
     old_value = post_values(post)
@@ -438,12 +492,14 @@ def post_edit(request, post_id):
         )
 
         form_is_valid = form.is_valid()
-
-        target_formset_is_valid = (
+        formset_is_valid = (
             target_formset.is_valid()
         )
 
-        if form_is_valid and target_formset_is_valid:
+        if (
+            form_is_valid
+            and formset_is_valid
+        ):
             post = save_post_with_targets(
                 form=form,
                 target_formset=target_formset,
@@ -453,7 +509,9 @@ def post_edit(request, post_id):
                 actor=request.user,
                 request=request,
                 action=AuditLog.Action.UPDATE,
-                target_type=post._meta.verbose_name,
+                target_type=(
+                    post._meta.verbose_name
+                ),
                 target_id=post.pk,
                 target_label=str(post),
                 old_value=old_value,
@@ -498,14 +556,20 @@ def post_delete(request, post_id):
         pk=post_id,
     )
 
-    if not can_delete_post(request.user, post):
+    if not can_delete_post(
+        request.user,
+        post,
+    ):
         return HttpResponseForbidden()
 
     if request.method == "POST":
         old_value = post_values(post)
+
         target_id = post.pk
         target_label = str(post)
-        target_type = post._meta.verbose_name
+        target_type = (
+            post._meta.verbose_name
+        )
 
         post.delete()
 
@@ -531,7 +595,8 @@ def post_delete(request, post_id):
         {
             "object_type": "post",
             "body": post.body,
-            "cancel_url": "community:post_detail",
+            "cancel_url":
+                "community:post_detail",
             "cancel_id": post.id,
         },
     )
@@ -548,7 +613,10 @@ def add_comment(request, post_id):
         pk=post_id,
     )
 
-    if not can_view_post(request.user, post):
+    if not can_view_post(
+        request.user,
+        post,
+    ):
         return HttpResponseForbidden()
 
     if post.is_locked:
@@ -571,10 +639,14 @@ def add_comment(request, post_id):
             actor=request.user,
             request=request,
             action=AuditLog.Action.CREATE,
-            target_type=comment._meta.verbose_name,
+            target_type=(
+                comment._meta.verbose_name
+            ),
             target_id=comment.pk,
             target_label=str(comment),
-            new_value=comment_values(comment),
+            new_value=comment_values(
+                comment,
+            ),
             source=AuditLog.Source.WEB_APP,
             method=AuditLog.Method.MANUAL,
         )
@@ -600,7 +672,10 @@ def add_reply(request, comment_id):
 
     post = parent.post
 
-    if not can_view_post(request.user, post):
+    if not can_view_post(
+        request.user,
+        post,
+    ):
         return HttpResponseForbidden()
 
     if post.is_locked:
@@ -629,10 +704,14 @@ def add_reply(request, comment_id):
             actor=request.user,
             request=request,
             action=AuditLog.Action.CREATE,
-            target_type=reply._meta.verbose_name,
+            target_type=(
+                reply._meta.verbose_name
+            ),
             target_id=reply.pk,
             target_label=str(reply),
-            new_value=comment_values(reply),
+            new_value=comment_values(
+                reply,
+            ),
             source=AuditLog.Source.WEB_APP,
             method=AuditLog.Method.MANUAL,
         )
@@ -678,11 +757,15 @@ def comment_edit(request, comment_id):
             actor=request.user,
             request=request,
             action=AuditLog.Action.UPDATE,
-            target_type=comment._meta.verbose_name,
+            target_type=(
+                comment._meta.verbose_name
+            ),
             target_id=comment.pk,
             target_label=str(comment),
             old_value=old_value,
-            new_value=comment_values(comment),
+            new_value=comment_values(
+                comment,
+            ),
             source=AuditLog.Source.WEB_APP,
             method=AuditLog.Method.MANUAL,
         )

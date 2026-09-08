@@ -1,0 +1,27 @@
+<a
+    class="needs-attention-card"
+    href="{{ item.target_url }}"
+>
+
+    <span class="needs-attention-type">
+        {{ item.type_label }}
+    </span>
+
+    <strong class="needs-attention-title">
+        {{ item.title }}
+    </strong>
+
+    <span class="needs-attention-status">
+        {{ item.status_text }}
+    </span>
+
+    {% if item.attention_date %}
+
+        <span class="needs-attention-date">
+            {{ item.date_label }}
+            {{ item.attention_date|date:"M j, Y, g:i A" }}
+        </span>
+
+    {% endif %}
+
+</a>

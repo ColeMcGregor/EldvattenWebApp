@@ -1,0 +1,25 @@
+<section class="app-rail-section needs-attention-section">
+
+    <h2 class="app-rail-heading">
+        Needs Attention
+    </h2>
+
+    <div class="needs-attention-list">
+
+        {% for item in needs_attention_items %}
+
+            {% include "community/tavern/_needs_attention_item.html" with item=item %}
+
+        {% empty %}
+
+            <div class="needs-attention-empty">
+                <p>
+                    Nothing needs your attention.
+                </p>
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
