@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
         initializePostForm(postForm);
     });
 
+    initializeTavernPosts();
     initializeTavernFeedScrollbar();
 });
 
@@ -452,6 +453,254 @@ function initializePostForm(postForm) {
     ) {
         ensureVisibleTargetRow();
     }
+}
+
+
+function initializeTavernPosts() {
+    const posts = document.querySelectorAll(
+        "[data-tavern-post]"
+    );
+
+    if (posts.length === 0) {
+        return;
+    }
+
+
+    function setPostExpanded(
+        post,
+        expanded
+    ) {
+        const discussion = post.querySelector(
+            "[data-post-discussion]"
+        );
+
+        const toggleButtons = post.querySelectorAll(
+            "[data-post-toggle]"
+        );
+
+        post.classList.toggle(
+            "is-expanded",
+            expanded
+        );
+
+        if (discussion) {
+            discussion.hidden = !expanded;
+        }
+
+        toggleButtons.forEach((button) => {
+            button.setAttribute(
+                "aria-expanded",
+                String(expanded)
+            );
+        });
+    }
+
+
+    function postIsExpanded(post) {
+        return post.classList.contains(
+            "is-expanded"
+        );
+    }
+
+
+    function clickShouldNotTogglePost(target) {
+        return Boolean(
+            target.closest(
+                [
+                    "a",
+                    "button",
+                    "input",
+                    "textarea",
+                    "select",
+                    "label",
+                    "form",
+                    "details",
+                    "summary",
+                    "[data-post-discussion]",
+                ].join(",")
+            )
+        );
+    }
+
+
+    posts.forEach((post) => {
+        const toggleButtons = post.querySelectorAll(
+            "[data-post-toggle]"
+        );
+
+        toggleButtons.forEach((button) => {
+            button.addEventListener(
+                "click",
+                () => {
+                    setPostExpanded(
+                        post,
+                        !postIsExpanded(post)
+                    );
+                }
+            );
+        });
+
+        post.addEventListener(
+            "click",
+            (event) => {
+                if (
+                    clickShouldNotTogglePost(
+                        event.target
+                    )
+                ) {
+                    return;
+                }
+
+                const selection =
+                    window.getSelection();
+
+                if (
+                    selection
+                    && selection.toString()
+                ) {
+                    return;
+                }
+
+                setPostExpanded(
+                    post,
+                    !postIsExpanded(post)
+                );
+            }
+        );
+    });
+
+
+    const inlineFormButtons =
+        document.querySelectorAll(
+            [
+                "[data-comment-edit-toggle]",
+                "[data-reply-toggle]",
+            ].join(",")
+        );
+
+    inlineFormButtons.forEach((button) => {
+        button.addEventListener(
+            "click",
+            () => {
+                const formId =
+                    button.dataset.formId;
+
+                if (!formId) {
+                    return;
+                }
+
+                const form =
+                    document.getElementById(
+                        formId
+                    );
+
+                if (!form) {
+                    return;
+                }
+
+                const shouldOpen =
+                    form.hidden;
+
+                const post = button.closest(
+                    "[data-tavern-post]"
+                );
+
+                if (post) {
+                    post
+                        .querySelectorAll(
+                            "[data-inline-comment-form]"
+                        )
+                        .forEach(
+                            (otherForm) => {
+                                if (
+                                    otherForm
+                                    !== form
+                                ) {
+                                    otherForm.hidden =
+                                        true;
+                                }
+                            }
+                        );
+                }
+
+                form.hidden = !shouldOpen;
+
+                if (shouldOpen) {
+                    const textarea =
+                        form.querySelector(
+                            "textarea"
+                        );
+
+                    if (textarea) {
+                        textarea.focus();
+                    }
+                }
+            }
+        );
+    });
+
+
+    const cancelButtons =
+        document.querySelectorAll(
+            "[data-comment-form-cancel]"
+        );
+
+    cancelButtons.forEach((button) => {
+        button.addEventListener(
+            "click",
+            () => {
+                const form = button.closest(
+                    "[data-inline-comment-form]"
+                );
+
+                if (form) {
+                    form.hidden = true;
+                }
+            }
+        );
+    });
+
+
+    const parameters = new URLSearchParams(
+        window.location.search
+    );
+
+    const openPostId = parameters.get(
+        "open_post"
+    );
+
+    if (!openPostId) {
+        return;
+    }
+
+    const postToOpen = document.getElementById(
+        `post-${openPostId}`
+    );
+
+    if (
+        !postToOpen
+        || !postToOpen.matches(
+            "[data-tavern-post]"
+        )
+    ) {
+        return;
+    }
+
+    setPostExpanded(
+        postToOpen,
+        true
+    );
+
+    requestAnimationFrame(
+        () => {
+            postToOpen.scrollIntoView(
+                {
+                    block: "nearest",
+                    inline: "nearest",
+                }
+            );
+        }
+    );
 }
 
 

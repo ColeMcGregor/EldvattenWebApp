@@ -27,7 +27,12 @@
 
     {% for post in posts %}
 
-        <article class="tavern-post">
+        <article
+            class="tavern-post"
+            id="post-{{ post.id }}"
+            data-tavern-post
+            data-post-id="{{ post.id }}"
+        >
 
             <header class="tavern-post-header">
 
@@ -104,8 +109,11 @@
             </header>
 
 
-            <div class="tavern-post-body">
-                {{ post.body|linebreaks }}
+            <div
+                class="tavern-post-body"
+                data-post-body
+            >
+                {{ post.body|linebreaksbr }}
             </div>
 
 
@@ -138,17 +146,394 @@
 
             <footer class="tavern-post-footer">
 
-                <a
-                    href="{% url 'community:post_detail' post.id %}"
+                <button
+                    class="tavern-comment-toggle"
+                    type="button"
+                    data-post-toggle
+                    aria-expanded="false"
+                    aria-controls="discussion-{{ post.id }}"
+                    aria-label="
+                        {% if post.comment_count == 1 %}
+                            1 comment
+                        {% else %}
+                            {{ post.comment_count }} comments
+                        {% endif %}
+                    "
                 >
-                    {% if post.is_locked %}
-                        View
-                    {% else %}
-                        Comment
-                    {% endif %}
-                </a>
+                    <svg
+                        class="tavern-comment-icon"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                    >
+                        <path
+                            d="M4 4h16v12H8l-4 4V4z"
+                        ></path>
+                    </svg>
+
+                    <span>
+                        {{ post.comment_count }}
+                    </span>
+                </button>
 
             </footer>
+
+
+            <section
+                class="tavern-post-discussion"
+                id="discussion-{{ post.id }}"
+                data-post-discussion
+                aria-label="Comments"
+                hidden
+            >
+
+                <div class="tavern-comment-list">
+
+                    {% for comment in post.tavern_comments %}
+
+                        <article
+                            class="tavern-comment"
+                            id="comment-{{ comment.id }}"
+                        >
+
+                            <header class="tavern-comment-header">
+
+                                <div class="tavern-comment-author">
+
+                                    <strong>
+                                        {% if comment.author.display_name %}
+                                            {{ comment.author.display_name }}
+                                        {% else %}
+                                            {{ comment.author.username }}
+                                        {% endif %}
+                                    </strong>
+
+                                    {% if comment.created_at %}
+                                        <span>
+                                            {{ comment.created_at|date:"M j, Y" }}
+                                        </span>
+                                    {% endif %}
+
+                                </div>
+
+                            </header>
+
+
+                            <div class="tavern-comment-body">
+                                {{ comment.body|linebreaksbr }}
+                            </div>
+
+
+                            {% if request.user.account_status == "MEMBER" %}
+
+                                <div class="tavern-comment-actions">
+
+                                    {% if not post.is_locked %}
+
+                                        {% if request.user.id == comment.author_id or perms.community.change_comment %}
+
+                                            <button
+                                                type="button"
+                                                data-comment-edit-toggle
+                                                data-form-id="comment-edit-form-{{ comment.id }}"
+                                            >
+                                                Edit
+                                            </button>
+
+                                        {% endif %}
+
+
+                                        <button
+                                            type="button"
+                                            data-reply-toggle
+                                            data-form-id="reply-form-{{ comment.id }}"
+                                        >
+                                            Reply
+                                        </button>
+
+                                    {% endif %}
+
+
+                                    {% if request.user.id == comment.author_id or perms.community.delete_comment %}
+
+                                        <a
+                                            href="{% url 'community:comment_delete' comment.id %}"
+                                        >
+                                            Delete
+                                        </a>
+
+                                    {% endif %}
+
+                                </div>
+
+
+                                {% if not post.is_locked %}
+
+                                    {% if request.user.id == comment.author_id or perms.community.change_comment %}
+
+                                        <form
+                                            class="tavern-inline-comment-form"
+                                            id="comment-edit-form-{{ comment.id }}"
+                                            method="post"
+                                            action="{% url 'community:comment_edit' comment.id %}"
+                                            data-inline-comment-form
+                                            hidden
+                                        >
+                                            {% csrf_token %}
+
+                                            <textarea
+                                                name="body"
+                                                rows="2"
+                                                required
+                                                aria-label="Edit comment"
+                                            >{{ comment.body }}</textarea>
+
+                                            <div class="tavern-inline-comment-form-actions">
+
+                                                <button
+                                                    type="button"
+                                                    class="tavern-comment-cancel"
+                                                    data-comment-form-cancel
+                                                >
+                                                    Cancel
+                                                </button>
+
+                                                <button
+                                                    type="submit"
+                                                    class="tavern-comment-submit"
+                                                >
+                                                    Save
+                                                </button>
+
+                                            </div>
+
+                                        </form>
+
+                                    {% endif %}
+
+
+                                    <form
+                                        class="tavern-inline-comment-form"
+                                        id="reply-form-{{ comment.id }}"
+                                        method="post"
+                                        action="{% url 'community:add_reply' comment.id %}"
+                                        data-inline-comment-form
+                                        hidden
+                                    >
+                                        {% csrf_token %}
+
+                                        <textarea
+                                            name="body"
+                                            rows="2"
+                                            required
+                                            placeholder="Write a reply..."
+                                            aria-label="Write a reply"
+                                        ></textarea>
+
+                                        <div class="tavern-inline-comment-form-actions">
+
+                                            <button
+                                                type="button"
+                                                class="tavern-comment-cancel"
+                                                data-comment-form-cancel
+                                            >
+                                                Cancel
+                                            </button>
+
+                                            <button
+                                                type="submit"
+                                                class="tavern-comment-submit"
+                                            >
+                                                Reply
+                                            </button>
+
+                                        </div>
+
+                                    </form>
+
+                                {% endif %}
+
+                            {% endif %}
+
+
+                            {% if comment.replies.all %}
+
+                                <div class="tavern-reply-list">
+
+                                    {% for reply in comment.replies.all %}
+
+                                        <article
+                                            class="tavern-reply"
+                                            id="comment-{{ reply.id }}"
+                                        >
+
+                                            <header class="tavern-comment-header">
+
+                                                <div class="tavern-comment-author">
+
+                                                    <strong>
+                                                        {% if reply.author.display_name %}
+                                                            {{ reply.author.display_name }}
+                                                        {% else %}
+                                                            {{ reply.author.username }}
+                                                        {% endif %}
+                                                    </strong>
+
+                                                    {% if reply.created_at %}
+                                                        <span>
+                                                            {{ reply.created_at|date:"M j, Y" }}
+                                                        </span>
+                                                    {% endif %}
+
+                                                </div>
+
+                                            </header>
+
+
+                                            <div class="tavern-comment-body">
+                                                {{ reply.body|linebreaksbr }}
+                                            </div>
+
+
+                                            {% if request.user.account_status == "MEMBER" %}
+
+                                                <div class="tavern-comment-actions">
+
+                                                    {% if not post.is_locked %}
+
+                                                        {% if request.user.id == reply.author_id or perms.community.change_comment %}
+
+                                                            <button
+                                                                type="button"
+                                                                data-comment-edit-toggle
+                                                                data-form-id="comment-edit-form-{{ reply.id }}"
+                                                            >
+                                                                Edit
+                                                            </button>
+
+                                                        {% endif %}
+
+                                                    {% endif %}
+
+
+                                                    {% if request.user.id == reply.author_id or perms.community.delete_comment %}
+
+                                                        <a
+                                                            href="{% url 'community:comment_delete' reply.id %}"
+                                                        >
+                                                            Delete
+                                                        </a>
+
+                                                    {% endif %}
+
+                                                </div>
+
+
+                                                {% if not post.is_locked %}
+
+                                                    {% if request.user.id == reply.author_id or perms.community.change_comment %}
+
+                                                        <form
+                                                            class="tavern-inline-comment-form"
+                                                            id="comment-edit-form-{{ reply.id }}"
+                                                            method="post"
+                                                            action="{% url 'community:comment_edit' reply.id %}"
+                                                            data-inline-comment-form
+                                                            hidden
+                                                        >
+                                                            {% csrf_token %}
+
+                                                            <textarea
+                                                                name="body"
+                                                                rows="2"
+                                                                required
+                                                                aria-label="Edit reply"
+                                                            >{{ reply.body }}</textarea>
+
+                                                            <div class="tavern-inline-comment-form-actions">
+
+                                                                <button
+                                                                    type="button"
+                                                                    class="tavern-comment-cancel"
+                                                                    data-comment-form-cancel
+                                                                >
+                                                                    Cancel
+                                                                </button>
+
+                                                                <button
+                                                                    type="submit"
+                                                                    class="tavern-comment-submit"
+                                                                >
+                                                                    Save
+                                                                </button>
+
+                                                            </div>
+
+                                                        </form>
+
+                                                    {% endif %}
+
+                                                {% endif %}
+
+                                            {% endif %}
+
+                                        </article>
+
+                                    {% endfor %}
+
+                                </div>
+
+                            {% endif %}
+
+                        </article>
+
+                    {% empty %}
+
+                        <div class="tavern-comment-empty">
+                            There are no comments yet.
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+
+                {% if request.user.account_status == "MEMBER" %}
+
+                    {% if not post.is_locked %}
+
+                        <form
+                            class="tavern-add-comment-form"
+                            method="post"
+                            action="{% url 'community:add_comment' post.id %}"
+                        >
+                            {% csrf_token %}
+
+                            <textarea
+                                name="body"
+                                rows="2"
+                                required
+                                placeholder="Write a comment..."
+                                aria-label="Write a comment"
+                            ></textarea>
+
+                            <div class="tavern-inline-comment-form-actions">
+
+                                <button
+                                    type="submit"
+                                    class="tavern-comment-submit"
+                                >
+                                    Comment
+                                </button>
+
+                            </div>
+
+                        </form>
+
+                    {% endif %}
+
+                {% endif %}
+
+            </section>
 
         </article>
 

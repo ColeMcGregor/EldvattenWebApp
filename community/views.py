@@ -1,7 +1,9 @@
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.db.models import Count, Prefetch
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
@@ -347,20 +349,52 @@ def create_replacement_post(
 
 
 def get_tavern_posts(user):
+    top_level_comments = (
+        Comment.objects
+        .filter(
+            parent__isnull=True,
+        )
+        .select_related(
+            "author",
+        )
+        .prefetch_related(
+            "replies__author",
+        )
+    )
+
     if user.has_perm(
         "community.view_post"
     ):
-        return (
+        posts = (
             Post.objects
             .filter(
                 is_deleted=False,
             )
-            .select_related("author")
-            .order_by("-created_at")
+        )
+    else:
+        posts = get_visible_posts(
+            user,
         )
 
-    return get_visible_posts(
-        user,
+    return (
+        posts
+        .select_related(
+            "author",
+        )
+        .annotate(
+            comment_count=Count(
+                "comments",
+                distinct=True,
+            ),
+        )
+        .prefetch_related(
+            Prefetch(
+                "comments",
+                queryset=top_level_comments,
+                to_attr="tavern_comments",
+            ),
+        )
+        .order_by("-created_at")
     )
 
 
@@ -483,24 +517,39 @@ def post_detail(request, post_id):
     ):
         return HttpResponseForbidden()
 
-    comment_form = None
-    reply_form = None
-
     if (
-        is_member(request.user)
-        and not post.is_locked
+        get_tavern_template(request)
+        == (
+            "community/tavern/"
+            "tavern_main_mobile.html"
+        )
     ):
-        comment_form = CommentForm()
-        reply_form = ReplyForm()
+        comment_form = None
+        reply_form = None
 
-    return render(
-        request,
-        "community/post_detail.html",
-        {
-            "post": post,
-            "comment_form": comment_form,
-            "reply_form": reply_form,
-        },
+        if (
+            is_member(request.user)
+            and not post.is_locked
+        ):
+            comment_form = CommentForm()
+            reply_form = ReplyForm()
+
+        return render(
+            request,
+            "community/post_detail.html",
+            {
+                "post": post,
+                "comment_form": comment_form,
+                "reply_form": reply_form,
+            },
+        )
+
+    return redirect(
+        (
+            f"{reverse('community:post_list')}"
+            f"?open_post={post.pk}"
+            f"#post-{post.pk}"
+        )
     )
 
 

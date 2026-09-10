@@ -589,6 +589,8 @@
     gap: 1rem;
 
     margin-bottom: 0.8rem;
+
+    cursor: pointer;
 }
 
 .tavern-post-author {
@@ -695,17 +697,29 @@
         0 4px 12px rgb(0 0 0 / 12%);
 }
 
-.tavern-post-menu-panel a {
+.tavern-post-menu-panel a,
+.tavern-post-menu-panel button {
     display: block;
+
+    width: 100%;
 
     padding: 0.6rem 0.8rem;
 
+    background: transparent;
+
+    border: 0;
+
     color: var(--text-main);
 
+    font: inherit;
     font-size: 0.9rem;
+    text-align: left;
+
+    cursor: pointer;
 }
 
-.tavern-post-menu-panel a:hover {
+.tavern-post-menu-panel a:hover,
+.tavern-post-menu-panel button:hover {
     background: var(--surface-muted);
 
     color: var(--eldvatten-red);
@@ -715,8 +729,25 @@
     color: var(--eldvatten-red);
 }
 
-.tavern-post-body p {
-    margin: 0 0 1rem;
+.tavern-post-body {
+    line-height: 1.5;
+
+    cursor: pointer;
+}
+
+.tavern-post:not(.is-expanded) .tavern-post-body {
+    display: -webkit-box;
+
+    overflow: hidden;
+
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+
+    line-clamp: 4;
+}
+
+.tavern-post.is-expanded .tavern-post-body {
+    display: block;
 }
 
 .tavern-post-meta {
@@ -725,11 +756,13 @@
 
     gap: 0.4rem 1rem;
 
-    margin-bottom: 0.8rem;
+    margin-top: 0.8rem;
 
     color: var(--text-muted);
 
     font-size: 0.85rem;
+
+    cursor: pointer;
 }
 
 .tavern-post-footer {
@@ -738,17 +771,248 @@
 
     gap: 1.5rem;
 
+    margin-top: 0.8rem;
+
     color: var(--text-muted);
 
     font-size: 0.9rem;
 }
 
-.tavern-post-footer a {
+.tavern-comment-toggle {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 0.35rem;
+
+    padding: 0.2rem 0.3rem;
+
+    background: transparent;
+
+    border: 0;
+    border-radius: var(--radius-small);
+
     color: var(--text-muted);
+
+    font: inherit;
+    font-size: 0.9rem;
+
+    cursor: pointer;
 }
 
-.tavern-post-footer a:hover {
+.tavern-comment-toggle:hover {
+    background: var(--surface-muted);
+
     color: var(--eldvatten-red);
+}
+
+.tavern-comment-icon {
+    width: 1.1rem;
+    height: 1.1rem;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-linejoin: round;
+    stroke-width: 1.7;
+}
+
+.tavern-post-discussion {
+    margin: 1rem -1.5rem -1.25rem;
+
+    background: var(--surface-muted);
+
+    border-top: 1px solid var(--border-color);
+}
+
+.tavern-post-discussion[hidden],
+.tavern-inline-comment-form[hidden] {
+    display: none;
+}
+
+.tavern-comment-list {
+    display: grid;
+}
+
+.tavern-comment {
+    padding: 1rem 1.5rem;
+
+    background: var(--surface);
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tavern-comment-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 1rem;
+
+    margin-bottom: 0.4rem;
+}
+
+.tavern-comment-author {
+    min-width: 0;
+
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+
+    gap: 0.4rem;
+}
+
+.tavern-comment-author strong {
+    font-size: 0.95rem;
+}
+
+.tavern-comment-author span {
+    color: var(--text-muted);
+
+    font-size: 0.82rem;
+}
+
+.tavern-comment-body {
+    line-height: 1.45;
+}
+
+.tavern-comment-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 0.8rem;
+
+    margin-top: 0.5rem;
+}
+
+.tavern-comment-actions button,
+.tavern-comment-actions a {
+    padding: 0;
+
+    background: transparent;
+
+    border: 0;
+
+    color: var(--text-muted);
+
+    font: inherit;
+    font-size: 0.82rem;
+
+    cursor: pointer;
+}
+
+.tavern-comment-actions button:hover,
+.tavern-comment-actions a:hover {
+    color: var(--eldvatten-red);
+}
+
+.tavern-reply-list {
+    display: grid;
+
+    gap: 0.7rem;
+
+    margin-top: 0.85rem;
+    margin-left: 2rem;
+}
+
+.tavern-reply {
+    padding: 0.8rem 0 0 1rem;
+
+    border-left: 2px solid var(--border-color);
+}
+
+.tavern-inline-comment-form,
+.tavern-add-comment-form {
+    display: grid;
+
+    gap: 0.6rem;
+
+    margin-top: 0.75rem;
+}
+
+.tavern-add-comment-form {
+    margin: 0;
+
+    padding: 1rem 1.5rem;
+
+    background: var(--surface);
+}
+
+.tavern-inline-comment-form textarea,
+.tavern-add-comment-form textarea {
+    width: 100%;
+    min-height: 58px;
+
+    padding: 0.6rem 0.7rem;
+
+    resize: vertical;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+
+    color: var(--text-main);
+
+    font: inherit;
+    line-height: 1.4;
+}
+
+.tavern-inline-comment-form textarea:focus,
+.tavern-add-comment-form textarea:focus {
+    outline: 1px solid var(--eldvatten-red);
+    outline-offset: 1px;
+}
+
+.tavern-inline-comment-form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 0.5rem;
+}
+
+.tavern-comment-submit,
+.tavern-comment-cancel {
+    padding: 0.45rem 0.7rem;
+
+    border-radius: var(--radius-small);
+
+    font: inherit;
+    font-size: 0.85rem;
+
+    cursor: pointer;
+}
+
+.tavern-comment-submit {
+    background: var(--eldvatten-red);
+
+    border: 1px solid var(--eldvatten-red);
+
+    color: white;
+}
+
+.tavern-comment-cancel {
+    background: var(--surface);
+
+    border: 1px solid var(--border-color);
+
+    color: var(--text-main);
+}
+
+.tavern-comment-cancel:hover {
+    border-color: var(--eldvatten-red);
+
+    color: var(--eldvatten-red);
+}
+
+.tavern-comment-empty {
+    padding: 1rem 1.5rem;
+
+    background: var(--surface);
+
+    color: var(--text-muted);
+
+    border-bottom: 1px solid var(--border-color);
 }
 
 .tavern-feed-empty {
