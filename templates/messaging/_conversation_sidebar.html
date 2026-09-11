@@ -1,0 +1,116 @@
+<aside
+    class="messages-sidebar"
+    aria-label="Conversations"
+>
+    <header class="messages-sidebar-header">
+        <div class="messages-sidebar-title-row">
+            <h1 class="section-heading">
+                Messages
+            </h1>
+
+            <a
+                class="messages-new-conversation"
+                href="{% url 'messaging:conversation_list' %}"
+                data-open-conversation-modal
+            >
+                New Conversation
+            </a>
+        </div>
+
+        <label
+            class="messages-search-label"
+            for="conversation-search"
+        >
+            Search conversations
+        </label>
+
+        <input
+            class="messages-search-input"
+            id="conversation-search"
+            type="search"
+            placeholder="Search conversations"
+            autocomplete="off"
+            data-conversation-search
+        >
+    </header>
+
+    <nav
+        class="messages-conversation-list"
+        aria-label="Conversation list"
+        data-conversation-list
+    >
+        {% for sidebar_conversation in conversations %}
+            <a
+                class="
+                    messages-conversation-row
+                    {% if conversation and sidebar_conversation.id == conversation.id %}
+                        active
+                    {% endif %}
+                "
+                href="{% url 'messaging:conversation_detail' sidebar_conversation.id %}"
+                data-conversation-row
+                data-conversation-search-text="{{ sidebar_conversation.display_title|lower }}"
+            >
+                <div class="messages-conversation-row-heading">
+                    <strong class="messages-conversation-name">
+                        {{ sidebar_conversation.display_title }}
+                    </strong>
+
+                    <div class="messages-conversation-indicators">
+                        {% if sidebar_conversation.is_muted_for_user %}
+                            <span class="messages-conversation-muted">
+                                Muted
+                            </span>
+                        {% endif %}
+
+                        {% if sidebar_conversation.unread_count %}
+                            <span
+                                class="messages-conversation-unread"
+                                aria-label="{{ sidebar_conversation.unread_count }} unread messages"
+                            >
+                                {{ sidebar_conversation.unread_count }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if sidebar_conversation.latest_visible_message %}
+                    <span class="messages-conversation-preview">
+                        {% if sidebar_conversation.latest_visible_message.sender_id == request.user.id %}
+                            You:
+                        {% else %}
+                            {% if sidebar_conversation.latest_visible_message.sender.display_name %}
+                                {{ sidebar_conversation.latest_visible_message.sender.display_name }}:
+                            {% else %}
+                                {{ sidebar_conversation.latest_visible_message.sender.username }}:
+                            {% endif %}
+                        {% endif %}
+
+                        {{ sidebar_conversation.latest_visible_message.body|truncatechars:55 }}
+
+                        {% if sidebar_conversation.latest_visible_message.delivery_status == "BLOCKED" %}
+                            · Not delivered
+                        {% endif %}
+                    </span>
+
+                    <time
+                        class="messages-conversation-time"
+                        datetime="{{ sidebar_conversation.latest_visible_message.created_at|date:'c' }}"
+                    >
+                        {{ sidebar_conversation.latest_visible_message.created_at|date:"M j" }}
+                    </time>
+                {% else %}
+                    <span class="messages-conversation-preview">
+                        No messages yet.
+                    </span>
+                {% endif %}
+            </a>
+        {% empty %}
+            <div class="messages-conversation-list-empty">
+                <p>
+                    You have no conversations.
+                </p>
+            </div>
+        {% endfor %}
+    </nav>
+</aside>

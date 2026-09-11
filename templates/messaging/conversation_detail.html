@@ -1,131 +1,221 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conversation</title>
-</head>
-<body>
-    <main>
-        <p>
-            <a href="{% url 'messaging:conversation_list' %}">
-                Back to Messages
-            </a>
-        </p>
+{% extends "app/base_desktop.html" %}
 
-        {% if messages %}
-            {% for message in messages %}
-                <p>{{ message }}</p>
-            {% endfor %}
-        {% endif %}
+{% block title %}
+    {{ conversation.display_title }} | Messages | EldVatten
+{% endblock %}
 
-        <h1>Conversation {{ conversation.id }}</h1>
+{% block nav_messages %}active{% endblock %}
+{% block app_shell_class %}app-two-column messages-shell{% endblock %}
 
-        <section>
-            <h2>Participants</h2>
+{% block app_content %}
 
-            <ul>
-                {% for participant in conversation.participants.all %}
-                    {% if not participant.left_at %}
-                        <li>
-                            {{ participant.user }}
+<section
+    class="messages-workspace"
+    data-messages-workspace
+>
+    {% include "messaging/_conversation_sidebar.html" %}
 
-                            {% if participant.user.id != user.id %}
-                                {% if participant.user.id in blocked_user_ids %}
+    <section
+        class="messages-conversation-panel"
+        aria-label="{{ conversation.display_title }}"
+    >
+        <header class="messages-conversation-header">
+            <div>
+                <h2 class="messages-conversation-title">
+                    {{ conversation.display_title }}
+                </h2>
+
+                <p class="messages-conversation-type">
+                    {% if conversation.conversation_type == "GROUP" %}
+                        Group conversation
+                    {% else %}
+                        Direct conversation
+                    {% endif %}
+                </p>
+            </div>
+
+            <details class="messages-conversation-menu">
+                <summary aria-label="Conversation actions">
+                    ...
+                </summary>
+
+                <div class="messages-conversation-menu-panel">
+                    {% if conversation.is_muted_for_user %}
+                        <form
+                            method="post"
+                            action="{% url 'messaging:unmute_conversation' conversation.id %}"
+                        >
+                            {% csrf_token %}
+
+                            <button type="submit">
+                                Unmute
+                            </button>
+                        </form>
+                    {% else %}
+                        <form
+                            method="post"
+                            action="{% url 'messaging:mute_conversation' conversation.id %}"
+                        >
+                            {% csrf_token %}
+
+                            <button type="submit">
+                                Mute
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    {% if conversation.conversation_type == "DIRECT" %}
+                        {% for participant in conversation.participants.all %}
+                            {% if not participant.left_at and participant.user_id != request.user.id %}
+                                {% if participant.user_id in blocked_user_ids %}
                                     <form
                                         method="post"
-                                        action="{% url 'messaging:unblock_user' participant.user.id %}"
+                                        action="{% url 'messaging:unblock_user' participant.user_id %}"
                                     >
                                         {% csrf_token %}
 
                                         <button type="submit">
                                             Unblock
+                                            {% if participant.user.display_name %}
+                                                {{ participant.user.display_name }}
+                                            {% else %}
+                                                {{ participant.user.username }}
+                                            {% endif %}
                                         </button>
                                     </form>
                                 {% else %}
                                     <form
                                         method="post"
-                                        action="{% url 'messaging:block_user' participant.user.id %}"
+                                        action="{% url 'messaging:block_user' participant.user_id %}"
                                     >
                                         {% csrf_token %}
 
                                         <button type="submit">
                                             Block
+                                            {% if participant.user.display_name %}
+                                                {{ participant.user.display_name }}
+                                            {% else %}
+                                                {{ participant.user.username }}
+                                            {% endif %}
                                         </button>
                                     </form>
                                 {% endif %}
                             {% endif %}
-                        </li>
+                        {% endfor %}
+
+                        <form
+                            method="post"
+                            action="{% url 'messaging:leave_conversation' conversation.id %}"
+                        >
+                            {% csrf_token %}
+
+                            <button type="submit">
+                                Leave Conversation
+                            </button>
+                        </form>
                     {% endif %}
+                </div>
+            </details>
+        </header>
+
+        {% if messages %}
+            <div
+                class="messages-status-list"
+                aria-live="polite"
+            >
+                {% for message in messages %}
+                    <p>
+                        {{ message }}
+                    </p>
                 {% endfor %}
-            </ul>
-        </section>
-
-        <hr>
-
-        <section>
-            <h2>Messages</h2>
-
-            {% for conversation_message in visible_messages %}
-                <article>
-                    <p>
-                        <strong>{{ conversation_message.sender }}</strong>
-                    </p>
-
-                    <p>
-                        {{ conversation_message.body|linebreaksbr }}
-                    </p>
-
-                    <p>
-                        {{ conversation_message.created_at }}
-                    </p>
-                </article>
-
-                <hr>
-            {% empty %}
-                <p>No messages yet.</p>
-            {% endfor %}
-        </section>
-
-        {% if message_form %}
-            <section>
-                <h2>Send Message</h2>
-
-                <form
-                    method="post"
-                    action="{% url 'messaging:send_message' conversation.id %}"
-                >
-                    {% csrf_token %}
-
-                    {{ message_form.body.errors }}
-
-                    <label for="{{ message_form.body.id_for_label }}">
-                        Message
-                    </label>
-
-                    {{ message_form.body }}
-
-                    <button type="submit">
-                        Send
-                    </button>
-                </form>
-            </section>
+            </div>
         {% endif %}
 
-        <hr>
+        <div
+            class="messages-thread"
+            data-message-thread
+        >
+            {% for conversation_message in visible_messages %}
+                <article
+                    class="
+                        messages-message
+                        {% if conversation_message.sender_id == request.user.id %}
+                            messages-message-outgoing
+                        {% else %}
+                            messages-message-incoming
+                        {% endif %}
+                    "
+                >
+                    {% if conversation_message.sender_id != request.user.id %}
+                        <strong class="messages-message-sender">
+                            {% if conversation_message.sender.display_name %}
+                                {{ conversation_message.sender.display_name }}
+                            {% else %}
+                                {{ conversation_message.sender.username }}
+                            {% endif %}
+                        </strong>
+                    {% endif %}
 
-        <section>
+                    <div class="messages-message-body">
+                        {{ conversation_message.body|linebreaksbr }}
+                    </div>
+
+                    <div class="messages-message-meta">
+                        {% if conversation_message.delivery_status == "BLOCKED" %}
+                            <span class="messages-message-not-delivered">
+                                Not delivered
+                            </span>
+                        {% endif %}
+
+                        <time
+                            datetime="{{ conversation_message.created_at|date:'c' }}"
+                        >
+                            {{ conversation_message.created_at|date:"M j, Y g:i A" }}
+                        </time>
+                    </div>
+                </article>
+            {% empty %}
+                <div class="messages-thread-empty">
+                    <p>
+                        No messages yet.
+                    </p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <footer class="messages-composer">
             <form
+                class="messages-composer-form"
                 method="post"
-                action="{% url 'messaging:leave_conversation' conversation.id %}"
+                action="{% url 'messaging:send_message' conversation.id %}"
             >
                 {% csrf_token %}
 
-                <button type="submit">
-                    Leave Conversation
+                {{ message_form.body.errors }}
+
+                <label
+                    class="messages-composer-label"
+                    for="{{ message_form.body.id_for_label }}"
+                >
+                    Message
+                </label>
+
+                {{ message_form.body }}
+
+                <button
+                    class="messages-send-button"
+                    type="submit"
+                >
+                    Send
                 </button>
             </form>
-        </section>
-    </main>
-</body>
-</html>
+        </footer>
+    </section>
+</section>
+
+{% include "messaging/_conversation_modal.html" %}
+
+{% endblock %}
+
+{% block app_right_rail %}
+{% endblock %}

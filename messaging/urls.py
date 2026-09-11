@@ -33,6 +33,16 @@ urlpatterns = [
         name="leave_conversation",
     ),
     path(
+        "<int:conversation_id>/mute/",
+        views.mute_conversation,
+        name="mute_conversation",
+    ),
+    path(
+        "<int:conversation_id>/unmute/",
+        views.unmute_conversation,
+        name="unmute_conversation",
+    ),
+    path(
         "block/<int:user_id>/",
         views.block_user,
         name="block_user",

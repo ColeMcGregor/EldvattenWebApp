@@ -1,47 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Messages</title>
-</head>
-<body>
-    <main>
-        <h1>Messages</h1>
+{% extends "app/base_desktop.html" %}
 
-        <p>
-            <a href="{% url 'messaging:conversation_create' %}">
-                Start Conversation
-            </a>
-        </p>
+{% block title %}Messages | EldVatten{% endblock %}
+{% block nav_messages %}active{% endblock %}
+{% block app_shell_class %}app-two-column messages-shell{% endblock %}
 
-        {% for conversation in conversations %}
-            <article>
-                <h2>
-                    <a href="{% url 'messaging:conversation_detail' conversation.id %}">
-                        Conversation {{ conversation.id }}
-                    </a>
-                </h2>
+{% block app_content %}
 
-                <p>
-                    Participants:
-                    {% for participant in conversation.participants.all %}
-                        {% if not participant.left_at %}
-                            {{ participant.user }}
-                            {% if not forloop.last %}, {% endif %}
-                        {% endif %}
-                    {% endfor %}
-                </p>
+<section
+    class="messages-workspace"
+    data-messages-workspace
+>
+    {% include "messaging/_conversation_sidebar.html" %}
 
-                <p>
-                    Last activity: {{ conversation.updated_at }}
-                </p>
-            </article>
+    <section
+        class="messages-conversation-panel
+        messages-conversation-panel-empty"
+        aria-label="Messages"
+    >
+        <div class="messages-empty-state">
+            <h2>
+                Messages
+            </h2>
 
-            <hr>
-        {% empty %}
-            <p>You have no conversations.</p>
-        {% endfor %}
-    </main>
-</body>
-</html>
+            <p>
+                Select a conversation or start a new one.
+            </p>
+        </div>
+    </section>
+</section>
+
+{% include "messaging/_conversation_modal.html" %}
+
+{% endblock %}
+
+{% block app_right_rail %}
+{% endblock %}

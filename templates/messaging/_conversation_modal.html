@@ -1,0 +1,229 @@
+<div
+    class="messages-modal"
+    data-conversation-modal
+    hidden
+>
+    <div
+        class="messages-modal-backdrop"
+        data-close-conversation-modal
+    ></div>
+
+    <section
+        class="messages-modal-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="new-conversation-title"
+    >
+        <header class="messages-modal-header">
+            <h2 id="new-conversation-title">
+                Start Conversation
+            </h2>
+
+            <button
+                type="button"
+                aria-label="Close"
+                data-close-conversation-modal
+            >
+                ×
+            </button>
+        </header>
+
+        <form
+            method="post"
+            action="{% url 'messaging:conversation_create' %}"
+            data-conversation-form
+        >
+            {% csrf_token %}
+
+            {{ conversation_form.non_field_errors }}
+
+            <input
+                type="hidden"
+                name="conversation_type"
+                value="{{ conversation_form.conversation_type.value|default:'DIRECT' }}"
+                data-conversation-type-input
+            >
+
+            <div
+                class="messages-conversation-type-tabs"
+                role="group"
+                aria-label="Conversation type"
+            >
+                <button
+                    type="button"
+                    class="active"
+                    data-conversation-type-choice="DIRECT"
+                    aria-pressed="true"
+                >
+                    People
+                </button>
+
+                <button
+                    type="button"
+                    data-conversation-type-choice="GROUP"
+                    aria-pressed="false"
+                >
+                    Groups
+                </button>
+            </div>
+
+            <div
+                class="messages-conversation-type-panel"
+                data-conversation-type-panel="DIRECT"
+            >
+                <div class="messages-modal-field">
+                    {{ conversation_form.participants.errors }}
+
+                    <label for="conversation-user-search">
+                        Search people
+                    </label>
+
+                    <input
+                        id="conversation-user-search"
+                        type="search"
+                        placeholder="Search by name"
+                        autocomplete="off"
+                        data-conversation-user-search
+                    >
+                </div>
+
+                <div class="messages-modal-field">
+                    <label for="{{ conversation_form.participants.id_for_label }}">
+                        People
+                    </label>
+
+                    {{ conversation_form.participants }}
+                </div>
+            </div>
+
+            <div
+                class="messages-conversation-type-panel"
+                data-conversation-type-panel="GROUP"
+                hidden
+            >
+                <div class="messages-modal-field">
+                    {{ conversation_form.title.errors }}
+
+                    <label for="{{ conversation_form.title.id_for_label }}">
+                        Conversation name
+                    </label>
+
+                    {{ conversation_form.title }}
+                </div>
+
+                {{ conversation_target_formset.non_form_errors }}
+                {{ conversation_target_formset.management_form }}
+
+                <div
+                    class="messages-target-list"
+                    data-conversation-target-list
+                >
+                    {% for target_form in conversation_target_formset.forms %}
+                        <div
+                            class="messages-target-row"
+                            data-conversation-target-row
+                        >
+                            <div class="messages-target-row-header">
+                                <strong>
+                                    Target
+                                    <span data-conversation-target-number>
+                                        {{ forloop.counter }}
+                                    </span>
+                                </strong>
+
+                                <button
+                                    type="button"
+                                    data-remove-conversation-target
+                                >
+                                    Remove
+                                </button>
+                            </div>
+
+                            {{ target_form.id }}
+
+                            {% for field in target_form.visible_fields %}
+                                {% if field.name != "DELETE" %}
+                                    <div class="messages-target-field">
+                                        {{ field.errors }}
+
+                                        {{ field.label_tag }}
+
+                                        {{ field }}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if target_form.DELETE %}
+                                <div hidden>
+                                    {{ target_form.DELETE }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <template data-conversation-empty-target>
+                    <div
+                        class="messages-target-row"
+                        data-conversation-target-row
+                    >
+                        <div class="messages-target-row-header">
+                            <strong>
+                                Target
+                                <span data-conversation-target-number></span>
+                            </strong>
+
+                            <button
+                                type="button"
+                                data-remove-conversation-target
+                            >
+                                Remove
+                            </button>
+                        </div>
+
+                        {{ conversation_target_formset.empty_form.id }}
+
+                        {% for field in conversation_target_formset.empty_form.visible_fields %}
+                            {% if field.name != "DELETE" %}
+                                <div class="messages-target-field">
+                                    {{ field.errors }}
+
+                                    {{ field.label_tag }}
+
+                                    {{ field }}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if conversation_target_formset.empty_form.DELETE %}
+                            <div hidden>
+                                {{ conversation_target_formset.empty_form.DELETE }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </template>
+
+                <button
+                    type="button"
+                    class="messages-add-target"
+                    data-add-conversation-target
+                >
+                    Add OR Target
+                </button>
+            </div>
+
+            <footer class="messages-modal-actions">
+                <button
+                    type="button"
+                    data-close-conversation-modal
+                >
+                    Cancel
+                </button>
+
+                <button type="submit">
+                    Start Conversation
+                </button>
+            </footer>
+        </form>
+    </section>
+</div>
