@@ -136,7 +136,7 @@ class ActionAdmin(admin.ModelAdmin):
     )
 
     filter_horizontal = (
-        "linked_posts",
+        "linked_threads",
     )
 
     ordering = (
@@ -153,12 +153,22 @@ class ActionAdmin(admin.ModelAdmin):
         "sync_assignments",
     )
 
-    def save_model(self, request, obj, form, change):
+    def save_model(
+        self,
+        request,
+        obj,
+        form,
+        change,
+    ):
         old_value = None
 
         if change:
-            old_action = Action.objects.get(pk=obj.pk)
-            old_value = action_values(old_action)
+            old_action = Action.objects.get(
+                pk=obj.pk,
+            )
+            old_value = action_values(
+                old_action,
+            )
 
         super().save_model(
             request,
@@ -209,7 +219,11 @@ class ActionAdmin(admin.ModelAdmin):
             method=AuditLog.Method.MANUAL,
         )
 
-    def delete_model(self, request, obj):
+    def delete_model(
+        self,
+        request,
+        obj,
+    ):
         old_value = action_values(obj)
 
         record_audit_event(
@@ -231,31 +245,44 @@ class ActionAdmin(admin.ModelAdmin):
         )
 
     @admin.action(
-        description="Synchronize action assignments with current targets"
+        description=(
+            "Synchronize action assignments "
+            "with current targets"
+        )
     )
-    def sync_assignments(self, request, queryset):
+    def sync_assignments(
+        self,
+        request,
+        queryset,
+    ):
         activated_count = 0
         deactivated_count = 0
 
         for action in queryset:
-            activated_assignments, deactivated_assignments = (
-                sync_action_assignments(
-                    action,
-                    actor=request.user,
-                    request=request,
-                    source=AuditLog.Source.ADMIN,
-                    method=AuditLog.Method.MANUAL,
-                )
+            (
+                activated_assignments,
+                deactivated_assignments,
+            ) = sync_action_assignments(
+                action,
+                actor=request.user,
+                request=request,
+                source=AuditLog.Source.ADMIN,
+                method=AuditLog.Method.MANUAL,
             )
 
-            activated_count += len(activated_assignments)
-            deactivated_count += len(deactivated_assignments)
+            activated_count += len(
+                activated_assignments
+            )
+            deactivated_count += len(
+                deactivated_assignments
+            )
 
         self.message_user(
             request,
             (
-                f"Activated {activated_count} assignment(s) and "
-                f"deactivated {deactivated_count} assignment(s)."
+                f"Activated {activated_count} "
+                f"assignment(s) and deactivated "
+                f"{deactivated_count} assignment(s)."
             ),
         )
 
@@ -296,12 +323,22 @@ class ActionTargetAdmin(admin.ModelAdmin):
         "user__display_name",
     )
 
-    def save_model(self, request, obj, form, change):
+    def save_model(
+        self,
+        request,
+        obj,
+        form,
+        change,
+    ):
         old_value = None
 
         if change:
-            old_target = ActionTarget.objects.get(pk=obj.pk)
-            old_value = target_values(old_target)
+            old_target = ActionTarget.objects.get(
+                pk=obj.pk,
+            )
+            old_value = target_values(
+                old_target,
+            )
 
         super().save_model(
             request,
@@ -336,7 +373,11 @@ class ActionTargetAdmin(admin.ModelAdmin):
             method=AuditLog.Method.MANUAL,
         )
 
-    def delete_model(self, request, obj):
+    def delete_model(
+        self,
+        request,
+        obj,
+    ):
         old_value = target_values(obj)
         action = obj.action
 
@@ -399,12 +440,24 @@ class ActionAssignmentAdmin(admin.ModelAdmin):
         "-assigned_at",
     )
 
-    def save_model(self, request, obj, form, change):
+    def save_model(
+        self,
+        request,
+        obj,
+        form,
+        change,
+    ):
         old_value = None
 
         if change:
-            old_assignment = ActionAssignment.objects.get(pk=obj.pk)
-            old_value = assignment_values(old_assignment)
+            old_assignment = (
+                ActionAssignment.objects.get(
+                    pk=obj.pk,
+                )
+            )
+            old_value = assignment_values(
+                old_assignment,
+            )
 
         super().save_model(
             request,
@@ -431,7 +484,11 @@ class ActionAssignmentAdmin(admin.ModelAdmin):
             method=AuditLog.Method.MANUAL,
         )
 
-    def delete_model(self, request, obj):
+    def delete_model(
+        self,
+        request,
+        obj,
+    ):
         old_value = assignment_values(obj)
 
         record_audit_event(

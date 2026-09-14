@@ -2,7 +2,7 @@ from django.db.models import F, Q
 from django.utils import timezone
 
 from actions.models import ActionAssignment
-from community.models import Post
+from community.models import ForumPost
 from notifications.forms import NotificationPreferenceForm
 from notifications.models import (
     Notification,
@@ -67,7 +67,10 @@ def get_profile_context(user):
     citizenship_record = (
         user.citizenship_records
         .filter(ended_at__isnull=True)
-        .select_related("citizenship_class", "chapter")
+        .select_related(
+            "citizenship_class",
+            "chapter",
+        )
         .first()
     )
 
@@ -88,8 +91,14 @@ def get_profile_context(user):
     office_records = list(
         user.office_records
         .filter(ended_at__isnull=True)
-        .select_related("office", "chapter")
-        .order_by("office__name", "chapter__name")
+        .select_related(
+            "office",
+            "chapter",
+        )
+        .order_by(
+            "office__name",
+            "chapter__name",
+        )
     )
 
     governance_memberships = list(
@@ -102,7 +111,10 @@ def get_profile_context(user):
     order_memberships = list(
         user.order_memberships
         .filter(ended_at__isnull=True)
-        .select_related("order", "order_rank")
+        .select_related(
+            "order",
+            "order_rank",
+        )
         .order_by("order__name")
     )
 
@@ -143,12 +155,17 @@ def get_profile_context(user):
 
 def get_posts_context(user):
     posts = list(
-        Post.objects
+        ForumPost.objects
         .filter(
             author=user,
-            is_deleted=False,
+            archived_at__isnull=True,
         )
-        .select_related("author")
+        .select_related(
+            "author",
+            "thread",
+            "thread__board",
+            "thread__board__category",
+        )
         .order_by("-created_at")
     )
 

@@ -12,7 +12,7 @@ class ActionForm(forms.ModelForm):
             "external_url",
             "deadline",
             "is_required",
-            "linked_posts",
+            "linked_threads",
         ]
 
         widgets = {
@@ -29,7 +29,8 @@ class ActionForm(forms.ModelForm):
                 },
                 format="%Y-%m-%dT%H:%M",
             ),
-            "linked_posts": forms.SelectMultiple(),
+            "linked_threads":
+                forms.SelectMultiple(),
         }
 
     def __init__(self, *args, **kwargs):

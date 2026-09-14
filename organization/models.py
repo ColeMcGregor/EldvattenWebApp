@@ -219,7 +219,11 @@ class CitizenshipRecord(HistoricalAssignment):
         ]
 
     def __str__(self):
-        return f"{self.user} - {self.citizenship_class} - {self.chapter}"
+        return (
+            f"{self.user} - "
+            f"{self.citizenship_class} - "
+            f"{self.chapter}"
+        )
 
 
 class UserSocialRank(HistoricalAssignment):
@@ -274,7 +278,11 @@ class UserOffice(HistoricalAssignment):
         ]
 
     def __str__(self):
-        return f"{self.user} - {self.office} - {self.chapter}"
+        return (
+            f"{self.user} - "
+            f"{self.office} - "
+            f"{self.chapter}"
+        )
 
 
 class HouseholdMembership(HistoricalAssignment):
@@ -322,14 +330,22 @@ class HouseholdLeadership(HistoricalAssignment):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "household", "leadership_type"],
+                fields=[
+                    "user",
+                    "household",
+                    "leadership_type",
+                ],
                 condition=Q(ended_at__isnull=True),
                 name="unique_current_household_leadership",
             ),
         ]
 
     def __str__(self):
-        return f"{self.user} - {self.leadership_type} - {self.household}"
+        return (
+            f"{self.user} - "
+            f"{self.leadership_type} - "
+            f"{self.household}"
+        )
 
 
 class GovernanceMembership(HistoricalAssignment):
@@ -390,17 +406,32 @@ class OrderMembership(HistoricalAssignment):
 
         if self.order.uses_ranks and not self.order_rank:
             raise ValidationError(
-                {"order_rank": "A rank is required for this Order."}
+                {
+                    "order_rank": (
+                        "A rank is required for this Order."
+                    )
+                }
             )
 
-        if not self.order.uses_ranks and self.order_rank:
+        if (
+            not self.order.uses_ranks
+            and self.order_rank
+        ):
             raise ValidationError(
-                {"order_rank": "This Order does not use ranks."}
+                {
+                    "order_rank": (
+                        "This Order does not use ranks."
+                    )
+                }
             )
 
     def __str__(self):
         if self.order_rank:
-            return f"{self.user} - {self.order} - {self.order_rank}"
+            return (
+                f"{self.user} - "
+                f"{self.order} - "
+                f"{self.order_rank}"
+            )
 
         return f"{self.user} - {self.order}"
 
@@ -453,15 +484,26 @@ class InitiateSponsorship(HistoricalAssignment):
     class Meta:
         constraints = [
             models.CheckConstraint(
-                condition=~Q(initiate=F("sponsor")),
+                condition=~Q(
+                    initiate=F("sponsor")
+                ),
                 name="prevent_self_sponsorship",
             ),
             models.UniqueConstraint(
-                fields=["initiate", "sponsor_type"],
-                condition=Q(ended_at__isnull=True),
+                fields=[
+                    "initiate",
+                    "sponsor_type",
+                ],
+                condition=Q(
+                    ended_at__isnull=True
+                ),
                 name="one_current_sponsor_per_type",
             ),
         ]
 
     def __str__(self):
-        return f"{self.initiate} - {self.get_sponsor_type_display()}: {self.sponsor}"
+        return (
+            f"{self.initiate} - "
+            f"{self.get_sponsor_type_display()}: "
+            f"{self.sponsor}"
+        )

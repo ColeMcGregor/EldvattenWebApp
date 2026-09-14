@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
-from community.models import Post
+from community.models import ForumThread
 from organization.models import (
     Chapter,
     CitizenshipClass,
@@ -44,14 +44,19 @@ class Action(models.Model):
         related_name="created_actions",
     )
 
-    linked_posts = models.ManyToManyField(
-        Post,
+    linked_threads = models.ManyToManyField(
+        ForumThread,
         blank=True,
         related_name="linked_actions",
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
 
     class Meta:
         ordering = [
@@ -158,7 +163,9 @@ class ActionTarget(models.Model):
         related_name="action_targets",
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
 
     def clean(self):
         target_fields = [
@@ -196,7 +203,8 @@ class ActionTarget(models.Model):
 
             if any(other_fields):
                 raise ValidationError(
-                    "A specific user target cannot be combined with organizational selectors."
+                    "A specific user target cannot be combined "
+                    "with organizational selectors."
                 )
 
     def __str__(self):
@@ -246,7 +254,9 @@ class ActionAssignment(models.Model):
         null=True,
     )
 
-    assigned_at = models.DateTimeField(auto_now_add=True)
+    assigned_at = models.DateTimeField(
+        auto_now_add=True,
+    )
 
     class Meta:
         constraints = [
@@ -260,47 +270,64 @@ class ActionAssignment(models.Model):
         ]
 
     def clean(self):
-        if self.is_active and self.unassigned_at is not None:
+        if (
+            self.is_active
+            and self.unassigned_at is not None
+        ):
             raise ValidationError(
-                "An active assignment cannot have an unassigned timestamp."
+                "An active assignment cannot have "
+                "an unassigned timestamp."
             )
 
-        if not self.is_active and self.unassigned_at is None:
+        if (
+            not self.is_active
+            and self.unassigned_at is None
+        ):
             raise ValidationError(
-                "An inactive assignment must have an unassigned timestamp."
+                "An inactive assignment must have "
+                "an unassigned timestamp."
             )
 
         if self.status == self.Status.NOT_STARTED:
-            if self.opened_at is not None or self.completed_at is not None:
+            if (
+                self.opened_at is not None
+                or self.completed_at is not None
+            ):
                 raise ValidationError(
-                    "A not-started assignment cannot have opened or completed timestamps."
+                    "A not-started assignment cannot have "
+                    "opened or completed timestamps."
                 )
 
         elif self.status == self.Status.OPENED:
             if self.opened_at is None:
                 raise ValidationError(
-                    "An opened assignment must have an opened timestamp."
+                    "An opened assignment must have "
+                    "an opened timestamp."
                 )
 
             if self.completed_at is not None:
                 raise ValidationError(
-                    "An opened assignment cannot have a completed timestamp."
+                    "An opened assignment cannot have "
+                    "a completed timestamp."
                 )
 
         elif self.status == self.Status.COMPLETED:
             if self.opened_at is None:
                 raise ValidationError(
-                    "A completed assignment must have an opened timestamp."
+                    "A completed assignment must have "
+                    "an opened timestamp."
                 )
 
             if self.completed_at is None:
                 raise ValidationError(
-                    "A completed assignment must have a completed timestamp."
+                    "A completed assignment must have "
+                    "a completed timestamp."
                 )
 
             if self.completed_at < self.opened_at:
                 raise ValidationError(
-                    "An assignment cannot be completed before it was opened."
+                    "An assignment cannot be completed "
+                    "before it was opened."
                 )
 
     def mark_opened(self):

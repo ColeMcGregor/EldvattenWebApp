@@ -7,29 +7,214 @@ app_name = "community"
 
 
 urlpatterns = [
-    path("", views.post_list, name="post_list"),
-    path("create/", views.post_create, name="post_create"),
-    path("<int:post_id>/", views.post_detail, name="post_detail"),
-    path("<int:post_id>/edit/", views.post_edit, name="post_edit"),
-    path("<int:post_id>/delete/", views.post_delete, name="post_delete"),
     path(
-        "<int:post_id>/comment/",
-        views.add_comment,
-        name="add_comment",
+        "",
+        views.forum_index,
+        name="forum_index",
     ),
     path(
-        "comments/<int:comment_id>/reply/",
-        views.add_reply,
-        name="add_reply",
+        "search/",
+        views.forum_search,
+        name="search",
     ),
     path(
-        "comments/<int:comment_id>/edit/",
-        views.comment_edit,
-        name="comment_edit",
+        "drafts/",
+        views.draft_list,
+        name="draft_list",
     ),
     path(
-        "comments/<int:comment_id>/delete/",
-        views.comment_delete,
-        name="comment_delete",
+        "drafts/<int:draft_id>/delete/",
+        views.draft_delete,
+        name="draft_delete",
+    ),
+    path(
+        "drafts/<int:draft_id>/publish/",
+        views.draft_publish,
+        name="draft_publish",
+    ),
+
+    path(
+        "categories/create/",
+        views.category_create,
+        name="category_create",
+    ),
+    path(
+        "categories/<int:category_id>/edit/",
+        views.category_edit,
+        name="category_edit",
+    ),
+    path(
+        "categories/<int:category_id>/archive/",
+        views.category_archive,
+        name="category_archive",
+    ),
+    path(
+        "categories/<int:category_id>/restore/",
+        views.category_restore,
+        name="category_restore",
+    ),
+
+    path(
+        "categories/<int:category_id>/boards/create/",
+        views.board_create,
+        name="board_create",
+    ),
+    path(
+        "boards/<int:board_id>/",
+        views.board_detail,
+        name="board_detail",
+    ),
+    path(
+        "boards/<int:board_id>/edit/",
+        views.board_edit,
+        name="board_edit",
+    ),
+    path(
+        "boards/<int:board_id>/archive/",
+        views.board_archive,
+        name="board_archive",
+    ),
+    path(
+        "boards/<int:board_id>/restore/",
+        views.board_restore,
+        name="board_restore",
+    ),
+    path(
+        "boards/<int:board_id>/lock/",
+        views.board_lock,
+        name="board_lock",
+    ),
+    path(
+        "boards/<int:board_id>/unlock/",
+        views.board_unlock,
+        name="board_unlock",
+    ),
+    path(
+        "boards/<int:board_id>/subscribe/",
+        views.board_subscribe,
+        name="board_subscribe",
+    ),
+    path(
+        "boards/<int:board_id>/unsubscribe/",
+        views.board_unsubscribe,
+        name="board_unsubscribe",
+    ),
+
+    path(
+        "boards/<int:board_id>/threads/create/",
+        views.thread_create,
+        name="thread_create",
+    ),
+    path(
+        "boards/<int:board_id>/draft/",
+        views.thread_draft_save,
+        name="thread_draft_save",
+    ),
+
+    path(
+        "threads/<int:thread_id>/",
+        views.thread_detail,
+        name="thread_detail",
+    ),
+    path(
+        "threads/<int:thread_id>/edit/",
+        views.thread_edit,
+        name="thread_edit",
+    ),
+    path(
+        "threads/<int:thread_id>/archive/",
+        views.thread_archive,
+        name="thread_archive",
+    ),
+    path(
+        "threads/<int:thread_id>/restore/",
+        views.thread_restore,
+        name="thread_restore",
+    ),
+    path(
+        "threads/<int:thread_id>/pin/",
+        views.thread_pin,
+        name="thread_pin",
+    ),
+    path(
+        "threads/<int:thread_id>/unpin/",
+        views.thread_unpin,
+        name="thread_unpin",
+    ),
+    path(
+        "threads/<int:thread_id>/lock/",
+        views.thread_lock,
+        name="thread_lock",
+    ),
+    path(
+        "threads/<int:thread_id>/unlock/",
+        views.thread_unlock,
+        name="thread_unlock",
+    ),
+    path(
+        "threads/<int:thread_id>/move/",
+        views.thread_move,
+        name="thread_move",
+    ),
+    path(
+        "threads/<int:thread_id>/merge/",
+        views.thread_merge,
+        name="thread_merge",
+    ),
+    path(
+        "threads/<int:thread_id>/split/",
+        views.thread_split,
+        name="thread_split",
+    ),
+    path(
+        "threads/<int:thread_id>/move-posts/",
+        views.thread_move_posts,
+        name="thread_move_posts",
+    ),
+    path(
+        "threads/<int:thread_id>/follow/",
+        views.thread_follow,
+        name="thread_follow",
+    ),
+    path(
+        "threads/<int:thread_id>/unfollow/",
+        views.thread_unfollow,
+        name="thread_unfollow",
+    ),
+    path(
+        "threads/<int:thread_id>/post/",
+        views.post_create,
+        name="post_create",
+    ),
+    path(
+        "threads/<int:thread_id>/draft/",
+        views.post_draft_save,
+        name="post_draft_save",
+    ),
+
+    path(
+        "posts/<int:post_id>/edit/",
+        views.post_edit,
+        name="post_edit",
+    ),
+    path(
+        "posts/<int:post_id>/archive/",
+        views.post_archive,
+        name="post_archive",
+    ),
+    path(
+        "posts/<int:post_id>/restore/",
+        views.post_restore,
+        name="post_restore",
+    ),
+    path(
+        "posts/<int:post_id>/quote/",
+        views.post_quote,
+        name="post_quote",
+    ),
+    path(
+        "posts/<int:post_id>/report/",
+        views.post_report,
+        name="post_report",
     ),
 ]
