@@ -528,9 +528,16 @@ def user_can_create_thread(user, board):
         board.thread_creation_policy
         == ForumBoard.ThreadCreationPolicy.TARGETED
     ):
+        creation_targets = list(
+            board.thread_creation_targets.all()
+        )
+
+        if not creation_targets:
+            return False
+
         return user_matches_forum_targets(
             user,
-            board.thread_creation_targets.all(),
+            creation_targets,
         )
 
     return False

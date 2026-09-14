@@ -217,4 +217,9 @@ urlpatterns = [
         views.post_report,
         name="post_report",
     ),
+    path(
+        "reports/<int:report_id>/review/",
+        views.post_report_review,
+        name="post_report_review",
+    ),
 ]

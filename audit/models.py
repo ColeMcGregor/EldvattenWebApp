@@ -13,6 +13,14 @@ class AuditLog(models.Model):
         REJECT = "REJECT", "Reject"
         SUSPEND = "SUSPEND", "Suspend"
         RESTORE = "RESTORE", "Restore"
+        ARCHIVE = "ARCHIVE", "Archive"
+        LOCK = "LOCK", "Lock"
+        UNLOCK = "UNLOCK", "Unlock"
+        PIN = "PIN", "Pin"
+        UNPIN = "UNPIN", "Unpin"
+        MOVE = "MOVE", "Move"
+        SPLIT = "SPLIT", "Split"
+        MERGE = "MERGE", "Merge"
 
     class Source(models.TextChoices):
         ADMIN = "ADMIN", "Django Admin"
@@ -36,10 +44,12 @@ class AuditLog(models.Model):
         blank=True,
         null=True,
     )
+
     actor_label = models.CharField(
         max_length=150,
         blank=True,
     )
+
     ip_address = models.GenericIPAddressField(
         blank=True,
         null=True,
@@ -50,11 +60,15 @@ class AuditLog(models.Model):
         choices=Action.choices,
     )
 
-    target_type = models.CharField(max_length=100)
+    target_type = models.CharField(
+        max_length=100,
+    )
+
     target_id = models.CharField(
         max_length=100,
         blank=True,
     )
+
     target_label = models.CharField(
         max_length=255,
         blank=True,
@@ -64,6 +78,7 @@ class AuditLog(models.Model):
         blank=True,
         null=True,
     )
+
     new_value = models.JSONField(
         blank=True,
         null=True,
@@ -73,12 +88,16 @@ class AuditLog(models.Model):
         blank=True,
         null=True,
     )
-    recorded_at = models.DateTimeField(auto_now_add=True)
+
+    recorded_at = models.DateTimeField(
+        auto_now_add=True,
+    )
 
     source = models.CharField(
         max_length=30,
         choices=Source.choices,
     )
+
     method = models.CharField(
         max_length=20,
         choices=Method.choices,
@@ -88,13 +107,33 @@ class AuditLog(models.Model):
         max_length=500,
         blank=True,
     )
-    notes = models.TextField(blank=True)
+
+    notes = models.TextField(
+        blank=True,
+    )
 
     class Meta:
-        ordering = ["-recorded_at"]
+        ordering = [
+            "-recorded_at",
+        ]
 
     def __str__(self):
-        actor = self.actor_label or str(self.actor) if self.actor else "System"
-        target = self.target_label or self.target_type
+        actor = (
+            self.actor_label
+            or (
+                str(self.actor)
+                if self.actor
+                else "System"
+            )
+        )
 
-        return f"{actor} - {self.get_action_display()} - {target}"
+        target = (
+            self.target_label
+            or self.target_type
+        )
+
+        return (
+            f"{actor} - "
+            f"{self.get_action_display()} - "
+            f"{target}"
+        )

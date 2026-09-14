@@ -68,6 +68,7 @@ from .services import (
     move_forum_posts,
     move_forum_thread,
     publish_forum_draft,
+    resolve_post_report,
     restore_forum_board,
     restore_forum_category,
     restore_forum_post,
@@ -576,7 +577,7 @@ def category_archive(
     _audit(
         request,
         category,
-        action=AuditLog.Action.UPDATE,
+        action=AuditLog.Action.ARCHIVE,
         old_value=old_value,
         notes="Forum category archived.",
     )
@@ -609,7 +610,7 @@ def category_restore(
     _audit(
         request,
         category,
-        action=AuditLog.Action.UPDATE,
+        action=AuditLog.Action.RESTORE,
         old_value=old_value,
         notes="Forum category restored.",
     )
@@ -733,17 +734,21 @@ def board_detail(
         pk=board_id,
     )
 
-    show_archived = (
-        request.GET.get("archived") == "1"
-        and user_can_view_archived_forum(
+    can_view_archived = (
+        user_can_view_archived_forum(
             request.user
         )
+    )
+
+    show_archived = (
+        request.GET.get("archived") == "1"
+        and can_view_archived
     )
 
     if not user_can_access_board(
         request.user,
         board,
-        include_archived=show_archived,
+        include_archived=can_view_archived,
     ):
         raise PermissionDenied
 
@@ -927,7 +932,7 @@ def board_archive(
     _audit(
         request,
         board,
-        action=AuditLog.Action.UPDATE,
+        action=AuditLog.Action.ARCHIVE,
         old_value=old_value,
         notes="Forum board archived.",
     )
@@ -961,14 +966,27 @@ def board_restore(
     _audit(
         request,
         board,
-        action=AuditLog.Action.UPDATE,
+        action=AuditLog.Action.RESTORE,
         old_value=old_value,
         notes="Forum board restored.",
     )
 
+    if user_can_access_board(
+        request.user,
+        board,
+        include_archived=(
+            user_can_view_archived_forum(
+                request.user
+            )
+        ),
+    ):
+        return redirect(
+            "community:board_detail",
+            board_id=board.pk,
+        )
+
     return redirect(
-        "community:board_detail",
-        board_id=board.pk,
+        "community:forum_index"
     )
 
 
@@ -997,7 +1015,7 @@ def board_lock(
     _audit(
         request,
         board,
-        action=AuditLog.Action.UPDATE,
+        action=AuditLog.Action.LOCK,
         old_value=old_value,
         notes="Forum board locked.",
     )
@@ -1033,7 +1051,7 @@ def board_unlock(
     _audit(
         request,
         board,
-        action=AuditLog.Action.UPDATE,
+        action=AuditLog.Action.UNLOCK,
         old_value=old_value,
         notes="Forum board unlocked.",
     )
@@ -1336,17 +1354,37 @@ def thread_detail(
         pk=thread_id,
     )
 
-    if thread.merged_into_id is not None:
-        return redirect(
-            "community:thread_detail",
-            thread_id=thread.merged_into_id,
-        )
-
     can_view_archived = (
         user_can_view_archived_forum(
             request.user
         )
     )
+
+    if thread.merged_into_id is not None:
+        destination_thread = get_object_or_404(
+            ForumThread.objects
+            .select_related(
+                "board",
+                "board__category",
+            )
+            .prefetch_related(
+                "targets",
+                "board__targets",
+            ),
+            pk=thread.merged_into_id,
+        )
+
+        if not user_can_access_thread(
+            request.user,
+            destination_thread,
+            include_archived=can_view_archived,
+        ):
+            raise PermissionDenied
+
+        return redirect(
+            "community:thread_detail",
+            thread_id=destination_thread.pk,
+        )
 
     if not user_can_access_thread(
         request.user,
@@ -1688,7 +1726,7 @@ def thread_archive(
     _audit(
         request,
         thread,
-        action=AuditLog.Action.UPDATE,
+        action=AuditLog.Action.ARCHIVE,
         old_value=old_value,
         notes="Forum thread archived.",
     )
@@ -1730,7 +1768,7 @@ def thread_restore(
     _audit(
         request,
         thread,
-        action=AuditLog.Action.UPDATE,
+        action=AuditLog.Action.RESTORE,
         old_value=old_value,
         notes="Forum thread restored.",
     )
@@ -1765,7 +1803,7 @@ def thread_pin(
     _audit(
         request,
         thread,
-        action=AuditLog.Action.UPDATE,
+        action=AuditLog.Action.PIN,
         old_value=old_value,
         notes="Forum thread pinned.",
     )
@@ -1800,7 +1838,7 @@ def thread_unpin(
     _audit(
         request,
         thread,
-        action=AuditLog.Action.UPDATE,
+        action=AuditLog.Action.UNPIN,
         old_value=old_value,
         notes="Forum thread unpinned.",
     )
@@ -1835,7 +1873,7 @@ def thread_lock(
     _audit(
         request,
         thread,
-        action=AuditLog.Action.UPDATE,
+        action=AuditLog.Action.LOCK,
         old_value=old_value,
         notes="Forum thread locked.",
     )
@@ -1870,7 +1908,7 @@ def thread_unlock(
     _audit(
         request,
         thread,
-        action=AuditLog.Action.UPDATE,
+        action=AuditLog.Action.UNLOCK,
         old_value=old_value,
         notes="Forum thread unlocked.",
     )
@@ -1941,7 +1979,7 @@ def thread_move(
             _audit(
                 request,
                 thread,
-                action=AuditLog.Action.UPDATE,
+                action=AuditLog.Action.MOVE,
                 old_value=old_value,
                 notes="Forum thread moved.",
             )
@@ -2033,7 +2071,7 @@ def thread_merge(
             _audit(
                 request,
                 source_thread,
-                action=AuditLog.Action.UPDATE,
+                action=AuditLog.Action.MERGE,
                 old_value=old_source,
                 notes=(
                     "Forum thread merged into "
@@ -2044,7 +2082,7 @@ def thread_merge(
             _audit(
                 request,
                 destination_thread,
-                action=AuditLog.Action.UPDATE,
+                action=AuditLog.Action.MERGE,
                 old_value=old_destination,
                 notes=(
                     "Forum thread received merged "
@@ -2160,7 +2198,7 @@ def thread_split(
             _audit(
                 request,
                 source_thread,
-                action=AuditLog.Action.UPDATE,
+                action=AuditLog.Action.SPLIT,
                 old_value=source_old_value,
                 notes="Forum thread split.",
             )
@@ -2181,7 +2219,7 @@ def thread_split(
                 _audit(
                     request,
                     post,
-                    action=AuditLog.Action.UPDATE,
+                    action=AuditLog.Action.MOVE,
                     old_value=(
                         post_old_values[
                             post.pk
@@ -2286,7 +2324,7 @@ def thread_move_posts(
                 _audit(
                     request,
                     post,
-                    action=AuditLog.Action.UPDATE,
+                    action=AuditLog.Action.MOVE,
                     old_value=(
                         post_old_values[
                             post.pk
@@ -2687,7 +2725,7 @@ def post_archive(
     _audit(
         request,
         post,
-        action=AuditLog.Action.UPDATE,
+        action=AuditLog.Action.ARCHIVE,
         old_value=old_value,
         notes="Forum post archived.",
     )
@@ -2732,7 +2770,7 @@ def post_restore(
     _audit(
         request,
         post,
-        action=AuditLog.Action.UPDATE,
+        action=AuditLog.Action.RESTORE,
         old_value=old_value,
         notes="Forum post restored.",
     )
@@ -2857,6 +2895,80 @@ def post_report(
             "post": post,
             "form": form,
         },
+    )
+
+
+@login_required
+@require_POST
+def post_report_review(
+    request,
+    report_id,
+):
+    if not user_is_forum_moderator(
+        request.user
+    ):
+        raise PermissionDenied
+
+    report = get_object_or_404(
+        ForumPostReport.objects
+        .select_related(
+            "post",
+            "post__thread",
+            "post__thread__board",
+            "post__thread__board__category",
+            "reporter",
+            "reviewed_by",
+        ),
+        pk=report_id,
+    )
+
+    old_value = _audit_values(
+        report
+    )
+
+    try:
+        report = resolve_post_report(
+            user=request.user,
+            report=report,
+            status=request.POST.get(
+                "status",
+                "",
+            ),
+            resolution_note=(
+                request.POST.get(
+                    "resolution_note",
+                    "",
+                )
+            ),
+        )
+    except ValidationError as error:
+        messages.error(
+            request,
+            _validation_message(error),
+        )
+
+        return redirect(
+            reverse(
+                "community:thread_detail",
+                args=[report.post.thread_id],
+            )
+            + f"#post-{report.post_id}"
+        )
+
+    _audit(
+        request,
+        report,
+        action=AuditLog.Action.UPDATE,
+        old_value=old_value,
+        notes="Forum post report reviewed.",
+    )
+
+    return redirect(
+        reverse(
+            "community:thread_detail",
+            args=[report.post.thread_id],
+        )
+        + f"#post-{report.post_id}"
     )
 
 
