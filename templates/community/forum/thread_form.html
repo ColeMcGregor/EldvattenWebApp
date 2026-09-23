@@ -1,0 +1,198 @@
+{% extends "app/base_desktop.html" %}
+
+{% block title %}{{ page_title }} | The Tavern | EldVatten{% endblock %}
+
+{% block nav_tavern %}active{% endblock %}
+
+
+{% block app_content %}
+
+<section class="forum-form-page">
+
+    <nav class="forum-breadcrumbs" aria-label="Breadcrumb">
+
+        <a href="{% url 'community:forum_index' %}">
+            The Tavern
+        </a>
+
+        <span aria-hidden="true">
+            /
+        </span>
+
+
+        {% if thread %}
+
+            <a href="{% url 'community:board_detail' thread.board.id %}">
+                {{ thread.board.name }}
+            </a>
+
+            <span aria-hidden="true">
+                /
+            </span>
+
+            <a href="{% url 'community:thread_detail' thread.id %}">
+                {{ thread.title }}
+            </a>
+
+        {% else %}
+
+            <a href="{% url 'community:board_detail' board.id %}">
+                {{ board.name }}
+            </a>
+
+        {% endif %}
+
+    </nav>
+
+
+    <header class="forum-page-header">
+
+        <h1 class="section-heading">
+            {{ page_title }}
+        </h1>
+
+    </header>
+
+
+    <form method="post">
+
+        {% csrf_token %}
+
+
+        {{ form.non_field_errors }}
+
+
+        <div class="forum-form-field">
+
+            <label for="{{ form.title.id_for_label }}">
+                Title
+            </label>
+
+            {{ form.title }}
+
+            {{ form.title.errors }}
+
+        </div>
+
+
+        {% if not thread %}
+
+            <div class="forum-form-field">
+
+                <label for="{{ form.body.id_for_label }}">
+                    Opening Post
+                </label>
+
+                {{ form.body }}
+
+                {{ form.body.errors }}
+
+            </div>
+
+        {% endif %}
+
+
+        {% include "community/forum/_target_formset.html" with formset=target_formset heading="Thread Visibility" help_text="Leave the targets empty to use the board audience. Multiple target rows are alternatives. Values in one row must all match." %}
+
+
+        {% if not thread %}
+
+            <section class="forum-attachment-section">
+
+                <h2 class="forum-form-section-heading">
+                    Opening Post Links
+                </h2>
+
+                <p class="forum-form-help">
+                    Add links that belong with the opening post.
+                </p>
+
+
+                {{ attachment_formset.management_form }}
+
+
+                {% if attachment_formset.non_form_errors %}
+
+                    <div class="forum-form-errors">
+                        {{ attachment_formset.non_form_errors }}
+                    </div>
+
+                {% endif %}
+
+
+                {% for attachment_form in attachment_formset.forms %}
+
+                    <div class="forum-attachment-row">
+
+                        {% for hidden_field in attachment_form.hidden_fields %}
+                            {{ hidden_field }}
+                        {% endfor %}
+
+
+                        {{ attachment_form.non_field_errors }}
+
+
+                        {% for field in attachment_form.visible_fields %}
+
+                            <div class="forum-form-field">
+
+                                <label for="{{ field.id_for_label }}">
+                                    {{ field.label }}
+                                </label>
+
+                                {{ field }}
+
+                                {{ field.errors }}
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endfor %}
+
+            </section>
+
+        {% endif %}
+
+
+        <div class="forum-form-actions">
+
+            {% if thread %}
+
+                <a href="{% url 'community:thread_detail' thread.id %}">
+                    Cancel
+                </a>
+
+                <button type="submit">
+                    Save Changes
+                </button>
+
+            {% else %}
+
+                <a href="{% url 'community:board_detail' board.id %}">
+                    Cancel
+                </a>
+
+                <button
+                    type="submit"
+                    formaction="{% url 'community:thread_draft_save' board.id %}"
+                    formnovalidate
+                >
+                    Save Draft
+                </button>
+
+                <button type="submit">
+                    Create Thread
+                </button>
+
+            {% endif %}
+
+        </div>
+
+    </form>
+
+</section>
+
+{% endblock %}

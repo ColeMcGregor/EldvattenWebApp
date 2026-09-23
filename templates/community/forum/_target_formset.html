@@ -1,0 +1,90 @@
+<section class="forum-target-section">
+
+    {% if heading %}
+        <h2 class="forum-form-section-heading">
+            {{ heading }}
+        </h2>
+    {% endif %}
+
+
+    {% if help_text %}
+        <p class="forum-form-help">
+            {{ help_text }}
+        </p>
+    {% endif %}
+
+
+    {{ formset.management_form }}
+
+
+    {% if formset.non_form_errors %}
+
+        <div class="forum-form-errors">
+            {{ formset.non_form_errors }}
+        </div>
+
+    {% endif %}
+
+
+    <div class="forum-target-list">
+
+        {% for target_form in formset.forms %}
+
+            <fieldset class="forum-target-row">
+
+                {% for hidden_field in target_form.hidden_fields %}
+                    {{ hidden_field }}
+                {% endfor %}
+
+
+                {% if target_form.non_field_errors %}
+
+                    <div class="forum-form-errors">
+                        {{ target_form.non_field_errors }}
+                    </div>
+
+                {% endif %}
+
+
+                <div class="forum-target-fields">
+
+                    {% for field in target_form.visible_fields %}
+
+                        {% if field.name == "DELETE" %}
+
+                            <div class="forum-target-delete">
+                                <label for="{{ field.id_for_label }}">
+                                    {{ field }}
+                                    Remove this target
+                                </label>
+
+                                {{ field.errors }}
+                            </div>
+
+                        {% else %}
+
+                            <div class="forum-target-field">
+
+                                <label for="{{ field.id_for_label }}">
+                                    {{ field.label }}
+                                </label>
+
+                                {{ field }}
+
+                                {{ field.errors }}
+
+                            </div>
+
+                        {% endif %}
+
+                    {% endfor %}
+
+                </div>
+
+            </fieldset>
+
+        {% endfor %}
+
+    </div>
+
+</section>

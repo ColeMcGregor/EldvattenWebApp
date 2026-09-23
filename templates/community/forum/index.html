@@ -1,0 +1,87 @@
+<section
+    class="forum-index"
+    aria-label="The Tavern forums"
+>
+
+    <div class="forum-index-toolbar">
+
+        <form
+            class="forum-search-form"
+            method="get"
+            action="{% url 'community:search' %}"
+            role="search"
+        >
+            <label
+                class="visually-hidden"
+                for="forum-search-input"
+            >
+                Search The Tavern
+            </label>
+
+            <input
+                id="forum-search-input"
+                type="search"
+                name="q"
+                placeholder="Search The Tavern"
+            >
+
+            <button type="submit">
+                Search
+            </button>
+        </form>
+
+
+        <div class="forum-index-actions">
+
+            {% if request.user.account_status == "MEMBER" %}
+                <a href="{% url 'community:draft_list' %}">
+                    Drafts
+                </a>
+            {% endif %}
+
+
+            {% if can_view_archived %}
+
+                {% if show_archived %}
+                    <a href="{% url 'community:forum_index' %}">
+                        Hide Archived
+                    </a>
+                {% else %}
+                    <a href="{% url 'community:forum_index' %}?archived=1">
+                        Show Archived
+                    </a>
+                {% endif %}
+
+            {% endif %}
+
+
+            {% if can_manage_categories %}
+                <a href="{% url 'community:category_create' %}">
+                    Create Category
+                </a>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <div class="forum-category-list">
+
+        {% for section in category_sections %}
+
+            {% include "community/forum/_category_section.html" with category=section.category boards=section.boards %}
+
+        {% empty %}
+
+            <div class="forum-empty-state">
+                <p>
+                    There are no forum categories to show.
+                </p>
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>

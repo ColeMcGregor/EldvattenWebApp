@@ -5,6 +5,7 @@ from django.core.exceptions import (
     ValidationError,
 )
 from django.db import transaction
+from django.db.models import Count
 from django.shortcuts import (
     get_object_or_404,
     redirect,
@@ -356,6 +357,15 @@ def forum_index(request):
         get_accessible_boards(
             request.user,
             include_archived=show_archived,
+        ).annotate(
+            thread_count=Count(
+                "threads",
+                distinct=True,
+            ),
+            post_count=Count(
+                "threads__posts",
+                distinct=True,
+            ),
         )
     )
 
@@ -368,9 +378,36 @@ def forum_index(request):
                 board,
             )
             if board.archived_at is None
-            and board.category.archived_at
-            is None
+            and board.category.archived_at is None
             else False
+        )
+
+        accessible_thread_ids = list(
+            get_accessible_threads(
+                request.user,
+                board=board,
+                include_archived=show_archived,
+            ).values_list(
+                "id",
+                flat=True,
+            )
+        )
+
+        board.latest_visible_post = (
+            ForumPost.objects
+            .filter(
+                thread_id__in=accessible_thread_ids,
+                archived_at__isnull=True,
+            )
+            .select_related(
+                "author",
+                "thread",
+            )
+            .order_by(
+                "-created_at",
+                "-id",
+            )
+            .first()
         )
 
         boards_by_category.setdefault(
@@ -393,22 +430,19 @@ def forum_index(request):
         category_sections.append(
             {
                 "category": category,
-                "boards":
-                    boards_by_category.get(
-                        category.pk,
-                        [],
-                    ),
+                "boards": boards_by_category.get(
+                    category.pk,
+                    [],
+                ),
             }
         )
 
     return render(
         request,
-        "community/forum/index.html",
+        "community/tavern/tavern_main_desktop.html",
         {
-            "category_sections":
-                category_sections,
-            "show_archived":
-                show_archived,
+            "category_sections": category_sections,
+            "show_archived": show_archived,
             "can_view_archived":
                 user_can_view_archived_forum(
                     request.user
@@ -757,6 +791,11 @@ def board_detail(
             request.user,
             board=board,
             include_archived=show_archived,
+        ).annotate(
+            post_count=Count(
+                "posts",
+                distinct=True,
+            )
         )
     )
 
@@ -768,6 +807,19 @@ def board_detail(
             )
             if thread.archived_at is None
             else False
+        )
+
+        thread.latest_visible_post = (
+            thread.posts
+            .filter(
+                archived_at__isnull=True,
+            )
+            .select_related("author")
+            .order_by(
+                "-created_at",
+                "-id",
+            )
+            .first()
         )
 
     return render(
@@ -1683,7 +1735,7 @@ def thread_edit(
 
     return render(
         request,
-        "community/forum/thread_edit.html",
+        "community/forum/thread_form.html",
         {
             "form": form,
             "target_formset":

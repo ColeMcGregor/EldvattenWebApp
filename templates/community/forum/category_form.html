@@ -1,0 +1,107 @@
+{% extends "app/base_desktop.html" %}
+
+{% block title %}{{ page_title }} | The Tavern | EldVatten{% endblock %}
+
+{% block nav_tavern %}active{% endblock %}
+
+
+{% block app_content %}
+
+<section class="forum-form-page">
+
+    <nav class="forum-breadcrumbs" aria-label="Breadcrumb">
+
+        <a href="{% url 'community:forum_index' %}">
+            The Tavern
+        </a>
+
+        <span aria-hidden="true">
+            /
+        </span>
+
+        <span aria-current="page">
+            {{ page_title }}
+        </span>
+
+    </nav>
+
+
+    <header class="forum-page-header">
+
+        <h1 class="section-heading">
+            {{ page_title }}
+        </h1>
+
+    </header>
+
+
+    <form method="post">
+
+        {% csrf_token %}
+
+
+        {{ form.non_field_errors }}
+
+
+        <div class="forum-form-field">
+
+            <label for="{{ form.name.id_for_label }}">
+                Name
+            </label>
+
+            {{ form.name }}
+
+            {{ form.name.errors }}
+
+        </div>
+
+
+        <div class="forum-form-field">
+
+            <label for="{{ form.description.id_for_label }}">
+                Description
+            </label>
+
+            {{ form.description }}
+
+            {{ form.description.errors }}
+
+        </div>
+
+
+        <div class="forum-form-field">
+
+            <label for="{{ form.display_order.id_for_label }}">
+                Display Order
+            </label>
+
+            {{ form.display_order }}
+
+            {{ form.display_order.errors }}
+
+        </div>
+
+
+        <div class="forum-form-actions">
+
+            <a href="{% url 'community:forum_index' %}">
+                Cancel
+            </a>
+
+            <button type="submit">
+
+                {% if category %}
+                    Save Changes
+                {% else %}
+                    Create Category
+                {% endif %}
+
+            </button>
+
+        </div>
+
+    </form>
+
+</section>
+
+{% endblock %}

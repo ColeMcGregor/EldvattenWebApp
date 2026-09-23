@@ -1,0 +1,256 @@
+<section
+    class="forum-category{% if category.archived_at %} forum-category-archived{% endif %}"
+    id="category-{{ category.id }}"
+>
+
+    <header class="forum-category-header">
+
+        <div class="forum-category-heading">
+
+            <div class="forum-category-title-line">
+
+                <h2>
+                    {{ category.name }}
+                </h2>
+
+                {% if category.has_unread %}
+                    <span class="forum-unread-label">
+                        New
+                    </span>
+                {% endif %}
+
+                {% if category.archived_at %}
+                    <span class="forum-status-label">
+                        Archived
+                    </span>
+                {% endif %}
+
+            </div>
+
+
+            {% if category.description %}
+                <p class="forum-category-description">
+                    {{ category.description }}
+                </p>
+            {% endif %}
+
+        </div>
+
+
+        {% if can_manage_categories %}
+
+            <div class="forum-category-actions">
+
+                <a href="{% url 'community:category_edit' category.id %}">
+                    Edit
+                </a>
+
+
+                {% if category.archived_at %}
+
+                    <form
+                        method="post"
+                        action="{% url 'community:category_restore' category.id %}"
+                    >
+                        {% csrf_token %}
+
+                        <button type="submit">
+                            Restore
+                        </button>
+                    </form>
+
+                {% else %}
+
+                    <form
+                        method="post"
+                        action="{% url 'community:category_archive' category.id %}"
+                    >
+                        {% csrf_token %}
+
+                        <button type="submit">
+                            Archive
+                        </button>
+                    </form>
+
+                {% endif %}
+
+            </div>
+
+        {% endif %}
+
+    </header>
+
+
+    <div
+        class="forum-board-table-header"
+        aria-hidden="true"
+    >
+        <span>Board</span>
+        <span>Threads</span>
+        <span>Posts</span>
+        <span>Last Post</span>
+    </div>
+
+
+    <div class="forum-board-list">
+
+        {% for board in boards %}
+
+            <article
+                class="
+                    forum-board-row
+                    {% if board.has_unread %} forum-board-unread{% endif %}
+                    {% if board.archived_at %} forum-board-archived{% endif %}
+                "
+                id="board-{{ board.id }}"
+            >
+
+                <div class="forum-board-primary">
+
+                    <div
+                        class="forum-board-icon"
+                        aria-hidden="true"
+                    ></div>
+
+
+                    <div class="forum-board-copy">
+
+                        <div class="forum-board-heading">
+
+                            <h3>
+                                <a
+                                    href="{% url 'community:board_detail' board.id %}{% if show_archived %}?archived=1{% endif %}"
+                                >
+                                    {{ board.name }}
+                                </a>
+                            </h3>
+
+
+                            <div class="forum-board-statuses">
+
+                                {% if board.has_unread %}
+                                    <span class="forum-unread-label">
+                                        Unread
+                                    </span>
+                                {% endif %}
+
+                                {% if board.is_locked %}
+                                    <span class="forum-status-label">
+                                        Locked
+                                    </span>
+                                {% endif %}
+
+                                {% if board.archived_at %}
+                                    <span class="forum-status-label">
+                                        Archived
+                                    </span>
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+
+                        {% if board.description %}
+                            <p class="forum-board-description">
+                                {{ board.description }}
+                            </p>
+                        {% endif %}
+
+
+                        {% if can_manage_boards %}
+                            <div class="forum-board-actions">
+                                <a href="{% url 'community:board_edit' board.id %}">
+                                    Edit Board
+                                </a>
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <div class="forum-count-cell">
+                    {{ board.thread_count }}
+                </div>
+
+
+                <div class="forum-count-cell">
+                    {{ board.post_count }}
+                </div>
+
+
+                <div class="forum-last-post-cell">
+
+                    {% if board.latest_visible_post %}
+
+                        <a
+                            class="forum-last-post-thread"
+                            href="{% url 'community:thread_detail' board.latest_visible_post.thread.id %}#post-{{ board.latest_visible_post.id }}"
+                        >
+                            {{ board.latest_visible_post.thread.title }}
+                        </a>
+
+                        <span>
+                            {{ board.latest_visible_post.created_at|date:"M j, Y" }}
+                            at
+                            {{ board.latest_visible_post.created_at|date:"g:i a" }}
+                        </span>
+
+                        <span>
+                            by
+                            {% if board.latest_visible_post.author %}
+                                {% if board.latest_visible_post.author.display_name %}
+                                    {{ board.latest_visible_post.author.display_name }}
+                                {% else %}
+                                    {{ board.latest_visible_post.author.username }}
+                                {% endif %}
+                            {% else %}
+                                Former member
+                            {% endif %}
+                        </span>
+
+                    {% else %}
+
+                        <span>
+                            No visible posts
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+            </article>
+
+        {% empty %}
+
+            <div class="forum-category-empty">
+                <p>
+                    There are no visible boards in this category.
+                </p>
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <div class="forum-visibility-note">
+        All other options are either not visible to you or do not exist yet.
+    </div>
+
+
+    {% if can_manage_boards and not category.archived_at %}
+
+        <footer class="forum-category-footer">
+
+            <a href="{% url 'community:board_create' category.id %}">
+                Create Board
+            </a>
+
+        </footer>
+
+    {% endif %}
+
+</section>

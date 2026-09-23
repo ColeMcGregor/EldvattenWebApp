@@ -1,0 +1,385 @@
+{% extends "app/base_desktop.html" %}
+
+{% block title %}{{ board.name }} | The Tavern | EldVatten{% endblock %}
+
+{% block nav_tavern %}active{% endblock %}
+
+{% block app_shell_class %}tavern-scroll-shell{% endblock %}
+
+
+{% block app_content %}
+
+<section class="forum-board-page">
+
+    <nav class="forum-breadcrumbs" aria-label="Breadcrumb">
+
+        <a href="{% url 'community:forum_index' %}">
+            The Tavern
+        </a>
+
+        <span aria-hidden="true">
+            /
+        </span>
+
+        <span>
+            {{ board.category.name }}
+        </span>
+
+        <span aria-hidden="true">
+            /
+        </span>
+
+        <span aria-current="page">
+            {{ board.name }}
+        </span>
+
+    </nav>
+
+
+    <header class="forum-page-header">
+
+        <div class="forum-page-heading">
+
+            <div class="forum-page-title-line">
+
+                <h1 class="section-heading">
+                    {{ board.name }}
+                </h1>
+
+                {% if board.is_locked %}
+                    <span class="forum-status-label">
+                        Locked
+                    </span>
+                {% endif %}
+
+                {% if board.archived_at %}
+                    <span class="forum-status-label">
+                        Archived
+                    </span>
+                {% endif %}
+
+            </div>
+
+
+            {% if board.description %}
+                <p class="forum-page-description">
+                    {{ board.description }}
+                </p>
+            {% endif %}
+
+        </div>
+
+
+        <div class="forum-page-actions">
+
+            {% if can_create_thread %}
+                <a
+                    class="forum-primary-action"
+                    href="{% url 'community:thread_create' board.id %}"
+                >
+                    Create Thread
+                </a>
+            {% endif %}
+
+
+            {% if request.user.account_status == "MEMBER" %}
+
+                {% if is_subscribed %}
+
+                    <form
+                        method="post"
+                        action="{% url 'community:board_unsubscribe' board.id %}"
+                    >
+                        {% csrf_token %}
+
+                        <button type="submit">
+                            Unsubscribe
+                        </button>
+                    </form>
+
+                {% elif not board.archived_at and not board.category.archived_at %}
+
+                    <form
+                        method="post"
+                        action="{% url 'community:board_subscribe' board.id %}"
+                    >
+                        {% csrf_token %}
+
+                        <button type="submit">
+                            Subscribe
+                        </button>
+                    </form>
+
+                {% endif %}
+
+            {% endif %}
+
+
+            {% if can_view_archived %}
+
+                {% if show_archived %}
+                    <a href="{% url 'community:board_detail' board.id %}">
+                        Hide Archived
+                    </a>
+                {% else %}
+                    <a href="{% url 'community:board_detail' board.id %}?archived=1">
+                        Show Archived
+                    </a>
+                {% endif %}
+
+            {% endif %}
+
+        </div>
+
+    </header>
+
+
+    {% if can_manage_board %}
+
+        <div class="forum-management-actions">
+
+            <a href="{% url 'community:board_edit' board.id %}">
+                Edit Board
+            </a>
+
+
+            {% if board.archived_at %}
+
+                <form
+                    method="post"
+                    action="{% url 'community:board_restore' board.id %}"
+                >
+                    {% csrf_token %}
+
+                    <button type="submit">
+                        Restore Board
+                    </button>
+                </form>
+
+            {% else %}
+
+                {% if board.is_locked %}
+
+                    <form
+                        method="post"
+                        action="{% url 'community:board_unlock' board.id %}"
+                    >
+                        {% csrf_token %}
+
+                        <button type="submit">
+                            Unlock Board
+                        </button>
+                    </form>
+
+                {% else %}
+
+                    <form
+                        method="post"
+                        action="{% url 'community:board_lock' board.id %}"
+                    >
+                        {% csrf_token %}
+
+                        <button type="submit">
+                            Lock Board
+                        </button>
+                    </form>
+
+                {% endif %}
+
+
+                <form
+                    method="post"
+                    action="{% url 'community:board_archive' board.id %}"
+                >
+                    {% csrf_token %}
+
+                    <button type="submit">
+                        Archive Board
+                    </button>
+                </form>
+
+            {% endif %}
+
+        </div>
+
+    {% endif %}
+
+
+    <section
+        class="forum-thread-directory"
+        aria-label="Threads"
+    >
+
+        <div
+            class="forum-thread-table-header"
+            aria-hidden="true"
+        >
+            <span>Thread</span>
+            <span>Posts</span>
+            <span>Started By</span>
+            <span>Last Post</span>
+        </div>
+
+
+        <div class="forum-thread-list">
+
+            {% for thread in threads %}
+
+                <article
+                    class="
+                        forum-thread-row
+                        {% if thread.is_unread_for_user %} forum-thread-unread{% endif %}
+                        {% if thread.archived_at %} forum-thread-archived{% endif %}
+                    "
+                    id="thread-{{ thread.id }}"
+                >
+
+                    <div class="forum-thread-primary">
+
+                        <div
+                            class="forum-thread-icon"
+                            aria-hidden="true"
+                        ></div>
+
+
+                        <div class="forum-thread-copy">
+
+                            <div class="forum-thread-heading">
+
+                                <h2>
+                                    <a href="{% url 'community:thread_detail' thread.id %}">
+                                        {{ thread.title }}
+                                    </a>
+                                </h2>
+
+
+                                <div class="forum-thread-statuses">
+
+                                    {% if thread.is_unread_for_user %}
+                                        <span class="forum-unread-label">
+                                            Unread
+                                        </span>
+                                    {% endif %}
+
+                                    {% if thread.is_pinned %}
+                                        <span class="forum-status-label">
+                                            Pinned
+                                        </span>
+                                    {% endif %}
+
+                                    {% if thread.is_locked %}
+                                        <span class="forum-status-label">
+                                            Locked
+                                        </span>
+                                    {% endif %}
+
+                                    {% if thread.archived_at %}
+                                        <span class="forum-status-label">
+                                            Archived
+                                        </span>
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="forum-count-cell">
+                        {{ thread.post_count }}
+                    </div>
+
+
+                    <div class="forum-thread-starter">
+
+                        {% if thread.created_by %}
+                            {% if thread.created_by.display_name %}
+                                {{ thread.created_by.display_name }}
+                            {% else %}
+                                {{ thread.created_by.username }}
+                            {% endif %}
+                        {% else %}
+                            Former member
+                        {% endif %}
+
+                        <span>
+                            {{ thread.created_at|date:"M j, Y" }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="forum-last-post-cell">
+
+                        {% if thread.latest_visible_post %}
+
+                            <a
+                                class="forum-last-post-thread"
+                                href="{% url 'community:thread_detail' thread.id %}#post-{{ thread.latest_visible_post.id }}"
+                            >
+                                Latest post
+                            </a>
+
+                            <span>
+                                {{ thread.latest_visible_post.created_at|date:"M j, Y" }}
+                                at
+                                {{ thread.latest_visible_post.created_at|date:"g:i a" }}
+                            </span>
+
+                            <span>
+                                by
+                                {% if thread.latest_visible_post.author %}
+                                    {% if thread.latest_visible_post.author.display_name %}
+                                        {{ thread.latest_visible_post.author.display_name }}
+                                    {% else %}
+                                        {{ thread.latest_visible_post.author.username }}
+                                    {% endif %}
+                                {% else %}
+                                    Former member
+                                {% endif %}
+                            </span>
+
+                        {% else %}
+
+                            <span>
+                                No posts yet
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+                </article>
+
+            {% empty %}
+
+                <div class="forum-empty-state">
+                    <p>
+                        There are no visible threads in this board.
+                    </p>
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+
+        <div class="forum-visibility-note">
+            All other options are either not visible to you or do not exist yet.
+        </div>
+
+    </section>
+
+</section>
+
+{% endblock %}
+
+
+{% block right_rail %}
+
+    {% include "community/tavern/_needs_attention.html" %}
+
+{% endblock %}

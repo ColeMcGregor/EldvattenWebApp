@@ -1,0 +1,623 @@
+{% extends "app/base_desktop.html" %}
+
+{% block title %}{{ thread.title }} | The Tavern | EldVatten{% endblock %}
+
+{% block nav_tavern %}active{% endblock %}
+
+{% block app_shell_class %}tavern-scroll-shell{% endblock %}
+
+
+{% block app_content %}
+
+<section class="forum-thread-page">
+
+    <nav class="forum-breadcrumbs" aria-label="Breadcrumb">
+
+        <a href="{% url 'community:forum_index' %}">
+            The Tavern
+        </a>
+
+        <span aria-hidden="true">
+            /
+        </span>
+
+        <a href="{% url 'community:board_detail' thread.board.id %}">
+            {{ thread.board.name }}
+        </a>
+
+        <span aria-hidden="true">
+            /
+        </span>
+
+        <span aria-current="page">
+            {{ thread.title }}
+        </span>
+
+    </nav>
+
+
+    <header class="forum-page-header">
+
+        <div class="forum-page-heading">
+
+            <div class="forum-page-title-line">
+
+                <h1 class="section-heading">
+                    {{ thread.title }}
+                </h1>
+
+                {% if thread.is_pinned %}
+                    <span class="forum-status-label">
+                        Pinned
+                    </span>
+                {% endif %}
+
+                {% if thread.is_locked %}
+                    <span class="forum-status-label">
+                        Locked
+                    </span>
+                {% endif %}
+
+                {% if thread.archived_at %}
+                    <span class="forum-status-label">
+                        Archived
+                    </span>
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <div class="forum-page-actions">
+
+            {% if request.user.account_status == "MEMBER" %}
+
+                {% if is_following %}
+
+                    <form
+                        method="post"
+                        action="{% url 'community:thread_unfollow' thread.id %}"
+                    >
+                        {% csrf_token %}
+
+                        <button type="submit">
+                            Unfollow
+                        </button>
+                    </form>
+
+                {% elif not thread.archived_at %}
+
+                    <form
+                        method="post"
+                        action="{% url 'community:thread_follow' thread.id %}"
+                    >
+                        {% csrf_token %}
+
+                        <button type="submit">
+                            Follow
+                        </button>
+                    </form>
+
+                {% endif %}
+
+            {% endif %}
+
+
+            {% if can_change_thread %}
+                <a href="{% url 'community:thread_edit' thread.id %}">
+                    Edit Thread
+                </a>
+            {% endif %}
+
+
+            {% if can_archive_thread %}
+
+                <form
+                    method="post"
+                    action="{% url 'community:thread_archive' thread.id %}"
+                >
+                    {% csrf_token %}
+
+                    <button type="submit">
+                        Archive Thread
+                    </button>
+                </form>
+
+            {% endif %}
+
+
+            {% if can_restore_thread %}
+
+                <form
+                    method="post"
+                    action="{% url 'community:thread_restore' thread.id %}"
+                >
+                    {% csrf_token %}
+
+                    <button type="submit">
+                        Restore Thread
+                    </button>
+                </form>
+
+            {% endif %}
+
+        </div>
+
+    </header>
+
+
+    {% if can_moderate %}
+
+        <details class="forum-moderation-actions">
+
+            <summary>
+                Moderation
+            </summary>
+
+
+            <div class="forum-moderation-action-list">
+
+                {% if thread.is_pinned %}
+
+                    <form
+                        method="post"
+                        action="{% url 'community:thread_unpin' thread.id %}"
+                    >
+                        {% csrf_token %}
+
+                        <button type="submit">
+                            Unpin
+                        </button>
+                    </form>
+
+                {% else %}
+
+                    <form
+                        method="post"
+                        action="{% url 'community:thread_pin' thread.id %}"
+                    >
+                        {% csrf_token %}
+
+                        <button type="submit">
+                            Pin
+                        </button>
+                    </form>
+
+                {% endif %}
+
+
+                {% if thread.is_locked %}
+
+                    <form
+                        method="post"
+                        action="{% url 'community:thread_unlock' thread.id %}"
+                    >
+                        {% csrf_token %}
+
+                        <button type="submit">
+                            Unlock
+                        </button>
+                    </form>
+
+                {% else %}
+
+                    <form
+                        method="post"
+                        action="{% url 'community:thread_lock' thread.id %}"
+                    >
+                        {% csrf_token %}
+
+                        <button type="submit">
+                            Lock
+                        </button>
+                    </form>
+
+                {% endif %}
+
+
+                <a href="{% url 'community:thread_move' thread.id %}">
+                    Move Thread
+                </a>
+
+                <a href="{% url 'community:thread_merge' thread.id %}">
+                    Merge Thread
+                </a>
+
+                <a href="{% url 'community:thread_split' thread.id %}">
+                    Split Thread
+                </a>
+
+                <a href="{% url 'community:thread_move_posts' thread.id %}">
+                    Move Posts
+                </a>
+
+            </div>
+
+        </details>
+
+    {% endif %}
+
+
+    <section
+        class="forum-post-list"
+        aria-label="Posts"
+    >
+
+        {% for post in posts %}
+
+            {% if first_unread_post and first_unread_post.id == post.id %}
+
+                <div class="forum-unread-divider">
+                    First unread post
+                </div>
+
+            {% endif %}
+
+
+            <article
+                class="forum-post{% if post.archived_at %} forum-post-archived{% endif %}"
+                id="post-{{ post.id }}"
+            >
+
+                <aside class="forum-post-author-panel">
+
+                    <div
+                        class="forum-post-avatar"
+                        aria-hidden="true"
+                    ></div>
+
+                    <strong class="forum-post-author-name">
+
+                        {% if post.author %}
+
+                            {% if post.author.display_name %}
+                                {{ post.author.display_name }}
+                            {% else %}
+                                {{ post.author.username }}
+                            {% endif %}
+
+                        {% else %}
+                            Former member
+                        {% endif %}
+
+                    </strong>
+
+                </aside>
+
+
+                <div class="forum-post-content">
+
+                    <header class="forum-post-header">
+
+                        <div class="forum-post-meta">
+
+                            <a
+                                class="forum-post-number"
+                                href="#post-{{ post.id }}"
+                            >
+                                #{{ forloop.counter }}
+                            </a>
+
+                            <span>
+                                {{ post.created_at|date:"M j, Y, g:i a" }}
+                            </span>
+
+                            {% if post.edited_at %}
+                                <span>
+                                    Edited
+                                </span>
+                            {% endif %}
+
+                        </div>
+
+
+                        {% if post.show_content %}
+
+                            {% if can_add_post or post.can_edit_for_user or post.can_archive_for_user or post.can_restore_for_user or post.can_report_for_user %}
+
+                                <details class="forum-post-menu">
+
+                                    <summary aria-label="Post actions">
+                                        ...
+                                    </summary>
+
+
+                                    <div class="forum-post-menu-panel">
+
+                                        {% if can_add_post and not post.archived_at %}
+                                            <a href="{% url 'community:post_quote' post.id %}">
+                                                Quote
+                                            </a>
+                                        {% endif %}
+
+
+                                        {% if post.can_edit_for_user %}
+                                            <a href="{% url 'community:post_edit' post.id %}">
+                                                Edit
+                                            </a>
+                                        {% endif %}
+
+
+                                        {% if post.can_archive_for_user %}
+
+                                            <form
+                                                method="post"
+                                                action="{% url 'community:post_archive' post.id %}"
+                                            >
+                                                {% csrf_token %}
+
+                                                <button type="submit">
+                                                    Archive
+                                                </button>
+                                            </form>
+
+                                        {% endif %}
+
+
+                                        {% if post.can_restore_for_user %}
+
+                                            <form
+                                                method="post"
+                                                action="{% url 'community:post_restore' post.id %}"
+                                            >
+                                                {% csrf_token %}
+
+                                                <button type="submit">
+                                                    Restore
+                                                </button>
+                                            </form>
+
+                                        {% endif %}
+
+
+                                        {% if post.can_report_for_user %}
+                                            <a href="{% url 'community:post_report' post.id %}">
+                                                Report
+                                            </a>
+                                        {% endif %}
+
+                                    </div>
+
+                                </details>
+
+                            {% endif %}
+
+                        {% endif %}
+
+                    </header>
+
+
+                    {% if post.show_content %}
+
+                        <div class="forum-post-body">
+                            {{ post.body|linebreaksbr }}
+                        </div>
+
+
+                        {% if post.attachments.all %}
+
+                            <div class="forum-post-attachments">
+
+                                <strong>
+                                    Links
+                                </strong>
+
+                                <ul>
+
+                                    {% for attachment in post.attachments.all %}
+
+                                        <li>
+                                            <a
+                                                href="{{ attachment.url }}"
+                                                rel="noopener noreferrer"
+                                                target="_blank"
+                                            >
+                                                {% if attachment.label %}
+                                                    {{ attachment.label }}
+                                                {% else %}
+                                                    {{ attachment.url }}
+                                                {% endif %}
+                                            </a>
+                                        </li>
+
+                                    {% endfor %}
+
+                                </ul>
+
+                            </div>
+
+                        {% endif %}
+
+                    {% else %}
+
+                        <div class="forum-post-placeholder">
+                            This post has been archived.
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </article>
+
+        {% empty %}
+
+            <div class="forum-empty-state">
+                <p>
+                    This thread does not have any posts yet.
+                </p>
+            </div>
+
+        {% endfor %}
+
+    </section>
+
+
+    {% if can_add_post %}
+
+        <section
+            class="forum-reply-composer"
+            id="reply"
+        >
+
+            <header class="forum-reply-header">
+                <h2>
+                    Reply
+                </h2>
+            </header>
+
+
+            {% if quoted_post %}
+
+                <div class="forum-quote-notice">
+
+                    <span>
+                        Quoting
+
+                        {% if quoted_post.author %}
+
+                            {% if quoted_post.author.display_name %}
+                                {{ quoted_post.author.display_name }}
+                            {% else %}
+                                {{ quoted_post.author.username }}
+                            {% endif %}
+
+                        {% else %}
+                            Former member
+                        {% endif %}
+                    </span>
+
+                    <a href="{% url 'community:thread_detail' thread.id %}#reply">
+                        Cancel Quote
+                    </a>
+
+                </div>
+
+            {% endif %}
+
+
+            <form
+                class="forum-reply-form"
+                method="post"
+                action="{% url 'community:post_create' thread.id %}"
+            >
+                {% csrf_token %}
+
+
+                {% if quoted_post %}
+                    <input
+                        type="hidden"
+                        name="quoted_post_id"
+                        value="{{ quoted_post.id }}"
+                    >
+                {% endif %}
+
+
+                {{ post_form.non_field_errors }}
+
+
+                <div class="forum-form-field">
+
+                    <label for="{{ post_form.body.id_for_label }}">
+                        Message
+                    </label>
+
+                    {{ post_form.body }}
+
+                    {{ post_form.body.errors }}
+
+                </div>
+
+
+                <section class="forum-attachment-section">
+
+                    <h3>
+                        Links
+                    </h3>
+
+                    <p class="forum-form-help">
+                        Add links that belong with this post.
+                    </p>
+
+
+                    {{ attachment_formset.management_form }}
+
+
+                    {% if attachment_formset.non_form_errors %}
+                        <div class="forum-form-errors">
+                            {{ attachment_formset.non_form_errors }}
+                        </div>
+                    {% endif %}
+
+
+                    {% for attachment_form in attachment_formset.forms %}
+
+                        <div class="forum-attachment-row">
+
+                            {% for hidden_field in attachment_form.hidden_fields %}
+                                {{ hidden_field }}
+                            {% endfor %}
+
+
+                            {{ attachment_form.non_field_errors }}
+
+
+                            {% for field in attachment_form.visible_fields %}
+
+                                <div class="forum-form-field">
+
+                                    <label for="{{ field.id_for_label }}">
+                                        {{ field.label }}
+                                    </label>
+
+                                    {{ field }}
+
+                                    {{ field.errors }}
+
+                                </div>
+
+                            {% endfor %}
+
+                        </div>
+
+                    {% endfor %}
+
+                </section>
+
+
+                <div class="forum-form-actions">
+
+                    <button
+                        type="submit"
+                        formaction="{% url 'community:post_draft_save' thread.id %}"
+                        formnovalidate
+                    >
+                        Save Draft
+                    </button>
+
+                    <button
+                        class="forum-primary-button"
+                        type="submit"
+                    >
+                        Post Reply
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    {% endif %}
+
+</section>
+
+{% endblock %}
+
+
+{% block right_rail %}
+
+    {% include "community/tavern/_needs_attention.html" %}
+
+{% endblock %}

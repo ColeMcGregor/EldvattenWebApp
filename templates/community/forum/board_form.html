@@ -1,0 +1,173 @@
+{% extends "app/base_desktop.html" %}
+
+{% block title %}{{ page_title }} | The Tavern | EldVatten{% endblock %}
+
+{% block nav_tavern %}active{% endblock %}
+
+
+{% block app_content %}
+
+<section class="forum-form-page">
+
+    <nav class="forum-breadcrumbs" aria-label="Breadcrumb">
+
+        <a href="{% url 'community:forum_index' %}">
+            The Tavern
+        </a>
+
+        <span aria-hidden="true">
+            /
+        </span>
+
+
+        {% if board %}
+
+            <a href="{% url 'community:board_detail' board.id %}">
+                {{ board.name }}
+            </a>
+
+        {% else %}
+
+            <span>
+                {{ category.name }}
+            </span>
+
+        {% endif %}
+
+
+        <span aria-hidden="true">
+            /
+        </span>
+
+        <span aria-current="page">
+            {{ page_title }}
+        </span>
+
+    </nav>
+
+
+    <header class="forum-page-header">
+
+        <h1 class="section-heading">
+            {{ page_title }}
+        </h1>
+
+    </header>
+
+
+    <form method="post">
+
+        {% csrf_token %}
+
+
+        {{ form.non_field_errors }}
+
+
+        <div class="forum-form-field">
+
+            <label for="{{ form.category.id_for_label }}">
+                Category
+            </label>
+
+            {{ form.category }}
+
+            {{ form.category.errors }}
+
+        </div>
+
+
+        <div class="forum-form-field">
+
+            <label for="{{ form.name.id_for_label }}">
+                Name
+            </label>
+
+            {{ form.name }}
+
+            {{ form.name.errors }}
+
+        </div>
+
+
+        <div class="forum-form-field">
+
+            <label for="{{ form.description.id_for_label }}">
+                Description
+            </label>
+
+            {{ form.description }}
+
+            {{ form.description.errors }}
+
+        </div>
+
+
+        <div class="forum-form-field">
+
+            <label for="{{ form.display_order.id_for_label }}">
+                Display Order
+            </label>
+
+            {{ form.display_order }}
+
+            {{ form.display_order.errors }}
+
+        </div>
+
+
+        <div class="forum-form-field">
+
+            <label for="{{ form.thread_creation_policy.id_for_label }}">
+                Thread Creation Policy
+            </label>
+
+            {{ form.thread_creation_policy }}
+
+            {{ form.thread_creation_policy.errors }}
+
+            <p class="forum-form-help">
+                Open allows eligible members to create threads.
+                Targeted limits thread creation to matching targets.
+                Staff Only limits thread creation to Forum staff.
+            </p>
+
+        </div>
+
+
+        {% include "community/forum/_target_formset.html" with formset=target_formset heading="Board Visibility" help_text="Leave the targets empty to allow all eligible Forum readers. Multiple target rows are alternatives. Values in one row must all match." %}
+
+
+        {% include "community/forum/_target_formset.html" with formset=creation_target_formset heading="Thread Creation Permissions" help_text="These targets are used only when the Thread Creation Policy is Targeted. At least one target is required for a targeted board." %}
+
+
+        <div class="forum-form-actions">
+
+            {% if board %}
+
+                <a href="{% url 'community:board_detail' board.id %}">
+                    Cancel
+                </a>
+
+                <button type="submit">
+                    Save Changes
+                </button>
+
+            {% else %}
+
+                <a href="{% url 'community:forum_index' %}">
+                    Cancel
+                </a>
+
+                <button type="submit">
+                    Create Board
+                </button>
+
+            {% endif %}
+
+        </div>
+
+    </form>
+
+</section>
+
+{% endblock %}

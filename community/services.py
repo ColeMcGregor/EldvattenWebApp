@@ -396,21 +396,23 @@ def get_accessible_categories(
     *,
     include_archived=False,
 ):
-    category_ids = (
-        get_accessible_boards(
-            user,
-            include_archived=include_archived,
-        )
-        .values_list(
-            "category_id",
-            flat=True,
-        )
-        .distinct()
-    )
+    if (
+        not user_can_read_forum(user)
+        and not user_is_forum_moderator(user)
+    ):
+        return ForumCategory.objects.none()
 
-    return ForumCategory.objects.filter(
-        pk__in=category_ids,
-    ).order_by(
+    categories = ForumCategory.objects.all()
+
+    if not (
+        include_archived
+        and user_can_view_archived_forum(user)
+    ):
+        categories = categories.filter(
+            archived_at__isnull=True,
+        )
+
+    return categories.order_by(
         "display_order",
         "name",
     )
