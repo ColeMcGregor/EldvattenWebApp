@@ -1,8 +1,11 @@
 {% extends "app/base_desktop.html" %}
 
+
 {% block title %}{{ thread.title }} | The Tavern | EldVatten{% endblock %}
 
+
 {% block nav_tavern %}active{% endblock %}
+
 
 {% block app_shell_class %}tavern-scroll-shell{% endblock %}
 
@@ -11,17 +14,34 @@
 
 <section class="forum-thread-page">
 
-    <nav class="forum-breadcrumbs" aria-label="Breadcrumb">
+    <nav
+        class="forum-breadcrumbs"
+        aria-label="Breadcrumb"
+    >
 
-        <a href="{% url 'community:forum_index' %}">
-            The Tavern
+        <a
+            href="{% url 'community:forum_index' %}{% if thread.archived_at or thread.board.archived_at or thread.board.category.archived_at %}?archived=1{% endif %}"
+        >
+            Home
         </a>
 
         <span aria-hidden="true">
             /
         </span>
 
-        <a href="{% url 'community:board_detail' thread.board.id %}">
+        <a
+            href="{% url 'community:forum_index' %}{% if thread.archived_at or thread.board.archived_at or thread.board.category.archived_at %}?archived=1{% endif %}#category-{{ thread.board.category.id }}"
+        >
+            {{ thread.board.category.name }}
+        </a>
+
+        <span aria-hidden="true">
+            /
+        </span>
+
+        <a
+            href="{% url 'community:board_detail' thread.board.id %}{% if thread.archived_at or thread.board.archived_at or thread.board.category.archived_at %}?archived=1{% endif %}#threads"
+        >
             {{ thread.board.name }}
         </a>
 
@@ -29,9 +49,16 @@
             /
         </span>
 
-        <span aria-current="page">
-            {{ thread.title }}
-        </span>
+        {% with latest_post=posts|last %}
+
+            <a
+                href="{% url 'community:thread_detail' thread.id %}{% if latest_post %}#post-{{ latest_post.id }}{% endif %}"
+                aria-current="page"
+            >
+                {{ thread.title }}
+            </a>
+
+        {% endwith %}
 
     </nav>
 
@@ -105,9 +132,11 @@
 
 
             {% if can_change_thread %}
+
                 <a href="{% url 'community:thread_edit' thread.id %}">
                     Edit Thread
                 </a>
+
             {% endif %}
 
 
@@ -326,16 +355,20 @@
                                     <div class="forum-post-menu-panel">
 
                                         {% if can_add_post and not post.archived_at %}
+
                                             <a href="{% url 'community:post_quote' post.id %}">
                                                 Quote
                                             </a>
+
                                         {% endif %}
 
 
                                         {% if post.can_edit_for_user %}
+
                                             <a href="{% url 'community:post_edit' post.id %}">
                                                 Edit
                                             </a>
+
                                         {% endif %}
 
 
@@ -372,9 +405,11 @@
 
 
                                         {% if post.can_report_for_user %}
+
                                             <a href="{% url 'community:post_report' post.id %}">
                                                 Report
                                             </a>
+
                                         {% endif %}
 
                                     </div>
@@ -506,11 +541,13 @@
 
 
                 {% if quoted_post %}
+
                     <input
                         type="hidden"
                         name="quoted_post_id"
                         value="{{ quoted_post.id }}"
                     >
+
                 {% endif %}
 
 
@@ -545,9 +582,11 @@
 
 
                     {% if attachment_formset.non_form_errors %}
+
                         <div class="forum-form-errors">
                             {{ attachment_formset.non_form_errors }}
                         </div>
+
                     {% endif %}
 
 
