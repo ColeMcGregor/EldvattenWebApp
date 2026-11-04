@@ -1,3 +1,4 @@
+
 {% extends "app/base_desktop.html" %}
 
 {% block title %}{{ board.name }} | The Tavern | EldVatten{% endblock %}
@@ -13,7 +14,9 @@
 
     <nav class="forum-breadcrumbs" aria-label="Breadcrumb">
 
-        <a href="{% url 'community:forum_index' %}">
+        <a
+            href="{% url 'community:forum_index' %}{% if show_archived or board.archived_at or board.category.archived_at %}?archived=1{% endif %}"
+        >
             The Tavern
         </a>
 

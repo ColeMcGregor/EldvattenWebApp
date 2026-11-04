@@ -1,3 +1,4 @@
+
 {% extends "app/base_desktop.html" %}
 
 
@@ -19,7 +20,9 @@
         aria-label="Breadcrumb"
     >
 
-        <a href="{% url 'community:forum_index' %}">
+        <a
+            href="{% url 'community:forum_index' %}{% if post.thread.archived_at or post.thread.board.archived_at or post.thread.board.category.archived_at %}?archived=1{% endif %}"
+        >
             The Tavern
         </a>
 
@@ -163,7 +166,7 @@
         <div class="forum-form-actions">
 
             <a
-                href="{% url 'community:thread_detail' post.thread.id %}#post-{{ post.id }}"
+                href="{% url 'community:thread_detail' post.thread.id %}{% if post.thread.archived_at or post.thread.board.archived_at or post.thread.board.category.archived_at %}?archived=1{% endif %}#post-{{ post.id }}"
             >
                 Cancel
             </a>

@@ -119,31 +119,6 @@ from .services import (
     user_is_forum_member,
     user_is_forum_moderator,
 )
-from .views import (
-    board_archive,
-    board_lock,
-    board_restore,
-    board_subscribe,
-    board_unlock,
-    board_unsubscribe,
-    category_archive,
-    category_restore,
-    post_archive,
-    post_report,
-    post_restore,
-    thread_archive,
-    thread_follow,
-    thread_lock,
-    thread_merge,
-    thread_move,
-    thread_move_posts,
-    thread_pin,
-    thread_restore,
-    thread_split,
-    thread_unfollow,
-    thread_unlock,
-    thread_unpin,
-)
 from .forms import (
     ForumBoardTargetForm,
     ForumBoardThreadCreationTargetFormSet,
@@ -1358,48 +1333,49 @@ class ForumBoardAndThreadAccessTests(
             board_ids,
         )
 
-    def test_category_is_hidden_when_it_has_no_accessible_boards(self):
-        visible_category = self.create_category(
-            "Visible Category"
+    def test_active_empty_category_remains_visible(self):
+        category = self.create_category("Empty Category")
+
+        category_ids = set(
+            get_accessible_categories(self.member).values_list("id", flat=True)
         )
 
-        hidden_category = self.create_category(
-            "Hidden Category"
-        )
+        self.assertIn(category.pk, category_ids)
 
-        self.create_board(
-            "Visible Category Board",
-            category=visible_category,
-        )
-
-        hidden_board = self.create_board(
-            "Hidden Category Board",
-            category=hidden_category,
-        )
-
+    def test_active_category_with_only_inaccessible_boards_remains_visible(self):
+        category = self.create_category("Restricted Category")
+        board = self.create_board("Restricted Board", category=category)
         ForumBoardTarget.objects.create(
-            board=hidden_board,
+            board=board,
             citizenship_class=self.honorary_citizen,
         )
 
         category_ids = set(
-            get_accessible_categories(
-                self.member
-            ).values_list(
-                "id",
-                flat=True,
-            )
+            get_accessible_categories(self.member).values_list("id", flat=True)
+        )
+        board_ids = set(
+            get_accessible_boards(self.member).values_list("id", flat=True)
         )
 
-        self.assertIn(
-            visible_category.pk,
-            category_ids,
-        )
+        self.assertIn(category.pk, category_ids)
+        self.assertNotIn(board.pk, board_ids)
 
-        self.assertNotIn(
-            hidden_category.pk,
-            category_ids,
-        )
+    def test_archived_category_requires_archive_authority_and_mode(self):
+        category = self.create_category("Archived Category", archived=True)
+
+        for user, include_archived, expected in (
+            (self.member, False, False),
+            (self.member, True, False),
+            (self.actor, False, False),
+            (self.actor, True, True),
+        ):
+            with self.subTest(user=user.username, archived=include_archived):
+                category_ids = set(
+                    get_accessible_categories(
+                        user, include_archived=include_archived,
+                    ).values_list("id", flat=True)
+                )
+                self.assertEqual(category.pk in category_ids, expected)
 
     def test_accessible_thread_query_does_not_leak_hidden_threads(self):
         board = self.create_board(
@@ -5259,3 +5235,171 @@ class ForumRoutingAndViewTests(
             ),
             fetch_redirect_response=False,
         )
+
+class ForumPhaseTenViewTests(ForumPermissionFixtureMixin, TestCase):
+    def test_tavern_normal_counts_exclude_archived_threads_and_posts(self):
+        board = self.create_board("Count Board")
+        active_thread = self.create_thread(board, title="Active Thread")
+        active_post = self.create_post(active_thread, body="Active post")
+        self.create_post(active_thread, body="Archived post", archived=True)
+        archived_thread = self.create_thread(
+            board, title="Archived Thread", archived=True,
+        )
+        self.create_post(archived_thread, body="Post in archived thread")
+
+        self.client.force_login(self.member)
+        response = self.client.get(reverse("community:forum_index"))
+
+        self.assertEqual(response.status_code, 200)
+        sections = response.context["category_sections"]
+        listed_board = next(
+            listed_board
+            for section in sections
+            for listed_board in section["boards"]
+            if listed_board.pk == board.pk
+        )
+        self.assertEqual(listed_board.thread_count, 1)
+        self.assertEqual(listed_board.post_count, 1)
+        self.assertEqual(listed_board.latest_visible_post.pk, active_post.pk)
+
+    def test_tavern_counts_include_inaccessible_threads_without_leaking_details(self):
+        board = self.create_board("Targeted Count Board")
+        visible_thread = self.create_thread(board, title="Visible Thread")
+        visible_post = self.create_post(visible_thread, body="Visible content")
+        hidden_thread = self.create_thread(board, title="Hidden Thread")
+        ForumThreadTarget.objects.create(
+            thread=hidden_thread, user=self.other_member,
+        )
+        hidden_post = self.create_post(hidden_thread, body="Private content")
+
+        self.client.force_login(self.member)
+        response = self.client.get(reverse("community:forum_index"))
+
+        self.assertEqual(response.status_code, 200)
+        listed_board = next(
+            listed_board
+            for section in response.context["category_sections"]
+            for listed_board in section["boards"]
+            if listed_board.pk == board.pk
+        )
+        self.assertEqual(listed_board.thread_count, 2)
+        self.assertEqual(listed_board.post_count, 2)
+        self.assertEqual(listed_board.latest_visible_post.pk, visible_post.pk)
+        self.assertNotEqual(listed_board.latest_visible_post.pk, hidden_post.pk)
+        self.assertNotContains(response, "Private content")
+        self.assertNotContains(response, "Hidden Thread")
+
+    def test_board_normal_post_counts_exclude_archived_posts(self):
+        board = self.create_board("Board Counts")
+        thread = self.create_thread(board)
+        self.create_post(thread, body="Active")
+        self.create_post(thread, body="Archived", archived=True)
+
+        self.client.force_login(self.member)
+        response = self.client.get(
+            reverse("community:board_detail", args=[board.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        listed_thread = next(
+            item for item in response.context["threads"] if item.pk == thread.pk
+        )
+        self.assertEqual(listed_thread.post_count, 1)
+
+    def test_board_last_post_ignores_archived_posts(self):
+        board = self.create_board("Last Post Board")
+        thread = self.create_thread(board)
+        current_post = self.create_post(thread, body="Active last post")
+        self.create_post(thread, body="Archived later post", archived=True)
+
+        self.client.force_login(self.member)
+        response = self.client.get(
+            reverse("community:board_detail", args=[board.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        listed_thread = next(
+            item for item in response.context["threads"] if item.pk == thread.pk
+        )
+        self.assertEqual(listed_thread.latest_visible_post.pk, current_post.pk)
+
+    def test_thread_uses_latest_active_post_for_breadcrumb(self):
+        board = self.create_board("Thread Breadcrumb Board")
+        thread = self.create_thread(board, title="Thread Breadcrumb")
+        active_post = self.create_post(thread, body="Visible")
+        archived_post = self.create_post(thread, body="Archived", archived=True)
+
+        self.client.force_login(self.member)
+        response = self.client.get(
+            reverse("community:thread_detail", args=[thread.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["latest_active_post"].pk, active_post.pk)
+        self.assertContains(response, f"#post-{active_post.pk}")
+        self.assertNotContains(
+            response, f'href="{reverse("community:thread_detail", args=[thread.pk])}#post-{archived_post.pk}"'
+        )
+
+    def test_empty_thread_renders_without_latest_active_post(self):
+        board = self.create_board("Empty Thread Board")
+        thread = self.create_thread(board, title="Empty Thread")
+
+        self.client.force_login(self.member)
+        response = self.client.get(
+            reverse("community:thread_detail", args=[thread.pk])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.context["latest_active_post"])
+        self.assertContains(response, "Empty Thread")
+
+    def test_invalid_reply_preserves_body_and_attachment_fields(self):
+        board = self.create_board("Reply Validation Board")
+        thread = self.create_thread(board)
+        original_post_count = thread.posts.count()
+        self.client.force_login(self.member)
+
+        response = self.client.post(
+            reverse("community:post_create", args=[thread.pk]),
+            {
+                "body": "Keep my unfinished reply",
+                "attachments-TOTAL_FORMS": "1",
+                "attachments-INITIAL_FORMS": "0",
+                "attachments-MIN_NUM_FORMS": "0",
+                "attachments-MAX_NUM_FORMS": "1000",
+                "attachments-0-label": "My reference",
+                "attachments-0-url": "not-a-valid-url",
+                "attachments-0-display_order": "0",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(thread.posts.count(), original_post_count)
+        self.assertTrue(response.context["post_form"].is_bound)
+        self.assertEqual(
+            response.context["post_form"]["body"].value(),
+            "Keep my unfinished reply",
+        )
+        formset = response.context["attachment_formset"]
+        self.assertTrue(formset.is_bound)
+        self.assertEqual(formset.forms[0]["label"].value(), "My reference")
+        self.assertEqual(formset.forms[0]["url"].value(), "not-a-valid-url")
+        self.assertIn("url", formset.forms[0].errors)
+        self.assertContains(response, "Keep my unfinished reply")
+        self.assertContains(response, "not-a-valid-url")
+
+    def test_archive_mode_category_navigation_retains_archived_category(self):
+        category = self.create_category("Archived Index Category", archived=True)
+        self.client.force_login(self.actor)
+
+        response = self.client.get(
+            reverse("community:forum_index"), {"archived": "1"}
+        )
+
+        self.assertEqual(response.status_code, 200)
+        section_ids = {
+            section["category"].pk
+            for section in response.context["category_sections"]
+        }
+        self.assertIn(category.pk, section_ids)

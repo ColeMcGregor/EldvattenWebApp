@@ -1,3 +1,4 @@
+
 {% extends "app/base_desktop.html" %}
 
 {% block title %}{{ page_title }} | The Tavern | EldVatten{% endblock %}
@@ -11,7 +12,9 @@
 
     <nav class="forum-breadcrumbs" aria-label="Breadcrumb">
 
-        <a href="{% url 'community:forum_index' %}">
+        <a
+            href="{% url 'community:forum_index' %}{% if board.archived_at or board.category.archived_at or category.archived_at %}?archived=1{% endif %}"
+        >
             The Tavern
         </a>
 
@@ -158,7 +161,9 @@
 
             {% if board %}
 
-                <a href="{% url 'community:board_detail' board.id %}">
+                <a
+                    href="{% url 'community:board_detail' board.id %}{% if board.archived_at or board.category.archived_at %}?archived=1{% endif %}"
+                >
                     Cancel
                 </a>
 
@@ -168,7 +173,9 @@
 
             {% else %}
 
-                <a href="{% url 'community:forum_index' %}#category-{{ category.id }}">
+                <a
+                    href="{% url 'community:forum_index' %}{% if category.archived_at %}?archived=1{% endif %}#category-{{ category.id }}"
+                >
                     Cancel
                 </a>
 
