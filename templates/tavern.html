@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 {% load static %}
 
@@ -17,11 +18,42 @@
 
         <p class="hero-text">
             A community application for EldVatten members,
-            built for blogging, events, voting, messaging, and more.
+            built for discussions, events, voting, messaging, and more.
             <br><br>
             The Tavern also connects with other parts of the site,
             keeping relevant community information available to those curious about joining.
         </p>
+
+        <div class="button-row">
+
+            {% if request.user.is_authenticated %}
+
+                <a
+                    class="button button-primary"
+                    href="{% url 'tavern_main' %}"
+                >
+                    Enter The Tavern
+                </a>
+
+            {% else %}
+
+                <a
+                    class="button button-primary"
+                    href="{% url 'login' %}"
+                >
+                    Member Login
+                </a>
+
+            {% endif %}
+
+            <a
+                class="button button-secondary"
+                href="{% url 'register' %}"
+            >
+                Register
+            </a>
+
+        </div>
     </div>
 </section>
 
@@ -46,43 +78,13 @@
                 It sends notifications about events and updates, and is especially useful for communication during events.
                 It provides a space for centralized votes by community members, as well as member and group messaging.
             </p>
-
-            <div class="button-row">
-
-                {% if request.user.is_authenticated %}
-
-                    <a
-                        class="button button-primary"
-                        href="{% url 'tavern_main' %}"
-                    >
-                        Enter The Tavern
-                    </a>
-
-                {% else %}
-
-                    <a
-                        class="button button-primary"
-                        href="{% url 'login' %}"
-                    >
-                        Member Login
-                    </a>
-
-                {% endif %}
-
-                <a
-                    class="button button-secondary"
-                    href="{% url 'register' %}"
-                >
-                    Register
-                </a>
-            </div>
         </div>
 
 
         <div>
             <img
                 class="section-image"
-                src="{% static 'images/Eldvatten_Group_Photo_2.jpg' %}"
+                src="{% static 'images/EldVatten_Group_Photo_2.jpg' %}"
                 alt="EldVatten members together"
             >
         </div>
@@ -105,11 +107,14 @@ Section showcasing the features and functionality of The Tavern. -->
             <article class="card">
                 <div class="card-body">
                     <h3 class="card-title">
-                        Community Feed
+                        Community Forum
                     </h3>
 
                     <p class="card-text">
-                        A centralized place for community updates and discussions. Allows text and image posts, as well as commmenting.
+                        A centralized place for community discussions,
+                        organized into categories, boards, and threads.
+                        Members can create threads, reply to discussions,
+                        and share links.
                     </p>
                 </div>
             </article>

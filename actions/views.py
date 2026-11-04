@@ -15,6 +15,7 @@ from django.views.decorators.http import require_POST
 from accounts.models import AccountStatus
 from audit.models import AuditLog
 from audit.services import record_audit_event
+from community.services import user_can_access_thread
 
 from .forms import ActionForm, ActionTargetForm
 from .models import (
@@ -198,12 +199,22 @@ def action_detail(
             ),
         )
 
+    visible_linked_threads = [
+        thread
+        for thread in assignment.action.linked_threads.all()
+        if user_can_access_thread(
+            request.user,
+            thread,
+        )
+    ]
+
     return render(
         request,
         "actions/action_detail.html",
         {
             "action": assignment.action,
             "assignment": assignment,
+            "visible_linked_threads": visible_linked_threads,
         },
     )
 
@@ -568,6 +579,15 @@ def action_manage_detail(
         )
     )
 
+    visible_linked_threads = [
+        thread
+        for thread in action.linked_threads.all()
+        if user_can_access_thread(
+            request.user,
+            thread,
+        )
+    ]
+
     return render(
         request,
         "actions/action_manage_detail.html",
@@ -575,6 +595,7 @@ def action_manage_detail(
             "action": action,
             "targets": action.targets.all(),
             "assignments": assignments,
+            "visible_linked_threads": visible_linked_threads,
         },
     )
 

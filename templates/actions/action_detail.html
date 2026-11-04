@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -53,15 +54,15 @@
             </p>
         {% endif %}
 
-        {% if action.linked_posts.all %}
+        {% if visible_linked_threads %}
             <section>
-                <h2>Related Tavern Posts</h2>
+                <h2>Related Tavern Threads</h2>
 
                 <ul>
-                    {% for post in action.linked_posts.all %}
+                    {% for thread in visible_linked_threads %}
                         <li>
-                            <a href="{% url 'community:post_detail' post.id %}">
-                                Tavern Post {{ post.id }}
+                            <a href="{% url 'community:thread_detail' thread.id %}">
+                                {{ thread.title }}
                             </a>
                         </li>
                     {% endfor %}
