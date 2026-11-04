@@ -1,0 +1,89 @@
+/* Right Rail */
+
+.app-right-rail {
+    min-width: 0;
+    height: 100vh;
+
+    padding: 1.25rem 1.4rem;
+
+    overflow-y: auto;
+
+    background: var(--surface);
+}
+
+
+/* Needs Attention */
+
+.app-rail-section,
+.needs-attention-list {
+    display: grid;
+}
+
+.app-rail-heading {
+    margin: 0 0 1rem;
+
+    font-family: "EldVatten", Georgia, serif;
+    font-size: 1.7rem;
+    font-weight: normal;
+}
+
+.needs-attention-card {
+    display: grid;
+
+    gap: 0.25rem;
+
+    padding: 0.9rem 0;
+
+    color: inherit;
+
+    border-bottom: 1px solid var(--border-color);
+
+    text-decoration: none;
+}
+
+.needs-attention-card:first-child {
+    border-top: 1px solid var(--border-color);
+}
+
+.needs-attention-card:hover {
+    background: var(--surface-muted);
+
+    color: inherit;
+}
+
+.needs-attention-type {
+    color: var(--eldvatten-red);
+
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.needs-attention-title {
+    color: var(--text-main);
+
+    font-size: 1rem;
+    line-height: 1.3;
+}
+
+.needs-attention-status,
+.needs-attention-date {
+    color: var(--text-muted);
+
+    font-size: 0.85rem;
+    line-height: 1.3;
+}
+
+.needs-attention-empty {
+    padding: 0.9rem 0;
+
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+
+    color: var(--text-muted);
+}
+
+.needs-attention-empty p {
+    margin: 0;
+}
+
+

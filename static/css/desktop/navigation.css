@@ -1,0 +1,77 @@
+/* Left Rail */
+
+.app-left-rail {
+    min-width: 0;
+
+    padding: 1.25rem 1.4rem;
+
+    background: var(--surface);
+
+    border-right: 1px solid var(--border-color);
+}
+
+.tavern-scroll-shell .app-left-rail {
+    height: 100vh;
+
+    overflow: hidden;
+}
+
+
+/* Application Identity */
+
+.app-identity {
+    display: flex;
+    align-items: center;
+
+    gap: 0.75rem;
+
+    margin-bottom: 1.5rem;
+}
+
+.app-wordmark {
+    font-family: "EldVatten", Georgia, serif;
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.app-crest {
+    width: 44px;
+    height: 44px;
+
+    object-fit: contain;
+}
+
+
+/* Navigation */
+
+.app-navigation {
+    display: grid;
+
+    gap: 0.15rem;
+}
+
+.app-navigation-link {
+    display: block;
+
+    padding: 0.55rem 0.75rem;
+
+    border-radius: var(--radius-small);
+
+    font-size: 1rem;
+}
+
+.app-navigation-link:hover {
+    background: var(--surface-muted);
+
+    color: var(--eldvatten-red);
+}
+
+.app-navigation-link.active {
+    background: var(--surface-muted);
+
+    color: var(--eldvatten-red);
+
+    font-weight: 700;
+}
+
+

@@ -1,0 +1,26 @@
+/* Tavern Header */
+
+.tavern-main-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 1rem;
+
+    padding: 1rem 1.5rem;
+
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tavern-scroll-shell .tavern-main-header {
+    flex: 0 0 auto;
+}
+
+.tavern-main-header .section-heading {
+    margin: 0;
+
+    font-size: 2.2rem;
+    line-height: 1;
+}
+
+

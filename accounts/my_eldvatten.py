@@ -1,8 +1,10 @@
+
 from django.db.models import F, Q
 from django.utils import timezone
 
 from actions.models import ActionAssignment
 from community.models import ForumPost
+from community.services import user_can_access_thread
 from notifications.forms import NotificationPreferenceForm
 from notifications.models import (
     Notification,
@@ -154,11 +156,14 @@ def get_profile_context(user):
 
 
 def get_posts_context(user):
-    posts = list(
+    posts = (
         ForumPost.objects
         .filter(
             author=user,
             archived_at__isnull=True,
+            thread__archived_at__isnull=True,
+            thread__board__archived_at__isnull=True,
+            thread__board__category__archived_at__isnull=True,
         )
         .select_related(
             "author",
@@ -166,11 +171,24 @@ def get_posts_context(user):
             "thread__board",
             "thread__board__category",
         )
+        .prefetch_related(
+            "thread__targets",
+            "thread__board__targets",
+        )
         .order_by("-created_at")
     )
 
+    visible_posts = [
+        post
+        for post in posts
+        if user_can_access_thread(
+            user,
+            post.thread,
+        )
+    ]
+
     return {
-        "my_posts": posts,
+        "my_posts": visible_posts,
     }
 
 
