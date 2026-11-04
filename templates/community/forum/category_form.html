@@ -19,6 +19,22 @@
             /
         </span>
 
+
+        {% if category %}
+
+            <a
+                href="{% url 'community:forum_index' %}{% if category.archived_at %}?archived=1{% endif %}#category-{{ category.id }}"
+            >
+                {{ category.name }}
+            </a>
+
+            <span aria-hidden="true">
+                /
+            </span>
+
+        {% endif %}
+
+
         <span aria-current="page">
             {{ page_title }}
         </span>
@@ -84,9 +100,22 @@
 
         <div class="forum-form-actions">
 
-            <a href="{% url 'community:forum_index' %}">
-                Cancel
-            </a>
+            {% if category %}
+
+                <a
+                    href="{% url 'community:forum_index' %}{% if category.archived_at %}?archived=1{% endif %}#category-{{ category.id }}"
+                >
+                    Cancel
+                </a>
+
+            {% else %}
+
+                <a href="{% url 'community:forum_index' %}">
+                    Cancel
+                </a>
+
+            {% endif %}
+
 
             <button type="submit">
 

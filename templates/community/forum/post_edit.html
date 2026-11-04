@@ -1,0 +1,191 @@
+{% extends "app/base_desktop.html" %}
+
+
+{% block title %}Edit Post | The Tavern | EldVatten{% endblock %}
+
+
+{% block nav_tavern %}active{% endblock %}
+
+
+{% block app_shell_class %}tavern-scroll-shell{% endblock %}
+
+
+{% block app_content %}
+
+<section class="forum-form-page">
+
+    <nav
+        class="forum-breadcrumbs"
+        aria-label="Breadcrumb"
+    >
+
+        <a href="{% url 'community:forum_index' %}">
+            The Tavern
+        </a>
+
+        <span aria-hidden="true">
+            /
+        </span>
+
+        <a
+            href="{% url 'community:forum_index' %}{% if post.thread.archived_at or post.thread.board.archived_at or post.thread.board.category.archived_at %}?archived=1{% endif %}#category-{{ post.thread.board.category.id }}"
+        >
+            {{ post.thread.board.category.name }}
+        </a>
+
+        <span aria-hidden="true">
+            /
+        </span>
+
+        <a
+            href="{% url 'community:board_detail' post.thread.board.id %}{% if post.thread.archived_at or post.thread.board.archived_at or post.thread.board.category.archived_at %}?archived=1{% endif %}#threads"
+        >
+            {{ post.thread.board.name }}
+        </a>
+
+        <span aria-hidden="true">
+            /
+        </span>
+
+        <a
+            href="{% url 'community:thread_detail' post.thread.id %}{% if post.thread.archived_at or post.thread.board.archived_at or post.thread.board.category.archived_at %}?archived=1{% endif %}#post-{{ post.id }}"
+        >
+            {{ post.thread.title }}
+        </a>
+
+        <span aria-hidden="true">
+            /
+        </span>
+
+        <span aria-current="page">
+            Edit Post
+        </span>
+
+    </nav>
+
+
+    <header class="forum-page-header">
+
+        <div class="forum-page-heading">
+
+            <h1 class="section-heading">
+                Edit Post
+            </h1>
+
+            <p class="forum-page-description">
+                Edit your post and its attached links.
+            </p>
+
+        </div>
+
+    </header>
+
+
+    <form method="post">
+
+        {% csrf_token %}
+
+
+        {{ form.non_field_errors }}
+
+
+        <div class="forum-form-field">
+
+            <label for="{{ form.body.id_for_label }}">
+                Message
+            </label>
+
+            {{ form.body }}
+
+            {{ form.body.errors }}
+
+        </div>
+
+
+        <section class="forum-attachment-section">
+
+            <h2 class="forum-form-section-heading">
+                Links
+            </h2>
+
+            <p class="forum-form-help">
+                Add, change, or remove links attached to this post.
+            </p>
+
+
+            {{ attachment_formset.management_form }}
+
+
+            {% if attachment_formset.non_form_errors %}
+
+                <div class="forum-form-errors">
+                    {{ attachment_formset.non_form_errors }}
+                </div>
+
+            {% endif %}
+
+
+            {% for attachment_form in attachment_formset.forms %}
+
+                <div class="forum-attachment-row">
+
+                    {% for hidden_field in attachment_form.hidden_fields %}
+                        {{ hidden_field }}
+                    {% endfor %}
+
+
+                    {{ attachment_form.non_field_errors }}
+
+
+                    {% for field in attachment_form.visible_fields %}
+
+                        <div class="forum-form-field">
+
+                            <label for="{{ field.id_for_label }}">
+                                {{ field.label }}
+                            </label>
+
+                            {{ field }}
+
+                            {{ field.errors }}
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endfor %}
+
+        </section>
+
+
+        <div class="forum-form-actions">
+
+            <a
+                href="{% url 'community:thread_detail' post.thread.id %}#post-{{ post.id }}"
+            >
+                Cancel
+            </a>
+
+            <button
+                class="forum-primary-button"
+                type="submit"
+            >
+                Save Changes
+            </button>
+
+        </div>
+
+    </form>
+
+</section>
+
+{% endblock %}
+
+
+{% block right_rail %}
+
+    {% include "community/tavern/_needs_attention.html" %}
+
+{% endblock %}

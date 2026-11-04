@@ -5,7 +5,7 @@ from django.core.exceptions import (
     ValidationError,
 )
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.shortcuts import (
     get_object_or_404,
     redirect,
@@ -353,20 +353,47 @@ def forum_index(request):
         )
     )
 
-    boards = list(
-        get_accessible_boards(
-            request.user,
-            include_archived=show_archived,
-        ).annotate(
-            thread_count=Count(
-                "threads",
-                distinct=True,
-            ),
-            post_count=Count(
-                "threads__posts",
-                distinct=True,
-            ),
+    boards_queryset = get_accessible_boards(
+        request.user,
+        include_archived=show_archived,
+    )
+
+    if show_archived:
+        boards_queryset = (
+            boards_queryset.annotate(
+                thread_count=Count(
+                    "threads",
+                    distinct=True,
+                ),
+                post_count=Count(
+                    "threads__posts",
+                    distinct=True,
+                ),
+            )
         )
+    else:
+        boards_queryset = (
+            boards_queryset.annotate(
+                thread_count=Count(
+                    "threads",
+                    filter=Q(
+                        threads__archived_at__isnull=True,
+                    ),
+                    distinct=True,
+                ),
+                post_count=Count(
+                    "threads__posts",
+                    filter=Q(
+                        threads__archived_at__isnull=True,
+                        threads__posts__archived_at__isnull=True,
+                    ),
+                    distinct=True,
+                ),
+            )
+        )
+
+    boards = list(
+        boards_queryset
     )
 
     boards_by_category = {}
@@ -461,7 +488,6 @@ def forum_index(request):
                 ),
         },
     )
-
 
 @login_required
 def forum_search(request):
@@ -786,17 +812,38 @@ def board_detail(
     ):
         raise PermissionDenied
 
-    threads = list(
+    threads_queryset = (
         get_accessible_threads(
             request.user,
             board=board,
             include_archived=show_archived,
-        ).annotate(
-            post_count=Count(
-                "posts",
-                distinct=True,
+        )
+    )
+
+    if show_archived:
+        threads_queryset = (
+            threads_queryset.annotate(
+                post_count=Count(
+                    "posts",
+                    distinct=True,
+                )
             )
         )
+    else:
+        threads_queryset = (
+            threads_queryset.annotate(
+                post_count=Count(
+                    "posts",
+                    filter=Q(
+                        posts__archived_at__isnull=True,
+                    ),
+                    distinct=True,
+                )
+            )
+        )
+
+    threads = list(
+        threads_queryset
     )
 
     for thread in threads:
@@ -831,9 +878,7 @@ def board_detail(
             "show_archived":
                 show_archived,
             "can_view_archived":
-                user_can_view_archived_forum(
-                    request.user
-                ),
+                can_view_archived,
             "is_subscribed":
                 ForumBoardSubscription
                 .objects
@@ -861,7 +906,6 @@ def board_detail(
                 ),
         },
     )
-
 
 @login_required
 def board_edit(
@@ -1386,6 +1430,243 @@ def thread_draft_save(
     )
 
 
+def _render_thread_detail_page(
+    request,
+    thread,
+    *,
+    post_form=None,
+    attachment_formset=None,
+    quote_id=None,
+):
+    can_view_archived = (
+        user_can_view_archived_forum(
+            request.user
+        )
+    )
+
+    first_unread_post = (
+        get_first_unread_post(
+            request.user,
+            thread,
+        )
+        if thread.archived_at is None
+        else None
+    )
+
+    posts = list(
+        thread.posts
+        .select_related(
+            "author",
+            "edited_by",
+            "archived_by",
+        )
+        .prefetch_related(
+            "attachments",
+            "quotes__quoted_post",
+        )
+        .order_by(
+            "created_at",
+            "id",
+        )
+    )
+
+    for post in posts:
+        post.show_content = (
+            post.archived_at is None
+            or can_view_archived
+        )
+
+        post.can_edit_for_user = (
+            user_can_edit_post(
+                request.user,
+                post,
+            )
+        )
+
+        post.can_archive_for_user = (
+            user_can_archive_post(
+                request.user,
+                post,
+            )
+        )
+
+        post.can_restore_for_user = (
+            user_can_restore_post(
+                request.user,
+                post,
+            )
+        )
+
+        post.can_report_for_user = (
+            user_can_report_post(
+                request.user,
+                post,
+            )
+        )
+
+    latest_active_post = next(
+        (
+            post
+            for post in reversed(posts)
+            if post.archived_at is None
+        ),
+        None,
+    )
+
+    can_add_post = user_can_add_post(
+        request.user,
+        thread,
+    )
+
+    quoted_post = None
+
+    if (
+        can_add_post
+        and quote_id
+    ):
+        try:
+            quoted_post = (
+                ForumPost.objects
+                .select_related(
+                    "thread",
+                    "thread__board",
+                    "thread__board__category",
+                    "author",
+                )
+                .prefetch_related(
+                    "thread__targets",
+                    "thread__board__targets",
+                )
+                .get(
+                    pk=int(quote_id)
+                )
+            )
+        except (
+            ForumPost.DoesNotExist,
+            TypeError,
+            ValueError,
+        ):
+            quoted_post = None
+
+        if (
+            quoted_post is not None
+            and (
+                quoted_post.archived_at
+                is not None
+                or not user_can_access_thread(
+                    request.user,
+                    quoted_post.thread,
+                )
+            )
+        ):
+            quoted_post = None
+
+    if (
+        can_add_post
+        and post_form is None
+    ):
+        initial_body = ""
+
+        if quoted_post is not None:
+            author_name = (
+                str(quoted_post.author)
+                if quoted_post.author
+                is not None
+                else "Former member"
+            )
+
+            initial_body = (
+                f"Quoted from {author_name}:\n"
+                + "\n".join(
+                    f"> {line}"
+                    for line
+                    in quoted_post.body
+                    .splitlines()
+                )
+                + "\n\n"
+            )
+
+        post_form = ForumPostForm(
+            initial={
+                "body": initial_body,
+            }
+        )
+
+    if (
+        can_add_post
+        and attachment_formset is None
+    ):
+        attachment_formset = (
+            ForumPostAttachmentFormSet(
+                instance=ForumPost(),
+                prefix="attachments",
+            )
+        )
+
+    if (
+        thread.archived_at is None
+        and thread.board.archived_at
+        is None
+        and thread.board.category
+        .archived_at is None
+        and latest_active_post is not None
+    ):
+        mark_thread_read(
+            request.user,
+            thread,
+            newest_post=latest_active_post,
+        )
+
+    return render(
+        request,
+        "community/forum/thread_detail.html",
+        {
+            "thread": thread,
+            "posts": posts,
+            "post_form": post_form,
+            "attachment_formset":
+                attachment_formset,
+            "quoted_post": quoted_post,
+            "latest_active_post":
+                latest_active_post,
+            "first_unread_post":
+                first_unread_post,
+            "is_following":
+                ForumThreadSubscription
+                .objects
+                .filter(
+                    user=request.user,
+                    thread=thread,
+                )
+                .exists(),
+            "can_add_post": can_add_post,
+            "can_change_thread":
+                user_can_change_thread(
+                    request.user,
+                    thread,
+                ),
+            "can_archive_thread":
+                user_can_archive_thread(
+                    request.user,
+                    thread,
+                ),
+            "can_restore_thread":
+                user_can_restore_thread(
+                    request.user,
+                    thread,
+                ),
+            "can_moderate":
+                user_is_forum_moderator(
+                    request.user
+                ),
+            "needs_attention_items":
+                get_needs_attention_items(
+                    request.user
+                ),
+        },
+    )
+
+
 @login_required
 def thread_detail(
     request,
@@ -1445,213 +1726,12 @@ def thread_detail(
     ):
         raise PermissionDenied
 
-    first_unread_post = (
-        get_first_unread_post(
-            request.user,
-            thread,
-        )
-        if thread.archived_at is None
-        else None
-    )
-
-    posts = list(
-        thread.posts
-        .select_related(
-            "author",
-            "edited_by",
-            "archived_by",
-        )
-        .prefetch_related(
-            "attachments",
-            "quotes__quoted_post",
-        )
-        .order_by(
-            "created_at",
-            "id",
-        )
-    )
-
-    for post in posts:
-        post.show_content = (
-            post.archived_at is None
-            or can_view_archived
-        )
-        post.can_edit_for_user = (
-            user_can_edit_post(
-                request.user,
-                post,
-            )
-        )
-        post.can_archive_for_user = (
-            user_can_archive_post(
-                request.user,
-                post,
-            )
-        )
-        post.can_restore_for_user = (
-            user_can_restore_post(
-                request.user,
-                post,
-            )
-        )
-        post.can_report_for_user = (
-            user_can_report_post(
-                request.user,
-                post,
-            )
-        )
-
-    can_add_post = user_can_add_post(
-        request.user,
-        thread,
-    )
-
-    quoted_post = None
-    post_form = None
-    attachment_formset = None
-
-    if can_add_post:
-        quote_id = request.GET.get(
-            "quote_post"
-        )
-
-        initial_body = ""
-
-        if quote_id:
-            try:
-                quoted_post = (
-                    ForumPost.objects
-                    .select_related(
-                        "thread",
-                        "thread__board",
-                        "thread__board__category",
-                        "author",
-                    )
-                    .get(
-                        pk=int(quote_id)
-                    )
-                )
-            except (
-                ForumPost.DoesNotExist,
-                TypeError,
-                ValueError,
-            ):
-                quoted_post = None
-
-            if (
-                quoted_post is not None
-                and (
-                    quoted_post.archived_at
-                    is not None
-                    or not user_can_access_thread(
-                        request.user,
-                        quoted_post.thread,
-                    )
-                )
-            ):
-                quoted_post = None
-
-        if quoted_post is not None:
-            author_name = (
-                str(quoted_post.author)
-                if quoted_post.author
-                is not None
-                else "Former member"
-            )
-
-            initial_body = (
-                f"Quoted from {author_name}:\n"
-                + "\n".join(
-                    f"> {line}"
-                    for line
-                    in quoted_post.body
-                    .splitlines()
-                )
-                + "\n\n"
-            )
-
-        post_form = ForumPostForm(
-            initial={
-                "body": initial_body,
-            }
-        )
-
-        attachment_formset = (
-            ForumPostAttachmentFormSet(
-                instance=ForumPost(),
-                prefix="attachments",
-            )
-        )
-
-    if (
-        thread.archived_at is None
-        and thread.board.archived_at
-        is None
-        and thread.board.category
-        .archived_at
-        is None
-    ):
-        newest_active_post = next(
-            (
-                post
-                for post in reversed(posts)
-                if post.archived_at is None
-            ),
-            None,
-        )
-
-        if newest_active_post is not None:
-            mark_thread_read(
-                request.user,
-                thread,
-                newest_post=newest_active_post,
-            )
-
-    return render(
+    return _render_thread_detail_page(
         request,
-        "community/forum/thread_detail.html",
-        {
-            "thread": thread,
-            "posts": posts,
-            "post_form": post_form,
-            "attachment_formset":
-                attachment_formset,
-            "quoted_post": quoted_post,
-            "first_unread_post":
-                first_unread_post,
-            "is_following":
-                ForumThreadSubscription
-                .objects
-                .filter(
-                    user=request.user,
-                    thread=thread,
-                )
-                .exists(),
-            "can_add_post": can_add_post,
-            "can_change_thread":
-                user_can_change_thread(
-                    request.user,
-                    thread,
-                ),
-            "can_archive_thread":
-                user_can_archive_thread(
-                    request.user,
-                    thread,
-                ),
-            "can_restore_thread":
-                user_can_restore_thread(
-                    request.user,
-                    thread,
-                ),
-            "can_moderate":
-                user_is_forum_moderator(
-                    request.user
-                ),
-            "needs_attention_items":
-                get_needs_attention_items(
-                    request.user
-                ),
-        },
+        thread,
+        quote_id=request.GET.get(
+            "quote_post"
+        ),
     )
 
 
@@ -2526,8 +2606,8 @@ def post_create(
                 ),
             )
         except ValidationError as error:
-            messages.error(
-                request,
+            form.add_error(
+                None,
                 _validation_message(error),
             )
 
@@ -2546,17 +2626,25 @@ def post_create(
                 + f"#post-{post.pk}"
             )
 
-    else:
-        messages.error(
-            request,
-            "The post could not be created.",
-        )
-
-    return redirect(
-        "community:thread_detail",
-        thread_id=thread.pk,
+    quote_ids = request.POST.getlist(
+        "quoted_post_id"
     )
 
+    quote_id = (
+        quote_ids[0]
+        if quote_ids
+        else None
+    )
+
+    return _render_thread_detail_page(
+        request,
+        thread,
+        post_form=form,
+        attachment_formset=(
+            attachment_formset
+        ),
+        quote_id=quote_id,
+    )
 
 @login_required
 @require_POST
@@ -2739,6 +2827,10 @@ def post_edit(
             "form": form,
             "attachment_formset":
                 attachment_formset,
+            "needs_attention_items":
+                get_needs_attention_items(
+                    request.user
+                ),
         },
     )
 

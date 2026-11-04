@@ -22,7 +22,19 @@
 
         {% if thread %}
 
-            <a href="{% url 'community:board_detail' thread.board.id %}">
+            <a
+                href="{% url 'community:forum_index' %}{% if thread.archived_at or thread.board.archived_at or thread.board.category.archived_at %}?archived=1{% endif %}#category-{{ thread.board.category.id }}"
+            >
+                {{ thread.board.category.name }}
+            </a>
+
+            <span aria-hidden="true">
+                /
+            </span>
+
+            <a
+                href="{% url 'community:board_detail' thread.board.id %}{% if thread.archived_at or thread.board.archived_at or thread.board.category.archived_at %}?archived=1{% endif %}#threads"
+            >
                 {{ thread.board.name }}
             </a>
 
@@ -30,17 +42,40 @@
                 /
             </span>
 
-            <a href="{% url 'community:thread_detail' thread.id %}">
+            <a
+                href="{% url 'community:thread_detail' thread.id %}{% if thread.archived_at or thread.board.archived_at or thread.board.category.archived_at %}?archived=1{% endif %}"
+            >
                 {{ thread.title }}
             </a>
 
         {% else %}
 
-            <a href="{% url 'community:board_detail' board.id %}">
+            <a
+                href="{% url 'community:forum_index' %}#category-{{ board.category.id }}"
+            >
+                {{ board.category.name }}
+            </a>
+
+            <span aria-hidden="true">
+                /
+            </span>
+
+            <a
+                href="{% url 'community:board_detail' board.id %}#threads"
+            >
                 {{ board.name }}
             </a>
 
         {% endif %}
+
+
+        <span aria-hidden="true">
+            /
+        </span>
+
+        <span aria-current="page">
+            {{ page_title }}
+        </span>
 
     </nav>
 

@@ -22,7 +22,7 @@
         <a
             href="{% url 'community:forum_index' %}{% if thread.archived_at or thread.board.archived_at or thread.board.category.archived_at %}?archived=1{% endif %}"
         >
-            Home
+            The Tavern
         </a>
 
         <span aria-hidden="true">
@@ -49,16 +49,12 @@
             /
         </span>
 
-        {% with latest_post=posts|last %}
-
-            <a
-                href="{% url 'community:thread_detail' thread.id %}{% if latest_post %}#post-{{ latest_post.id }}{% endif %}"
-                aria-current="page"
-            >
-                {{ thread.title }}
-            </a>
-
-        {% endwith %}
+        <a
+            href="{% url 'community:thread_detail' thread.id %}{% if thread.archived_at or thread.board.archived_at or thread.board.category.archived_at %}?archived=1{% endif %}{% if latest_active_post %}#post-{{ latest_active_post.id }}{% endif %}"
+            aria-current="page"
+        >
+            {{ thread.title }}
+        </a>
 
     </nav>
 
