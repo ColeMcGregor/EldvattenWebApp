@@ -1,161 +1,202 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page_title }}</title>
-</head>
-<body>
-    <main>
-        <h1>{{ page_title }}</h1>
+{% extends "app/base_desktop.html" %}
+{% load static %}
 
-        {% if messages %}
+{% block title %}{{ page_title }} | EldVatten{% endblock %}
+{% block nav_my_eldvatten %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+{% block app_content %}
+
+<section class="actions-page action-form-page" aria-labelledby="action-form-heading">
+
+    <nav class="action-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'actions:manage_list' %}">Manage Actions</a>
+        <span aria-hidden="true">/</span>
+
+        {% if editing and form.instance.pk %}
+            <a href="{% url 'actions:manage_detail' form.instance.pk %}">
+                {{ form.instance.title }}
+            </a>
+            <span aria-hidden="true">/</span>
+        {% endif %}
+
+        <span aria-current="page">{{ page_title }}</span>
+    </nav>
+
+    <header class="action-page-header">
+        <div>
+            <h1 class="section-heading" id="action-form-heading">
+                {{ page_title }}
+            </h1>
+            <p class="action-page-subtitle">
+                Set instructions, deadlines, and assignment targets.
+            </p>
+        </div>
+    </header>
+
+    {% if messages %}
+        <div class="action-messages" role="status">
             {% for message in messages %}
                 <p>{{ message }}</p>
             {% endfor %}
-        {% endif %}
+        </div>
+    {% endif %}
 
-        <form method="post">
+    <div class="action-form-container">
+
+        <form
+            class="action-editor-form"
+            method="post"
+            data-action-editor
+        >
             {% csrf_token %}
 
             {{ form.non_field_errors }}
 
-            <div>
-                {{ form.title.label_tag }}
-                {{ form.title }}
-                {{ form.title.errors }}
-            </div>
+            <section class="action-detail-card" aria-labelledby="action-information-heading">
+                <h2 id="action-information-heading">
+                    Action Details
+                </h2>
 
-            <div>
-                {{ form.instructions.label_tag }}
-                {{ form.instructions }}
-                {{ form.instructions.errors }}
-            </div>
+                <div class="action-editor-grid">
 
-            <div>
-                {{ form.external_url.label_tag }}
-                {{ form.external_url }}
-                {{ form.external_url.errors }}
-            </div>
+                    <div class="action-form-field action-field-wide">
+                        <label for="{{ form.title.id_for_label }}">
+                            Title
+                        </label>
+                        {{ form.title }}
+                        {{ form.title.errors }}
+                    </div>
 
-            <div>
-                {{ form.deadline.label_tag }}
-                {{ form.deadline }}
-                {{ form.deadline.errors }}
-            </div>
+                    <div class="action-form-field action-field-wide">
+                        <label for="{{ form.instructions.id_for_label }}">
+                            Instructions
+                        </label>
+                        {{ form.instructions }}
+                        {{ form.instructions.errors }}
+                    </div>
 
-            <div>
-                {{ form.is_required }}
-                {{ form.is_required.label_tag }}
-                {{ form.is_required.errors }}
-            </div>
+                    <div class="action-form-field action-field-wide">
+                        <label for="{{ form.external_url.id_for_label }}">
+                            External URL
+                        </label>
+                        {{ form.external_url }}
+                        {{ form.external_url.errors }}
+                    </div>
 
-            <div>
-                {{ form.linked_posts.label_tag }}
-                {{ form.linked_posts }}
-                {{ form.linked_posts.errors }}
-            </div>
+                    <div class="action-form-field">
+                        <label for="{{ form.deadline.id_for_label }}">
+                            Deadline
+                        </label>
+                        {{ form.deadline }}
+                        {{ form.deadline.errors }}
+                    </div>
 
-            <section>
-                <h2>Targets</h2>
+                    <div class="action-form-field action-checkbox-field">
+                        <label for="{{ form.is_required.id_for_label }}">
+                            {{ form.is_required }}
+                            Required Action
+                        </label>
+                        {{ form.is_required.errors }}
+                    </div>
+
+                </div>
+            </section>
+
+            <section class="action-detail-card" aria-labelledby="action-linked-threads-heading">
+                <h2 id="action-linked-threads-heading">
+                    Linked Tavern Threads
+                </h2>
+
+                <p class="action-muted">
+                    Select related Tavern threads.
+                    Hold Ctrl or Command to select multiple threads.
+                </p>
+
+                <div class="action-form-field">
+                    <label for="{{ form.linked_threads.id_for_label }}">
+                        Related Threads
+                    </label>
+                    {{ form.linked_threads }}
+                    {{ form.linked_threads.errors }}
+                </div>
+            </section>
+
+            <section class="action-detail-card" aria-labelledby="action-targets-heading">
+                <div class="action-section-title-row">
+                    <div>
+                        <h2 id="action-targets-heading">
+                            Assignment Targets
+                        </h2>
+
+                        <p class="action-muted">
+                            Select one member or a set of organizational
+                            criteria in each target. All criteria within
+                            one target must match. Multiple targets
+                            are alternatives.
+                        </p>
+                    </div>
+
+                    <button
+                        class="action-button"
+                        type="button"
+                        data-add-action-target
+                    >
+                        Add Target
+                    </button>
+                </div>
 
                 {{ target_formset.management_form }}
                 {{ target_formset.non_form_errors }}
 
-                {% for target_form in target_formset %}
-                    <fieldset>
-                        {{ target_form.non_field_errors }}
+                <div
+                    class="action-target-list"
+                    data-action-target-list
+                    data-formset-prefix="{{ target_formset.prefix }}"
+                >
+                    {% for target_form in target_formset.forms %}
+                        {% include "actions/_target_fields.html" with target_form=target_form %}
+                    {% endfor %}
+                </div>
 
-                        {% for hidden_field in target_form.hidden_fields %}
-                            {{ hidden_field }}
-                        {% endfor %}
+                <template id="action-target-empty-form">
+                    {% include "actions/_target_fields.html" with target_form=target_formset.empty_form %}
+                </template>
 
-                        <div>
-                            {{ target_form.user.label_tag }}
-                            {{ target_form.user }}
-                            {{ target_form.user.errors }}
-                        </div>
-
-                        <div>
-                            {{ target_form.citizenship_class.label_tag }}
-                            {{ target_form.citizenship_class }}
-                            {{ target_form.citizenship_class.errors }}
-                        </div>
-
-                        <div>
-                            {{ target_form.social_rank.label_tag }}
-                            {{ target_form.social_rank }}
-                            {{ target_form.social_rank.errors }}
-                        </div>
-
-                        <div>
-                            {{ target_form.office.label_tag }}
-                            {{ target_form.office }}
-                            {{ target_form.office.errors }}
-                        </div>
-
-                        <div>
-                            {{ target_form.chapter.label_tag }}
-                            {{ target_form.chapter }}
-                            {{ target_form.chapter.errors }}
-                        </div>
-
-                        <div>
-                            {{ target_form.household.label_tag }}
-                            {{ target_form.household }}
-                            {{ target_form.household.errors }}
-                        </div>
-
-                        <div>
-                            {{ target_form.governance_body.label_tag }}
-                            {{ target_form.governance_body }}
-                            {{ target_form.governance_body.errors }}
-                        </div>
-
-                        <div>
-                            {{ target_form.order.label_tag }}
-                            {{ target_form.order }}
-                            {{ target_form.order.errors }}
-                        </div>
-
-                        <div>
-                            {{ target_form.order_rank.label_tag }}
-                            {{ target_form.order_rank }}
-                            {{ target_form.order_rank.errors }}
-                        </div>
-
-                        <div>
-                            {{ target_form.community_group.label_tag }}
-                            {{ target_form.community_group }}
-                            {{ target_form.community_group.errors }}
-                        </div>
-
-                        <div>
-                            {{ target_form.household_leadership_type.label_tag }}
-                            {{ target_form.household_leadership_type }}
-                            {{ target_form.household_leadership_type.errors }}
-                        </div>
-
-                        {% if target_form.DELETE %}
-                            <div>
-                                {{ target_form.DELETE }}
-                                {{ target_form.DELETE.label_tag }}
-                            </div>
-                        {% endif %}
-                    </fieldset>
-                {% endfor %}
             </section>
 
-            <button type="submit">
-                Save Action
-            </button>
+            <div class="action-form-actions">
+                {% if editing and form.instance.pk %}
+                    <a
+                        class="action-button"
+                        href="{% url 'actions:manage_detail' form.instance.pk %}"
+                    >
+                        Cancel
+                    </a>
+                {% else %}
+                    <a
+                        class="action-button"
+                        href="{% url 'actions:manage_list' %}"
+                    >
+                        Cancel
+                    </a>
+                {% endif %}
+
+                <button
+                    class="action-button action-button-primary"
+                    type="submit"
+                >
+                    Save Action
+                </button>
+            </div>
+
         </form>
 
-        <p>
-            <a href="{% url 'actions:manage_list' %}">
-                Cancel
-            </a>
-        </p>
-    </main>
-</body>
-</html>
+    </div>
+
+</section>
+
+<script src="{% static 'js/actions/action-form.js' %}" defer></script>
+
+{% endblock %}

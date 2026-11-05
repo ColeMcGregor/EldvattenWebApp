@@ -1,91 +1,235 @@
+{% extends "app/base_desktop.html" %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ action.title }}</title>
-</head>
-<body>
-    <main>
-        <p>
-            <a href="{% url 'actions:list' %}">
-                Back to My Actions
+{% block title %}{{ action.title }} | EldVatten{% endblock %}
+{% block nav_my_eldvatten %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+{% block app_content %}
+
+<article class="actions-page action-detail-page">
+
+    <nav class="action-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'my_eldvatten' %}?section=todo">To-Do</a>
+        <span aria-hidden="true">/</span>
+        <a href="{% url 'actions:list' %}">My Actions</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{{ action.title }}</span>
+    </nav>
+
+    <header class="action-page-header">
+        <div>
+            <div class="action-status-group">
+                <span class="action-state {% if assignment.status == 'COMPLETED' %}action-state-completed{% else %}action-state-open{% endif %}">
+                    {{ assignment.get_status_display }}
+                </span>
+
+                {% if action.is_required %}
+                    <span class="action-state action-state-required">
+                        Required
+                    </span>
+                {% else %}
+                    <span class="action-state">
+                        Optional
+                    </span>
+                {% endif %}
+            </div>
+
+            <h1 class="section-heading">
+                {{ action.title }}
+            </h1>
+        </div>
+
+        {% if perms.actions.view_action %}
+            <a
+                class="action-button"
+                href="{% url 'actions:manage_detail' action.id %}"
+            >
+                Manage
             </a>
-        </p>
+        {% endif %}
+    </header>
 
-        {% if messages %}
+    {% if messages %}
+        <div class="action-messages" role="status">
             {% for message in messages %}
                 <p>{{ message }}</p>
             {% endfor %}
-        {% endif %}
+        </div>
+    {% endif %}
 
-        <h1>{{ action.title }}</h1>
+    <div class="action-detail-layout">
 
-        <p>Status: {{ assignment.get_status_display }}</p>
+        <div class="action-detail-main">
 
-        {% if action.is_required %}
-            <p>Required</p>
-        {% endif %}
+            <section class="action-detail-card" aria-labelledby="action-instructions-heading">
+                <h2 id="action-instructions-heading">
+                    Instructions
+                </h2>
 
-        {% if action.deadline %}
-            <p>
-                Deadline:
-                {{ action.deadline }}
-            </p>
-        {% endif %}
+                {% if action.instructions %}
+                    <div class="action-instructions">
+                        {{ action.instructions|linebreaks }}
+                    </div>
+                {% else %}
+                    <p class="action-muted">
+                        No instructions have been provided.
+                    </p>
+                {% endif %}
 
-        {% if action.instructions %}
-            <section>
-                <h2>Instructions</h2>
-                {{ action.instructions|linebreaks }}
+                {% if action.external_url %}
+                    <p class="action-external-link">
+                        <a
+                            class="action-button"
+                            href="{{ action.external_url }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Open External Link
+                            <span class="action-link-note">
+                                (new tab)
+                            </span>
+                        </a>
+                    </p>
+                {% endif %}
             </section>
-        {% endif %}
 
-        {% if action.external_url %}
-            <p>
-                <a
-                    href="{{ action.external_url }}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    Open External Link
-                </a>
-            </p>
-        {% endif %}
+            {% if visible_linked_threads %}
+                <section class="action-detail-card" aria-labelledby="action-threads-heading">
+                    <h2 id="action-threads-heading">
+                        Related Tavern Threads
+                    </h2>
 
-        {% if visible_linked_threads %}
-            <section>
-                <h2>Related Tavern Threads</h2>
+                    <ul class="action-link-list">
+                        {% for thread in visible_linked_threads %}
+                            <li>
+                                <a href="{% url 'community:thread_detail' thread.id %}">
+                                    {{ thread.title }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </section>
+            {% endif %}
 
-                <ul>
-                    {% for thread in visible_linked_threads %}
-                        <li>
-                            <a href="{% url 'community:thread_detail' thread.id %}">
-                                {{ thread.title }}
-                            </a>
-                        </li>
-                    {% endfor %}
-                </ul>
+            <section class="action-detail-card" aria-labelledby="action-completion-heading">
+                <h2 id="action-completion-heading">
+                    Your Progress
+                </h2>
+
+                {% if assignment.status == "COMPLETED" %}
+                    <p>
+                        <strong>This action is complete.</strong>
+                    </p>
+
+                    {% if assignment.completed_at %}
+                        <p class="action-muted">
+                            Completed
+                            <time datetime="{{ assignment.completed_at|date:'c' }}">
+                                {{ assignment.completed_at|date:"M j, Y g:i A" }}
+                            </time>
+                        </p>
+                    {% endif %}
+                {% else %}
+                    <p>
+                        Current status:
+                        <strong>{{ assignment.get_status_display }}</strong>
+                    </p>
+
+                    <form
+                        method="post"
+                        action="{% url 'actions:complete' action.id %}"
+                    >
+                        {% csrf_token %}
+                        <button
+                            class="action-button action-button-primary"
+                            type="submit"
+                        >
+                            Mark Complete
+                        </button>
+                    </form>
+                {% endif %}
             </section>
-        {% endif %}
 
-        {% if assignment.status != "COMPLETED" %}
-            <form
-                method="post"
-                action="{% url 'actions:complete' action.id %}"
-            >
-                {% csrf_token %}
-                <button type="submit">
-                    Mark Complete
-                </button>
-            </form>
-        {% else %}
-            <p>
-                Completed:
-                {{ assignment.completed_at }}
-            </p>
-        {% endif %}
-    </main>
-</body>
-</html>
+        </div>
+
+        <aside class="action-detail-sidebar" aria-label="Action information">
+            <section class="action-detail-card">
+                <h2>Details</h2>
+
+                <dl class="action-facts">
+                    <div>
+                        <dt>Status</dt>
+                        <dd>{{ assignment.get_status_display }}</dd>
+                    </div>
+
+                    <div>
+                        <dt>Requirement</dt>
+                        <dd>
+                            {% if action.is_required %}
+                                Required
+                            {% else %}
+                                Optional
+                            {% endif %}
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt>Deadline</dt>
+                        <dd>
+                            {% if action.deadline %}
+                                <time datetime="{{ action.deadline|date:'c' }}">
+                                    {{ action.deadline|date:"M j, Y g:i A" }}
+                                </time>
+                            {% else %}
+                                No deadline
+                            {% endif %}
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt>Created By</dt>
+                        <dd>
+                            {{ action.created_by.display_name|default:action.created_by.username }}
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt>Assigned</dt>
+                        <dd>
+                            <time datetime="{{ assignment.assigned_at|date:'c' }}">
+                                {{ assignment.assigned_at|date:"M j, Y g:i A" }}
+                            </time>
+                        </dd>
+                    </div>
+
+                    {% if assignment.opened_at %}
+                        <div>
+                            <dt>First Opened</dt>
+                            <dd>
+                                <time datetime="{{ assignment.opened_at|date:'c' }}">
+                                    {{ assignment.opened_at|date:"M j, Y g:i A" }}
+                                </time>
+                            </dd>
+                        </div>
+                    {% endif %}
+
+                    {% if assignment.completed_at %}
+                        <div>
+                            <dt>Completed</dt>
+                            <dd>
+                                <time datetime="{{ assignment.completed_at|date:'c' }}">
+                                    {{ assignment.completed_at|date:"M j, Y g:i A" }}
+                                </time>
+                            </dd>
+                        </div>
+                    {% endif %}
+                </dl>
+            </section>
+        </aside>
+
+    </div>
+
+</article>
+
+{% endblock %}

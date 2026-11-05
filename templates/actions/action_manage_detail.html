@@ -1,233 +1,373 @@
+{% extends "app/base_desktop.html" %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage {{ action.title }}</title>
-</head>
-<body>
-    <main>
-        <p>
-            <a href="{% url 'actions:manage_list' %}">
-                Back to Manage Actions
-            </a>
-        </p>
+{% block title %}Manage {{ action.title }} | EldVatten{% endblock %}
+{% block nav_my_eldvatten %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
 
-        {% if messages %}
+{% block app_content %}
+
+<article class="actions-page action-detail-page">
+
+    <nav class="action-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'actions:list' %}">My Actions</a>
+        <span aria-hidden="true">/</span>
+        <a href="{% url 'actions:manage_list' %}">Manage Actions</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{{ action.title }}</span>
+    </nav>
+
+    <header class="action-page-header">
+        <div>
+            <div class="action-status-group">
+                {% if action.is_required %}
+                    <span class="action-state action-state-required">
+                        Required
+                    </span>
+                {% else %}
+                    <span class="action-state">
+                        Optional
+                    </span>
+                {% endif %}
+            </div>
+
+            <h1 class="section-heading">
+                {{ action.title }}
+            </h1>
+
+            <p class="action-page-subtitle">
+                Manage action information and assigned members.
+            </p>
+        </div>
+
+        <div class="action-management-buttons">
+            {% if perms.actions.change_action %}
+                <a
+                    class="action-button"
+                    href="{% url 'actions:edit' action.id %}"
+                >
+                    Edit Action
+                </a>
+            {% endif %}
+
+            {% if perms.actions.delete_action %}
+                <a
+                    class="action-button action-button-danger"
+                    href="{% url 'actions:delete' action.id %}"
+                >
+                    Delete Action
+                </a>
+            {% endif %}
+        </div>
+    </header>
+
+    {% if messages %}
+        <div class="action-messages" role="status">
             {% for message in messages %}
                 <p>{{ message }}</p>
             {% endfor %}
-        {% endif %}
+        </div>
+    {% endif %}
 
-        <h1>{{ action.title }}</h1>
+    <div class="action-detail-layout">
 
-        <p>
-            Created by:
-            {{ action.created_by.display_name|default:action.created_by.username }}
-        </p>
+        <div class="action-detail-main">
 
-        {% if action.is_required %}
-            <p>Required</p>
-        {% endif %}
+            <section class="action-detail-card" aria-labelledby="manage-action-instructions-heading">
+                <h2 id="manage-action-instructions-heading">
+                    Instructions
+                </h2>
 
-        {% if action.deadline %}
-            <p>
-                Deadline:
-                {{ action.deadline }}
-            </p>
-        {% endif %}
+                {% if action.instructions %}
+                    <div class="action-instructions">
+                        {{ action.instructions|linebreaks }}
+                    </div>
+                {% else %}
+                    <p class="action-muted">
+                        No instructions have been provided.
+                    </p>
+                {% endif %}
 
-        {% if action.instructions %}
-            <section>
-                <h2>Instructions</h2>
-                {{ action.instructions|linebreaks }}
+                {% if action.external_url %}
+                    <p class="action-external-link">
+                        <a
+                            class="action-button"
+                            href="{{ action.external_url }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Open External Link
+                            <span class="action-link-note">
+                                (new tab)
+                            </span>
+                        </a>
+                    </p>
+                {% endif %}
             </section>
-        {% endif %}
 
-        {% if action.external_url %}
-            <p>
-                <a
-                    href="{{ action.external_url }}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    Open External Link
-                </a>
-            </p>
-        {% endif %}
+            <section class="action-detail-card" aria-labelledby="manage-action-targets-heading">
+                <h2 id="manage-action-targets-heading">
+                    Assignment Targets
+                </h2>
 
-        <section>
-            <h2>Targets</h2>
+                <p class="action-muted">
+                    Each target can select one user or members who match
+                    organizational criteria.
+                </p>
 
-            {% if targets %}
-                <ul>
-                    {% for target in targets %}
-                        <li>
-                            {% if target.user %}
-                                User:
-                                {{ target.user.display_name|default:target.user.username }}
-                            {% endif %}
+                {% if targets %}
+                    <ul class="action-target-summary-list">
+                        {% for target in targets %}
+                            <li>
+                                {% if target.user %}
+                                    <span>
+                                        User:
+                                        {{ target.user.display_name|default:target.user.username }}
+                                    </span>
+                                {% endif %}
 
-                            {% if target.citizenship_class %}
-                                Citizenship:
-                                {{ target.citizenship_class }}
-                            {% endif %}
+                                {% if target.citizenship_class %}
+                                    <span>Citizenship: {{ target.citizenship_class }}</span>
+                                {% endif %}
 
-                            {% if target.social_rank %}
-                                Rank:
-                                {{ target.social_rank }}
-                            {% endif %}
+                                {% if target.social_rank %}
+                                    <span>Social Rank: {{ target.social_rank }}</span>
+                                {% endif %}
 
-                            {% if target.office %}
-                                Office:
-                                {{ target.office }}
-                            {% endif %}
+                                {% if target.office %}
+                                    <span>Office: {{ target.office }}</span>
+                                {% endif %}
 
-                            {% if target.chapter %}
-                                Chapter:
-                                {{ target.chapter }}
-                            {% endif %}
+                                {% if target.chapter %}
+                                    <span>Chapter: {{ target.chapter }}</span>
+                                {% endif %}
 
-                            {% if target.household %}
-                                Household:
-                                {{ target.household }}
-                            {% endif %}
+                                {% if target.household %}
+                                    <span>Household: {{ target.household }}</span>
+                                {% endif %}
 
-                            {% if target.governance_body %}
-                                Governance Body:
-                                {{ target.governance_body }}
-                            {% endif %}
+                                {% if target.governance_body %}
+                                    <span>Governance Body: {{ target.governance_body }}</span>
+                                {% endif %}
 
-                            {% if target.order %}
-                                Order:
-                                {{ target.order }}
-                            {% endif %}
+                                {% if target.order %}
+                                    <span>Order: {{ target.order }}</span>
+                                {% endif %}
 
-                            {% if target.order_rank %}
-                                Order Rank:
-                                {{ target.order_rank }}
-                            {% endif %}
+                                {% if target.order_rank %}
+                                    <span>Order Rank: {{ target.order_rank }}</span>
+                                {% endif %}
 
-                            {% if target.community_group %}
-                                Community Group:
-                                {{ target.community_group }}
-                            {% endif %}
+                                {% if target.community_group %}
+                                    <span>Community Group: {{ target.community_group }}</span>
+                                {% endif %}
 
-                            {% if target.household_leadership_type %}
-                                Household Leadership:
-                                {{ target.household_leadership_type }}
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>No targets are configured.</p>
-            {% endif %}
-        </section>
-
-        <section>
-            <h2>Assignments</h2>
-
-            {% if assignments %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Status</th>
-                            <th>Active</th>
-                            <th>Assigned</th>
-                            <th>Unassigned</th>
-                            <th>Opened</th>
-                            <th>Completed</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for assignment in assignments %}
-                            <tr>
-                                <td>
-                                    {{ assignment.user.display_name|default:assignment.user.username }}
-                                </td>
-
-                                <td>
-                                    {{ assignment.get_status_display }}
-                                </td>
-
-                                <td>
-                                    {% if assignment.is_active %}
-                                        Yes
-                                    {% else %}
-                                        No
-                                    {% endif %}
-                                </td>
-
-                                <td>
-                                    {{ assignment.assigned_at }}
-                                </td>
-
-                                <td>
-                                    {{ assignment.unassigned_at|default:"-" }}
-                                </td>
-
-                                <td>
-                                    {{ assignment.opened_at|default:"-" }}
-                                </td>
-
-                                <td>
-                                    {{ assignment.completed_at|default:"-" }}
-                                </td>
-                            </tr>
+                                {% if target.household_leadership_type %}
+                                    <span>
+                                        Household Leadership:
+                                        {{ target.household_leadership_type }}
+                                    </span>
+                                {% endif %}
+                            </li>
                         {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <p>No assignments exist.</p>
-            {% endif %}
-        </section>
-
-        {% if visible_linked_threads %}
-            <section>
-                <h2>Linked Tavern Threads</h2>
-
-                <ul>
-                    {% for thread in visible_linked_threads %}
-                        <li>
-                            <a href="{% url 'community:thread_detail' thread.id %}">
-                                {{ thread.title }}
-                            </a>
-                        </li>
-                    {% endfor %}
-                </ul>
+                    </ul>
+                {% else %}
+                    <p class="action-muted">
+                        No targets are configured.
+                    </p>
+                {% endif %}
             </section>
-        {% endif %}
 
-        {% if perms.actions.change_action %}
-            <p>
-                <a href="{% url 'actions:edit' action.id %}">
-                    Edit Action
-                </a>
-            </p>
-        {% endif %}
+            <section class="action-detail-card" aria-labelledby="manage-action-assignments-heading">
+                <div class="action-section-title-row">
+                    <div>
+                        <h2 id="manage-action-assignments-heading">
+                            Assignments
+                        </h2>
+                        <p class="action-muted">
+                            Active and inactive assignments are shown.
+                        </p>
+                    </div>
 
-        {% if perms.actions.add_action %}
-            <form
-                method="post"
-                action="{% url 'actions:sync_assignments' action.id %}"
-            >
-                {% csrf_token %}
-                <button type="submit">
-                    Synchronize Assignments
-                </button>
-            </form>
-        {% endif %}
+                    {% if perms.actions.change_action %}
+                        <form
+                            method="post"
+                            action="{% url 'actions:sync_assignments' action.id %}"
+                        >
+                            {% csrf_token %}
+                            <button
+                                class="action-button"
+                                type="submit"
+                            >
+                                Synchronize Assignments
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
 
-        {% if perms.actions.delete_action %}
-            <p>
-                <a href="{% url 'actions:delete' action.id %}">
-                    Delete Action
-                </a>
-            </p>
-        {% endif %}
-    </main>
-</body>
-</html>
+                {% if assignments %}
+                    <div class="action-table-scroll">
+                        <table class="action-assignment-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Member</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Assignment</th>
+                                    <th scope="col">Assigned</th>
+                                    <th scope="col">Opened</th>
+                                    <th scope="col">Completed</th>
+                                    <th scope="col">Unassigned</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for assignment in assignments %}
+                                    <tr>
+                                        <th scope="row">
+                                            {{ assignment.user.display_name|default:assignment.user.username }}
+                                        </th>
+
+                                        <td>
+                                            <span class="action-state {% if assignment.status == 'COMPLETED' %}action-state-completed{% else %}action-state-open{% endif %}">
+                                                {{ assignment.get_status_display }}
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            {% if assignment.is_active %}
+                                                Active
+                                            {% else %}
+                                                Inactive
+                                            {% endif %}
+                                        </td>
+
+                                        <td>
+                                            <time datetime="{{ assignment.assigned_at|date:'c' }}">
+                                                {{ assignment.assigned_at|date:"M j, Y g:i A" }}
+                                            </time>
+                                        </td>
+
+                                        <td>
+                                            {% if assignment.opened_at %}
+                                                <time datetime="{{ assignment.opened_at|date:'c' }}">
+                                                    {{ assignment.opened_at|date:"M j, Y g:i A" }}
+                                                </time>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+
+                                        <td>
+                                            {% if assignment.completed_at %}
+                                                <time datetime="{{ assignment.completed_at|date:'c' }}">
+                                                    {{ assignment.completed_at|date:"M j, Y g:i A" }}
+                                                </time>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+
+                                        <td>
+                                            {% if assignment.unassigned_at %}
+                                                <time datetime="{{ assignment.unassigned_at|date:'c' }}">
+                                                    {{ assignment.unassigned_at|date:"M j, Y g:i A" }}
+                                                </time>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="action-muted">
+                        No assignments exist.
+                    </p>
+                {% endif %}
+            </section>
+
+            {% if visible_linked_threads %}
+                <section class="action-detail-card" aria-labelledby="manage-action-threads-heading">
+                    <h2 id="manage-action-threads-heading">
+                        Linked Tavern Threads
+                    </h2>
+
+                    <ul class="action-link-list">
+                        {% for thread in visible_linked_threads %}
+                            <li>
+                                <a href="{% url 'community:thread_detail' thread.id %}">
+                                    {{ thread.title }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </section>
+            {% endif %}
+
+        </div>
+
+        <aside class="action-detail-sidebar" aria-label="Action information">
+            <section class="action-detail-card">
+                <h2>Details</h2>
+
+                <dl class="action-facts">
+                    <div>
+                        <dt>Created By</dt>
+                        <dd>
+                            {{ action.created_by.display_name|default:action.created_by.username }}
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt>Created</dt>
+                        <dd>
+                            <time datetime="{{ action.created_at|date:'c' }}">
+                                {{ action.created_at|date:"M j, Y g:i A" }}
+                            </time>
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt>Requirement</dt>
+                        <dd>
+                            {% if action.is_required %}
+                                Required
+                            {% else %}
+                                Optional
+                            {% endif %}
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt>Deadline</dt>
+                        <dd>
+                            {% if action.deadline %}
+                                <time datetime="{{ action.deadline|date:'c' }}">
+                                    {{ action.deadline|date:"M j, Y g:i A" }}
+                                </time>
+                            {% else %}
+                                No deadline
+                            {% endif %}
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt>Targets</dt>
+                        <dd>{{ action.targets.count }}</dd>
+                    </div>
+
+                    <div>
+                        <dt>Total Assignments</dt>
+                        <dd>{{ action.assignments.count }}</dd>
+                    </div>
+                </dl>
+            </section>
+        </aside>
+
+    </div>
+
+</article>
+
+{% endblock %}

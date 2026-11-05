@@ -1,69 +1,139 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Actions</title>
-</head>
-<body>
-    <main>
-        <h1>Manage Actions</h1>
+{% extends "app/base_desktop.html" %}
 
-        {% if messages %}
+{% block title %}Manage Actions | EldVatten{% endblock %}
+{% block nav_my_eldvatten %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+{% block app_content %}
+
+<section class="actions-page" aria-labelledby="manage-actions-heading">
+
+    <nav class="action-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'actions:list' %}">My Actions</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Manage Actions</span>
+    </nav>
+
+    <header class="action-page-header">
+        <div>
+            <h1 class="section-heading" id="manage-actions-heading">
+                Manage Actions
+            </h1>
+            <p class="action-page-subtitle">
+                Manage action details, targets, and assignments.
+            </p>
+        </div>
+
+        {% if perms.actions.add_action and perms.actions.view_action %}
+            <a
+                class="action-button action-button-primary"
+                href="{% url 'actions:create' %}"
+            >
+                Create Action
+            </a>
+        {% endif %}
+    </header>
+
+    {% if messages %}
+        <div class="action-messages" role="status">
             {% for message in messages %}
                 <p>{{ message }}</p>
             {% endfor %}
-        {% endif %}
+        </div>
+    {% endif %}
 
-        {% if perms.actions.add_action %}
-            <p>
-                <a href="{% url 'actions:create' %}">
-                    Create Action
-                </a>
-            </p>
-        {% endif %}
+    <nav class="action-page-navigation" aria-label="Action navigation">
+        <a href="{% url 'actions:list' %}">
+            My Actions
+        </a>
+
+        <a
+            class="action-navigation-active"
+            href="{% url 'actions:manage_list' %}"
+            aria-current="page"
+        >
+            Manage Actions
+        </a>
+    </nav>
+
+    <section class="action-list-section" aria-labelledby="all-managed-actions-heading">
+        <h2 id="all-managed-actions-heading">
+            All Actions
+        </h2>
 
         {% if actions %}
-            <ul>
+
+            <div class="action-list">
                 {% for action in actions %}
-                    <li>
-                        <h2>
-                            <a href="{% url 'actions:manage_detail' action.id %}">
-                                {{ action.title }}
-                            </a>
-                        </h2>
 
-                        <p>
-                            Created by:
-                            {{ action.created_by.display_name|default:action.created_by.username }}
-                        </p>
+                    <article class="action-list-item">
+                        <div class="action-list-item-main">
+                            <div class="action-list-item-heading">
+                                <h3>
+                                    <a href="{% url 'actions:manage_detail' action.id %}">
+                                        {{ action.title }}
+                                    </a>
+                                </h3>
 
-                        {% if action.is_required %}
-                            <p>Required</p>
-                        {% endif %}
+                                {% if action.is_required %}
+                                    <span class="action-state action-state-required">
+                                        Required
+                                    </span>
+                                {% else %}
+                                    <span class="action-state">
+                                        Optional
+                                    </span>
+                                {% endif %}
+                            </div>
 
-                        {% if action.deadline %}
-                            <p>
-                                Deadline:
-                                {{ action.deadline }}
-                            </p>
-                        {% endif %}
+                            <div class="action-list-item-meta">
+                                <span>
+                                    Created by
+                                    {{ action.created_by.display_name|default:action.created_by.username }}
+                                </span>
 
-                        <p>
-                            Targets:
-                            {{ action.targets.count }}
-                        </p>
+                                {% if action.deadline %}
+                                    <span>
+                                        Due
+                                        <time datetime="{{ action.deadline|date:'c' }}">
+                                            {{ action.deadline|date:"M j, Y g:i A" }}
+                                        </time>
+                                    </span>
+                                {% else %}
+                                    <span>No deadline</span>
+                                {% endif %}
 
-                        <p>
-                            Assignments:
-                            {{ action.assignments.count }}
-                        </p>
-                    </li>
+                                <span>
+                                    Targets: {{ action.targets.count }}
+                                </span>
+
+                                <span>
+                                    Total assignments: {{ action.assignments.count }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <a
+                            class="action-button"
+                            href="{% url 'actions:manage_detail' action.id %}"
+                        >
+                            Manage
+                        </a>
+                    </article>
+
                 {% endfor %}
-            </ul>
+            </div>
+
         {% else %}
-            <p>No actions exist.</p>
+
+            <div class="action-empty-state">
+                <p>No actions exist.</p>
+            </div>
+
         {% endif %}
-    </main>
-</body>
-</html>
+    </section>
+
+</section>
+
+{% endblock %}

@@ -1,162 +1,218 @@
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page_title }}</title>
-</head>
-<body>
-    <main>
-        <h1>{{ page_title }}</h1>
+{% extends "app/base_desktop.html" %}
 
-        {% if messages %}
+{% block title %}My Actions | EldVatten{% endblock %}
+{% block nav_my_eldvatten %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+{% block app_content %}
+
+<section class="actions-page" aria-labelledby="actions-heading">
+
+    <nav class="action-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'my_eldvatten' %}?section=todo">To-Do</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">My Actions</span>
+    </nav>
+
+    <header class="action-page-header">
+        <div>
+            <h1 class="section-heading" id="actions-heading">
+                My Actions
+            </h1>
+            <p class="action-page-subtitle">
+                Review your assigned actions and completion history.
+            </p>
+        </div>
+
+        {% if perms.actions.view_action %}
+            <a
+                class="action-button"
+                href="{% url 'actions:manage_list' %}"
+            >
+                Manage Actions
+            </a>
+        {% endif %}
+    </header>
+
+    {% if messages %}
+        <div class="action-messages" role="status">
             {% for message in messages %}
                 <p>{{ message }}</p>
             {% endfor %}
-        {% endif %}
+        </div>
+    {% endif %}
 
-        <form method="post">
-            {% csrf_token %}
+    <nav class="action-page-navigation" aria-label="Action navigation">
+        <a
+            class="action-navigation-active"
+            href="{% url 'actions:list' %}"
+            aria-current="page"
+        >
+            My Actions
+        </a>
 
-            {{ form.non_field_errors }}
+        <a href="{% url 'my_eldvatten' %}?section=todo">
+            To-Do
+        </a>
+    </nav>
 
-            <div>
-                {{ form.title.label_tag }}
-                {{ form.title }}
-                {{ form.title.errors }}
-            </div>
+    {% if outstanding_assignments %}
 
-            <div>
-                {{ form.instructions.label_tag }}
-                {{ form.instructions }}
-                {{ form.instructions.errors }}
-            </div>
+        <section class="action-list-section" aria-labelledby="outstanding-actions-heading">
+            <h2 id="outstanding-actions-heading">
+                Outstanding Actions
+            </h2>
 
-            <div>
-                {{ form.external_url.label_tag }}
-                {{ form.external_url }}
-                {{ form.external_url.errors }}
-            </div>
+            <div class="action-list">
 
-            <div>
-                {{ form.deadline.label_tag }}
-                {{ form.deadline }}
-                {{ form.deadline.errors }}
-            </div>
+                {% for assignment in outstanding_assignments %}
 
-            <div>
-                {{ form.is_required }}
-                {{ form.is_required.label_tag }}
-                {{ form.is_required.errors }}
-            </div>
+                    <article class="action-list-item">
 
-            <div>
-                {{ form.linked_threads.label_tag }}
-                {{ form.linked_threads }}
-                {{ form.linked_threads.errors }}
-            </div>
+                        <div class="action-list-item-main">
 
-            <section>
-                <h2>Targets</h2>
+                            <div class="action-list-item-heading">
 
-                {{ target_formset.management_form }}
-                {{ target_formset.non_form_errors }}
+                                <h3>
+                                    <a href="{% url 'actions:detail' assignment.action.id %}">
+                                        {{ assignment.action.title }}
+                                    </a>
+                                </h3>
 
-                {% for target_form in target_formset %}
-                    <fieldset>
-                        {{ target_form.non_field_errors }}
+                                {% if assignment.action.is_required %}
+                                    <span class="action-state action-state-required">
+                                        Required
+                                    </span>
+                                {% else %}
+                                    <span class="action-state">
+                                        Optional
+                                    </span>
+                                {% endif %}
 
-                        {% for hidden_field in target_form.hidden_fields %}
-                            {{ hidden_field }}
-                        {% endfor %}
+                                <span class="action-state action-state-open">
+                                    {{ assignment.get_status_display }}
+                                </span>
 
-                        <div>
-                            {{ target_form.user.label_tag }}
-                            {{ target_form.user }}
-                            {{ target_form.user.errors }}
-                        </div>
-
-                        <div>
-                            {{ target_form.citizenship_class.label_tag }}
-                            {{ target_form.citizenship_class }}
-                            {{ target_form.citizenship_class.errors }}
-                        </div>
-
-                        <div>
-                            {{ target_form.social_rank.label_tag }}
-                            {{ target_form.social_rank }}
-                            {{ target_form.social_rank.errors }}
-                        </div>
-
-                        <div>
-                            {{ target_form.office.label_tag }}
-                            {{ target_form.office }}
-                            {{ target_form.office.errors }}
-                        </div>
-
-                        <div>
-                            {{ target_form.chapter.label_tag }}
-                            {{ target_form.chapter }}
-                            {{ target_form.chapter.errors }}
-                        </div>
-
-                        <div>
-                            {{ target_form.household.label_tag }}
-                            {{ target_form.household }}
-                            {{ target_form.household.errors }}
-                        </div>
-
-                        <div>
-                            {{ target_form.governance_body.label_tag }}
-                            {{ target_form.governance_body }}
-                            {{ target_form.governance_body.errors }}
-                        </div>
-
-                        <div>
-                            {{ target_form.order.label_tag }}
-                            {{ target_form.order }}
-                            {{ target_form.errors }}
-                        </div>
-
-                        <div>
-                            {{ target_form.order_rank.label_tag }}
-                            {{ target_form.order_rank }}
-                            {{ target_form.order_rank.errors }}
-                        </div>
-
-                        <div>
-                            {{ target_form.community_group.label_tag }}
-                            {{ target_form.community_group }}
-                            {{ target_form.community_group.errors }}
-                        </div>
-
-                        <div>
-                            {{ target_form.household_leadership_type.label_tag }}
-                            {{ target_form.household_leadership_type }}
-                            {{ target_form.household_leadership_type.errors }}
-                        </div>
-
-                        {% if target_form.DELETE %}
-                            <div>
-                                {{ target_form.DELETE }}
-                                {{ target_form.DELETE.label_tag }}
                             </div>
-                        {% endif %}
-                    </fieldset>
+
+                            <div class="action-list-item-meta">
+
+                                {% if assignment.action.deadline %}
+                                    <span>
+                                        Due
+                                        <time datetime="{{ assignment.action.deadline|date:'c' }}">
+                                            {{ assignment.action.deadline|date:"M j, Y g:i A" }}
+                                        </time>
+                                    </span>
+                                {% else %}
+                                    <span>No deadline</span>
+                                {% endif %}
+
+                                <span>
+                                    Assigned
+                                    <time datetime="{{ assignment.assigned_at|date:'c' }}">
+                                        {{ assignment.assigned_at|date:"M j, Y" }}
+                                    </time>
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <a
+                            class="action-button"
+                            href="{% url 'actions:detail' assignment.action.id %}"
+                        >
+                            View Action
+                        </a>
+
+                    </article>
+
                 {% endfor %}
-            </section>
 
-            <button type="submit">
-                Save Action
-            </button>
-        </form>
+            </div>
+        </section>
 
-        <p>
-            <a href="{% url 'actions:manage_list' %}">
-                Cancel
-            </a>
-        </p>
-    </main>
-</body>
-</html>
+    {% endif %}
+
+
+    {% if completed_assignments %}
+
+        <section class="action-list-section" aria-labelledby="completed-actions-heading">
+            <h2 id="completed-actions-heading">
+                Completed Actions
+            </h2>
+
+            <div class="action-list">
+
+                {% for assignment in completed_assignments %}
+
+                    <article class="action-list-item action-list-item-completed">
+
+                        <div class="action-list-item-main">
+
+                            <div class="action-list-item-heading">
+
+                                <h3>
+                                    <a href="{% url 'actions:detail' assignment.action.id %}">
+                                        {{ assignment.action.title }}
+                                    </a>
+                                </h3>
+
+                                <span class="action-state action-state-completed">
+                                    Completed
+                                </span>
+
+                                {% if assignment.action.is_required %}
+                                    <span class="action-state">
+                                        Required
+                                    </span>
+                                {% endif %}
+
+                            </div>
+
+                            <div class="action-list-item-meta">
+
+                                {% if assignment.completed_at %}
+                                    <span>
+                                        Completed
+                                        <time datetime="{{ assignment.completed_at|date:'c' }}">
+                                            {{ assignment.completed_at|date:"M j, Y g:i A" }}
+                                        </time>
+                                    </span>
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                        <a
+                            class="action-button"
+                            href="{% url 'actions:detail' assignment.action.id %}"
+                        >
+                            View
+                        </a>
+
+                    </article>
+
+                {% endfor %}
+
+            </div>
+        </section>
+
+    {% endif %}
+
+
+    {% if not outstanding_assignments and not completed_assignments %}
+
+        <div class="action-empty-state">
+            <p>You have no assigned actions.</p>
+        </div>
+
+    {% endif %}
+
+</section>
+
+{% endblock %}

@@ -1,0 +1,40 @@
+<fieldset class="action-target-row" data-action-target-row>
+
+    <legend>Assignment Target</legend>
+
+    {{ target_form.non_field_errors }}
+
+    {% for hidden_field in target_form.hidden_fields %}
+        {{ hidden_field }}
+    {% endfor %}
+
+    <div class="action-target-fields">
+        {% for field in target_form.visible_fields %}
+
+            {% if field.name == "DELETE" %}
+                <div class="action-target-delete" hidden>
+                    {{ field }}
+                </div>
+            {% else %}
+                <div class="action-form-field">
+                    <label for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                    </label>
+
+                    {{ field }}
+                    {{ field.errors }}
+                </div>
+            {% endif %}
+
+        {% endfor %}
+    </div>
+
+    <button
+        class="action-target-remove-button"
+        type="button"
+        data-remove-action-target
+    >
+        Remove Target
+    </button>
+
+</fieldset>

@@ -1,36 +1,65 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delete {{ action.title }}</title>
-</head>
-<body>
-    <main>
-        <h1>Delete Action</h1>
+{% extends "app/base_desktop.html" %}
 
-        <p>
-            Are you sure you want to delete
-            <strong>{{ action.title }}</strong>?
-        </p>
+{% block title %}Delete Action | EldVatten{% endblock %}
+{% block nav_my_eldvatten %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
 
-        <p>
-            This will also delete its targets and assignment records.
-        </p>
+{% block app_content %}
 
-        <form method="post">
-            {% csrf_token %}
+<section class="actions-page action-form-page" aria-labelledby="delete-action-heading">
 
-            <button type="submit">
-                Delete Action
-            </button>
-        </form>
+    <nav class="action-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'actions:manage_list' %}">Manage Actions</a>
+        <span aria-hidden="true">/</span>
+        <a href="{% url 'actions:manage_detail' action.id %}">
+            {{ action.title }}
+        </a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Delete</span>
+    </nav>
 
-        <p>
-            <a href="{% url 'actions:manage_detail' action.id %}">
-                Cancel
-            </a>
-        </p>
-    </main>
-</body>
-</html>
+    <header class="action-page-header">
+        <h1 class="section-heading" id="delete-action-heading">
+            Delete Action
+        </h1>
+    </header>
+
+    <div class="action-form-container">
+        <section class="action-detail-card action-delete-card">
+
+            <h2>Confirm Deletion</h2>
+
+            <p>
+                Delete <strong>{{ action.title }}</strong>?
+            </p>
+
+            <p class="action-muted">
+                This permanently deletes the Action, its targets,
+                and its assignment records.
+            </p>
+
+            <form class="action-form-actions" method="post">
+                {% csrf_token %}
+
+                <a
+                    class="action-button"
+                    href="{% url 'actions:manage_detail' action.id %}"
+                >
+                    Cancel
+                </a>
+
+                <button
+                    class="action-button action-button-danger"
+                    type="submit"
+                >
+                    Delete Action
+                </button>
+            </form>
+
+        </section>
+    </div>
+
+</section>
+
+{% endblock %}

@@ -1,3 +1,4 @@
+
 <section class="my-eldvatten-section">
 
     <header class="my-eldvatten-section-header">
@@ -7,6 +8,28 @@
     </header>
 
     <div class="my-eldvatten-section-body">
+
+        <nav aria-label="Action navigation">
+            <p>
+                <a
+                    class="my-eldvatten-action-link"
+                    href="{% url 'actions:list' %}"
+                >
+                    All My Actions
+                </a>
+
+                {% if perms.actions.view_action %}
+                    <span aria-hidden="true"> | </span>
+
+                    <a
+                        class="my-eldvatten-action-link"
+                        href="{% url 'actions:manage_list' %}"
+                    >
+                        Manage Actions
+                    </a>
+                {% endif %}
+            </p>
+        </nav>
 
         {% if todo_actions %}
 

@@ -1,28 +1,20 @@
+
 from django.contrib import messages
-from django.contrib.auth.decorators import (
-    login_required,
-    permission_required,
-)
+from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
+from django.db.models import Case, F, IntegerField, Value, When
 from django.forms import inlineformset_factory
-from django.shortcuts import (
-    get_object_or_404,
-    redirect,
-    render,
-)
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from accounts.models import AccountStatus
 from audit.models import AuditLog
 from audit.services import record_audit_event
-from community.services import user_can_access_thread
+from community.services import get_accessible_threads, user_can_access_thread
 
 from .forms import ActionForm, ActionTargetForm
-from .models import (
-    Action,
-    ActionAssignment,
-    ActionTarget,
-)
+from .models import Action, ActionAssignment, ActionTarget
 from .services import sync_action_assignments
 
 
@@ -39,8 +31,7 @@ def is_member(user):
     return (
         user.is_authenticated
         and user.is_active
-        and user.account_status
-        == AccountStatus.MEMBER
+        and user.account_status == AccountStatus.MEMBER
     )
 
 
@@ -49,18 +40,11 @@ def action_values(action):
         "title": action.title,
         "instructions": action.instructions,
         "external_url": action.external_url,
-        "deadline": (
-            action.deadline.isoformat()
-            if action.deadline
-            else None
-        ),
+        "deadline": action.deadline.isoformat() if action.deadline else None,
         "is_required": action.is_required,
         "created_by_id": action.created_by_id,
-        "linked_thread_ids": list(
-            action.linked_threads.values_list(
-                "id",
-                flat=True,
-            )
+        "linked_thread_ids": sorted(
+            action.linked_threads.values_list("id", flat=True)
         ),
     }
 
@@ -69,22 +53,16 @@ def target_values(target):
     return {
         "action_id": target.action_id,
         "user_id": target.user_id,
-        "citizenship_class_id":
-            target.citizenship_class_id,
-        "social_rank_id":
-            target.social_rank_id,
+        "citizenship_class_id": target.citizenship_class_id,
+        "social_rank_id": target.social_rank_id,
         "office_id": target.office_id,
         "chapter_id": target.chapter_id,
         "household_id": target.household_id,
-        "governance_body_id":
-            target.governance_body_id,
+        "governance_body_id": target.governance_body_id,
         "order_id": target.order_id,
         "order_rank_id": target.order_rank_id,
-        "community_group_id":
-            target.community_group_id,
-        "household_leadership_type_id": (
-            target.household_leadership_type_id
-        ),
+        "community_group_id": target.community_group_id,
+        "household_leadership_type_id": target.household_leadership_type_id,
     }
 
 
@@ -96,25 +74,83 @@ def assignment_values(assignment):
         "is_active": assignment.is_active,
         "assigned_at": (
             assignment.assigned_at.isoformat()
-            if assignment.assigned_at
-            else None
+            if assignment.assigned_at else None
         ),
         "unassigned_at": (
             assignment.unassigned_at.isoformat()
-            if assignment.unassigned_at
-            else None
+            if assignment.unassigned_at else None
         ),
         "opened_at": (
             assignment.opened_at.isoformat()
-            if assignment.opened_at
-            else None
+            if assignment.opened_at else None
         ),
         "completed_at": (
             assignment.completed_at.isoformat()
-            if assignment.completed_at
-            else None
+            if assignment.completed_at else None
         ),
     }
+
+
+def action_form_for_user(user, *args, **kwargs):
+    form = ActionForm(*args, **kwargs)
+    form.fields["linked_threads"].queryset = get_accessible_threads(user)
+    return form
+
+
+def record_target_changes(*, action, request, old_values):
+    current_targets = {
+        target.pk: target
+        for target in action.targets.all()
+    }
+
+    for target_id, target in current_targets.items():
+        old_value = old_values.get(target_id)
+        new_value = target_values(target)
+
+        if old_value is None:
+            record_audit_event(
+                action=AuditLog.Action.CREATE,
+                target_type="ActionTarget",
+                target_id=target_id,
+                target_label=str(target),
+                actor=request.user,
+                request=request,
+                old_value=None,
+                new_value=new_value,
+                effective_at=target.created_at,
+                source=AuditLog.Source.WEB_APP,
+                method=AuditLog.Method.MANUAL,
+            )
+        elif old_value != new_value:
+            record_audit_event(
+                action=AuditLog.Action.UPDATE,
+                target_type="ActionTarget",
+                target_id=target_id,
+                target_label=str(target),
+                actor=request.user,
+                request=request,
+                old_value=old_value,
+                new_value=new_value,
+                source=AuditLog.Source.WEB_APP,
+                method=AuditLog.Method.MANUAL,
+            )
+
+    for target_id, old_value in old_values.items():
+        if target_id in current_targets:
+            continue
+
+        record_audit_event(
+            action=AuditLog.Action.DELETE,
+            target_type="ActionTarget",
+            target_id=target_id,
+            target_label=f"Target for {action}",
+            actor=request.user,
+            request=request,
+            old_value=old_value,
+            new_value=None,
+            source=AuditLog.Source.WEB_APP,
+            method=AuditLog.Method.MANUAL,
+        )
 
 
 @login_required
@@ -124,60 +160,53 @@ def action_list(request):
 
     assignments = (
         ActionAssignment.objects
-        .filter(
-            user=request.user,
-            is_active=True,
-        )
-        .select_related(
-            "action",
-            "action__created_by",
-        )
+        .filter(user=request.user, is_active=True)
+        .select_related("action", "action__created_by")
+    )
+
+    outstanding_assignments = list(
+        assignments
+        .exclude(status=ActionAssignment.Status.COMPLETED)
         .order_by(
-            "status",
-            "action__deadline",
+            F("action__deadline").asc(nulls_last=True),
             "-assigned_at",
         )
+    )
+    completed_assignments = list(
+        assignments
+        .filter(status=ActionAssignment.Status.COMPLETED)
+        .order_by("-completed_at", "-assigned_at")
     )
 
     return render(
         request,
         "actions/action_list.html",
         {
-            "assignments": assignments,
+            "assignments": outstanding_assignments + completed_assignments,
+            "outstanding_assignments": outstanding_assignments,
+            "completed_assignments": completed_assignments,
         },
     )
 
 
 @login_required
-def action_detail(
-    request,
-    action_id,
-):
+@transaction.atomic
+def action_detail(request, action_id):
     if not is_member(request.user):
         raise PermissionDenied
 
     assignment = get_object_or_404(
         ActionAssignment.objects
-        .select_related(
-            "action",
-            "action__created_by",
-        )
-        .prefetch_related(
-            "action__linked_threads",
-        ),
+        .select_for_update()
+        .select_related("action", "action__created_by")
+        .prefetch_related("action__linked_threads"),
         action_id=action_id,
         user=request.user,
         is_active=True,
     )
 
-    if (
-        assignment.status
-        == ActionAssignment.Status.NOT_STARTED
-    ):
-        old_value = assignment_values(
-            assignment,
-        )
-
+    if assignment.status == ActionAssignment.Status.NOT_STARTED:
+        old_value = assignment_values(assignment)
         assignment.mark_opened()
 
         record_audit_event(
@@ -188,24 +217,17 @@ def action_detail(
             actor=request.user,
             request=request,
             old_value=old_value,
-            new_value=assignment_values(
-                assignment,
-            ),
+            new_value=assignment_values(assignment),
             effective_at=assignment.opened_at,
             source=AuditLog.Source.WEB_APP,
             method=AuditLog.Method.MANUAL,
-            notes=(
-                "Member opened assigned action."
-            ),
+            notes="Member opened assigned action.",
         )
 
     visible_linked_threads = [
         thread
         for thread in assignment.action.linked_threads.all()
-        if user_can_access_thread(
-            request.user,
-            thread,
-        )
+        if user_can_access_thread(request.user, thread)
     ]
 
     return render(
@@ -221,111 +243,69 @@ def action_detail(
 
 @login_required
 @permission_required(
-    "actions.add_action",
+    ("actions.add_action", "actions.view_action"),
     raise_exception=True,
 )
+@transaction.atomic
 def action_create(request):
+    action = Action(created_by=request.user)
+    post_data = request.POST if request.method == "POST" else None
+    form = action_form_for_user(
+        request.user,
+        post_data,
+        instance=action,
+    )
+    target_formset = ActionTargetFormSet(
+        post_data,
+        instance=action,
+    )
+
     if request.method == "POST":
-        form = ActionForm(
-            request.POST,
-        )
+        form_is_valid = form.is_valid()
+        targets_are_valid = target_formset.is_valid()
 
-        if form.is_valid():
-            action = form.save(
-                commit=False,
-            )
+        if form_is_valid and targets_are_valid:
+            action = form.save(commit=False)
             action.created_by = request.user
+            action.save()
+            form.save_m2m()
 
-            target_formset = ActionTargetFormSet(
-                request.POST,
-                instance=action,
+            target_formset.instance = action
+            target_formset.save()
+
+            record_audit_event(
+                action=AuditLog.Action.CREATE,
+                target_type="Action",
+                target_id=action.id,
+                target_label=str(action),
+                actor=request.user,
+                request=request,
+                old_value=None,
+                new_value=action_values(action),
+                effective_at=action.created_at,
+                source=AuditLog.Source.WEB_APP,
+                method=AuditLog.Method.MANUAL,
+            )
+            record_target_changes(
+                action=action,
+                request=request,
+                old_values={},
             )
 
-            if target_formset.is_valid():
-                action.save()
-                form.save_m2m()
-
-                target_formset.instance = action
-                targets = target_formset.save()
-
-                record_audit_event(
-                    action=AuditLog.Action.CREATE,
-                    target_type="Action",
-                    target_id=action.id,
-                    target_label=str(action),
-                    actor=request.user,
-                    request=request,
-                    old_value=None,
-                    new_value=action_values(
-                        action,
-                    ),
-                    effective_at=action.created_at,
-                    source=AuditLog.Source.WEB_APP,
-                    method=AuditLog.Method.MANUAL,
-                )
-
-                for target in targets:
-                    record_audit_event(
-                        action=(
-                            AuditLog.Action.CREATE
-                        ),
-                        target_type="ActionTarget",
-                        target_id=target.id,
-                        target_label=str(target),
-                        actor=request.user,
-                        request=request,
-                        old_value=None,
-                        new_value=target_values(
-                            target,
-                        ),
-                        effective_at=(
-                            target.created_at
-                        ),
-                        source=(
-                            AuditLog.Source.WEB_APP
-                        ),
-                        method=(
-                            AuditLog.Method.MANUAL
-                        ),
-                    )
-
-                (
-                    activated_assignments,
-                    deactivated_assignments,
-                ) = sync_action_assignments(
-                    action,
-                    actor=request.user,
-                    request=request,
-                    source=AuditLog.Source.WEB_APP,
-                    method=AuditLog.Method.MANUAL,
-                )
-
-                messages.success(
-                    request,
-                    (
-                        "Action created. "
-                        f"{len(activated_assignments)} "
-                        "assignment(s) activated."
-                    ),
-                )
-
-                return redirect(
-                    "actions:manage_detail",
-                    action_id=action.id,
-                )
-
-        else:
-            target_formset = (
-                ActionTargetFormSet(
-                    request.POST,
-                )
+            activated_assignments, _ = sync_action_assignments(
+                action,
+                actor=request.user,
+                request=request,
+                source=AuditLog.Source.WEB_APP,
+                method=AuditLog.Method.MANUAL,
             )
 
-    else:
-        form = ActionForm()
-        target_formset = (
-            ActionTargetFormSet()
-        )
+            messages.success(
+                request,
+                "Action created. "
+                f"{len(activated_assignments)} assignment(s) activated.",
+            )
+            return redirect("actions:manage_detail", action_id=action.id)
 
     return render(
         request,
@@ -334,61 +314,63 @@ def action_create(request):
             "form": form,
             "target_formset": target_formset,
             "page_title": "Create Action",
+            "editing": False,
         },
     )
 
 
 @login_required
 @permission_required(
-    "actions.change_action",
+    ("actions.change_action", "actions.view_action"),
     raise_exception=True,
 )
-def action_edit(
-    request,
-    action_id,
-):
-    action = get_object_or_404(
-        Action,
-        id=action_id,
+@transaction.atomic
+def action_edit(request, action_id):
+    action = get_object_or_404(Action, id=action_id)
+    old_action_value = action_values(action)
+    old_target_values = {
+        target.id: target_values(target)
+        for target in action.targets.all()
+    }
+
+    previously_linked_thread_ids = set(
+        action.linked_threads.values_list("id", flat=True)
+    )
+
+    post_data = request.POST if request.method == "POST" else None
+    form = action_form_for_user(
+        request.user,
+        post_data,
+        instance=action,
+    )
+    target_formset = ActionTargetFormSet(
+        post_data,
+        instance=action,
     )
 
     if request.method == "POST":
-        old_action_value = action_values(
-            action,
-        )
+        form_is_valid = form.is_valid()
+        targets_are_valid = target_formset.is_valid()
 
-        old_target_values = {
-            target.id: target_values(target)
-            for target in action.targets.all()
-        }
-
-        form = ActionForm(
-            request.POST,
-            instance=action,
-        )
-
-        target_formset = ActionTargetFormSet(
-            request.POST,
-            instance=action,
-        )
-
-        if (
-            form.is_valid()
-            and target_formset.is_valid()
-        ):
-            form.save()
-            target_formset.save()
-
-            action.refresh_from_db()
-
-            new_action_value = action_values(
-                action,
+        if form_is_valid and targets_are_valid:
+            accessible_thread_ids = set(
+                form.fields["linked_threads"].queryset.values_list(
+                    "id", flat=True
+                )
+            )
+            hidden_thread_ids = (
+                previously_linked_thread_ids - accessible_thread_ids
             )
 
-            if (
-                old_action_value
-                != new_action_value
-            ):
+            form.save()
+            if hidden_thread_ids:
+                action.linked_threads.add(*hidden_thread_ids)
+
+            target_formset.save()
+            action.refresh_from_db()
+            new_action_value = action_values(action)
+
+            if old_action_value != new_action_value:
                 record_audit_event(
                     action=AuditLog.Action.UPDATE,
                     target_type="Action",
@@ -402,135 +384,29 @@ def action_edit(
                     method=AuditLog.Method.MANUAL,
                 )
 
-            current_targets = {
-                target.id: target
-                for target
-                in action.targets.all()
-            }
-
-            for (
-                target_id,
-                target,
-            ) in current_targets.items():
-                new_value = target_values(
-                    target,
-                )
-
-                old_value = (
-                    old_target_values.get(
-                        target_id,
-                    )
-                )
-
-                if old_value is None:
-                    record_audit_event(
-                        action=(
-                            AuditLog.Action.CREATE
-                        ),
-                        target_type="ActionTarget",
-                        target_id=target.id,
-                        target_label=str(target),
-                        actor=request.user,
-                        request=request,
-                        old_value=None,
-                        new_value=new_value,
-                        effective_at=(
-                            target.created_at
-                        ),
-                        source=(
-                            AuditLog.Source.WEB_APP
-                        ),
-                        method=(
-                            AuditLog.Method.MANUAL
-                        ),
-                    )
-
-                elif old_value != new_value:
-                    record_audit_event(
-                        action=(
-                            AuditLog.Action.UPDATE
-                        ),
-                        target_type="ActionTarget",
-                        target_id=target.id,
-                        target_label=str(target),
-                        actor=request.user,
-                        request=request,
-                        old_value=old_value,
-                        new_value=new_value,
-                        source=(
-                            AuditLog.Source.WEB_APP
-                        ),
-                        method=(
-                            AuditLog.Method.MANUAL
-                        ),
-                    )
-
-            for (
-                target_id,
-                old_value,
-            ) in old_target_values.items():
-                if (
-                    target_id
-                    not in current_targets
-                ):
-                    record_audit_event(
-                        action=(
-                            AuditLog.Action.DELETE
-                        ),
-                        target_type="ActionTarget",
-                        target_id=target_id,
-                        target_label=(
-                            f"Target for {action}"
-                        ),
-                        actor=request.user,
-                        request=request,
-                        old_value=old_value,
-                        new_value=None,
-                        source=(
-                            AuditLog.Source.WEB_APP
-                        ),
-                        method=(
-                            AuditLog.Method.MANUAL
-                        ),
-                    )
-
-            (
-                activated_assignments,
-                deactivated_assignments,
-            ) = sync_action_assignments(
-                action,
-                actor=request.user,
+            record_target_changes(
+                action=action,
                 request=request,
-                source=AuditLog.Source.WEB_APP,
-                method=AuditLog.Method.MANUAL,
+                old_values=old_target_values,
+            )
+
+            activated_assignments, deactivated_assignments = (
+                sync_action_assignments(
+                    action,
+                    actor=request.user,
+                    request=request,
+                    source=AuditLog.Source.WEB_APP,
+                    method=AuditLog.Method.MANUAL,
+                )
             )
 
             messages.success(
                 request,
-                (
-                    "Action updated. "
-                    f"{len(activated_assignments)} "
-                    "assignment(s) activated and "
-                    f"{len(deactivated_assignments)} "
-                    "assignment(s) deactivated."
-                ),
+                "Action updated. "
+                f"{len(activated_assignments)} assignment(s) activated and "
+                f"{len(deactivated_assignments)} assignment(s) deactivated.",
             )
-
-            return redirect(
-                "actions:manage_detail",
-                action_id=action.id,
-            )
-
-    else:
-        form = ActionForm(
-            instance=action,
-        )
-
-        target_formset = (
-            ActionTargetFormSet(
-                instance=action,
-            )
-        )
+            return redirect("actions:manage_detail", action_id=action.id)
 
     return render(
         request,
@@ -545,35 +421,28 @@ def action_edit(
 
 
 @login_required
-@permission_required(
-    "actions.view_action",
-    raise_exception=True,
-)
-def action_manage_detail(
-    request,
-    action_id,
-):
+@permission_required("actions.view_action", raise_exception=True)
+def action_manage_detail(request, action_id):
     action = get_object_or_404(
         Action.objects
-        .select_related(
-            "created_by",
-        )
-        .prefetch_related(
-            "targets",
-            "assignments__user",
-            "linked_threads",
-        ),
+        .select_related("created_by")
+        .prefetch_related("targets", "linked_threads"),
         id=action_id,
     )
 
+    status_order = Case(
+        When(status=ActionAssignment.Status.NOT_STARTED, then=Value(0)),
+        When(status=ActionAssignment.Status.OPENED, then=Value(1)),
+        default=Value(2),
+        output_field=IntegerField(),
+    )
     assignments = (
         action.assignments
-        .select_related(
-            "user",
-        )
+        .select_related("user")
+        .annotate(status_order=status_order)
         .order_by(
             "-is_active",
-            "status",
+            "status_order",
             "user__display_name",
             "user__username",
         )
@@ -582,10 +451,7 @@ def action_manage_detail(
     visible_linked_threads = [
         thread
         for thread in action.linked_threads.all()
-        if user_can_access_thread(
-            request.user,
-            thread,
-        )
+        if user_can_access_thread(request.user, thread)
     ]
 
     return render(
@@ -601,56 +467,38 @@ def action_manage_detail(
 
 
 @login_required
-@permission_required(
-    "actions.view_action",
-    raise_exception=True,
-)
+@permission_required("actions.view_action", raise_exception=True)
 def action_manage_list(request):
     actions = (
         Action.objects
-        .select_related(
-            "created_by",
-        )
-        .prefetch_related(
-            "targets",
-            "assignments",
-        )
+        .select_related("created_by")
+        .prefetch_related("targets", "assignments")
         .all()
     )
 
     return render(
         request,
         "actions/action_manage_list.html",
-        {
-            "actions": actions,
-        },
+        {"actions": actions},
     )
 
 
 @login_required
 @require_POST
-def action_complete(
-    request,
-    action_id,
-):
+@transaction.atomic
+def action_complete(request, action_id):
     if not is_member(request.user):
         raise PermissionDenied
 
     assignment = get_object_or_404(
-        ActionAssignment,
+        ActionAssignment.objects.select_for_update(),
         action_id=action_id,
         user=request.user,
         is_active=True,
     )
 
-    if (
-        assignment.status
-        != ActionAssignment.Status.COMPLETED
-    ):
-        old_value = assignment_values(
-            assignment,
-        )
-
+    if assignment.status != ActionAssignment.Status.COMPLETED:
+        old_value = assignment_values(assignment)
         assignment.mark_completed()
 
         record_audit_event(
@@ -661,49 +509,27 @@ def action_complete(
             actor=request.user,
             request=request,
             old_value=old_value,
-            new_value=assignment_values(
-                assignment,
-            ),
-            effective_at=(
-                assignment.completed_at
-            ),
+            new_value=assignment_values(assignment),
+            effective_at=assignment.completed_at,
             source=AuditLog.Source.WEB_APP,
             method=AuditLog.Method.MANUAL,
-            notes=(
-                "Member completed assigned action."
-            ),
+            notes="Member completed assigned action.",
         )
 
-    messages.success(
-        request,
-        "Action marked complete.",
-    )
-
-    return redirect(
-        "actions:detail",
-        action_id=action_id,
-    )
+    messages.success(request, "Action marked complete.")
+    return redirect("actions:detail", action_id=action_id)
 
 
 @login_required
 @permission_required(
-    "actions.change_action",
+    ("actions.change_action", "actions.view_action"),
     raise_exception=True,
 )
 @require_POST
-def action_resolve_assignments(
-    request,
-    action_id,
-):
-    action = get_object_or_404(
-        Action,
-        id=action_id,
-    )
-
-    (
-        activated_assignments,
-        deactivated_assignments,
-    ) = sync_action_assignments(
+@transaction.atomic
+def action_resolve_assignments(request, action_id):
+    action = get_object_or_404(Action, id=action_id)
+    activated_assignments, deactivated_assignments = sync_action_assignments(
         action,
         actor=request.user,
         request=request,
@@ -713,33 +539,20 @@ def action_resolve_assignments(
 
     messages.success(
         request,
-        (
-            f"{len(activated_assignments)} "
-            "assignment(s) activated and "
-            f"{len(deactivated_assignments)} "
-            "assignment(s) deactivated."
-        ),
+        f"{len(activated_assignments)} assignment(s) activated and "
+        f"{len(deactivated_assignments)} assignment(s) deactivated.",
     )
-
-    return redirect(
-        "actions:manage_detail",
-        action_id=action.id,
-    )
+    return redirect("actions:manage_detail", action_id=action.id)
 
 
 @login_required
 @permission_required(
-    "actions.delete_action",
+    ("actions.delete_action", "actions.view_action"),
     raise_exception=True,
 )
-def action_delete(
-    request,
-    action_id,
-):
-    action = get_object_or_404(
-        Action,
-        id=action_id,
-    )
+@transaction.atomic
+def action_delete(request, action_id):
+    action = get_object_or_404(Action, id=action_id)
 
     if request.method == "POST":
         old_value = action_values(action)
@@ -760,20 +573,11 @@ def action_delete(
         )
 
         action.delete()
-
-        messages.success(
-            request,
-            "Action deleted.",
-        )
-
-        return redirect(
-            "actions:manage_list",
-        )
+        messages.success(request, "Action deleted.")
+        return redirect("actions:manage_list")
 
     return render(
         request,
         "actions/action_confirm_delete.html",
-        {
-            "action": action,
-        },
+        {"action": action},
     )
