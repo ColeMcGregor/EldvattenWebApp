@@ -14,6 +14,7 @@ from accounts.models import AccountStatus, User
 from audit.models import AuditLog
 from audit.services import record_audit_event
 
+from .calendar import event_calendar_weeks, selected_event_month
 from .forms import (
     AttendanceForm,
     AttendanceManagementForm,
@@ -28,7 +29,6 @@ from .models import (
 )
 from .services import (
     can_view_event,
-    copy_invitation_targets_to_visibility,
     event_target_values,
     event_visibility_matches_invitation_targets,
     material_event_changes,
@@ -128,15 +128,11 @@ def save_target_formset(
     formset,
     purpose,
 ):
-    deleted_objects = list(
-        formset.deleted_objects
-    )
-
     targets = formset.save(
         commit=False,
     )
 
-    for target in deleted_objects:
+    for target in formset.deleted_objects:
         target.delete()
 
     for target in targets:
@@ -236,26 +232,84 @@ def record_target_changes(
 
 
 def event_list(request):
-    events = Event.objects.select_related(
-        "organizer",
-    ).prefetch_related(
-        "targets",
+    now = timezone.now()
+    scope = request.GET.get("scope", "all")
+    if scope not in {"all", "invited"}:
+        scope = "all"
+
+    event_view = request.GET.get("view", "agenda")
+    if event_view not in {"agenda", "calendar"}:
+        event_view = "agenda"
+
+    selected_month = selected_event_month(request.GET, now)
+
+    events = (
+        Event.objects.filter(
+            status=Event.Status.ACTIVE,
+            end_at__gt=now,
+        )
+        .select_related("organizer")
+        .prefetch_related("targets")
+        .order_by("start_at", "id")
     )
+
+    if event_view == "calendar":
+        events = events.filter(
+            start_at__lt=selected_month["range_end"],
+            end_at__gt=selected_month["range_start"],
+        )
 
     visible_events = [
         event
         for event in events
-        if can_view_event(
-            request.user,
-            event,
+        if can_view_event(request.user, event)
+        and (
+            scope != "invited"
+            or user_is_invited(request.user, event)
         )
     ]
 
+    happening_events = [
+        event
+        for event in visible_events
+        if event.start_at <= now
+    ]
+    upcoming_events = [
+        event
+        for event in visible_events
+        if event.start_at > now
+    ]
+
+    calendar_weeks = (
+        event_calendar_weeks(selected_month, visible_events, now)
+        if event_view == "calendar"
+        else []
+    )
+
     return render(
         request,
-        "events/event_list.html",
+        (
+            "events/event_list_app.html"
+            if request.user.is_authenticated
+            else "events/event_list.html"
+        ),
         {
             "events": visible_events,
+            "happening_events": happening_events,
+            "upcoming_events": upcoming_events,
+            "scope": scope,
+            "event_view": event_view,
+            "calendar_weeks": calendar_weeks,
+            "calendar_year": selected_month["year"],
+            "calendar_month": selected_month["month"],
+            "calendar_month_name": selected_month["month_name"],
+            "calendar_previous_month": selected_month["previous_month"],
+            "calendar_next_month": selected_month["next_month"],
+            "calendar_weekday_names": (
+                "Sunday", "Monday", "Tuesday", "Wednesday",
+                "Thursday", "Friday", "Saturday",
+            ),
+            "now": now,
         },
     )
 
@@ -291,8 +345,8 @@ def event_detail(
 
     if (
         invited
-        and event.status
-        == Event.Status.ACTIVE
+        and event.status == Event.Status.ACTIVE
+        and event.end_at > timezone.now()
     ):
         participation = (
             EventParticipation.objects.filter(
@@ -317,9 +371,14 @@ def event_detail(
 
     return render(
         request,
-        "events/event_detail.html",
+        (
+            "events/event_detail_app.html"
+            if request.user.is_authenticated
+            else "events/event_detail.html"
+        ),
         {
             "event": event,
+            "now": timezone.now(),
             "participation": participation,
             "rsvp_form": rsvp_form,
             "attendance_management_form": (
@@ -457,9 +516,9 @@ def event_create(request):
                 )
 
                 if visible_to_invited_only:
-                    copy_invitation_targets_to_visibility(
-                        event
-                    )
+                    event.targets.filter(
+                        purpose=EventTarget.Purpose.VISIBILITY,
+                    ).delete()
 
                 elif (
                     event.visibility
@@ -542,7 +601,7 @@ def event_create(request):
 
     return render(
         request,
-        "events/event_form.html",
+        "events/event_form_app.html",
         {
             "form": form,
             "invitation_formset": (
@@ -709,9 +768,9 @@ def event_edit(
                 )
 
                 if visible_to_invited_only:
-                    copy_invitation_targets_to_visibility(
-                        event
-                    )
+                    event.targets.filter(
+                        purpose=EventTarget.Purpose.VISIBILITY,
+                    ).delete()
 
                 elif (
                     event.visibility
@@ -862,7 +921,7 @@ def event_edit(
 
     return render(
         request,
-        "events/event_form.html",
+        "events/event_form_app.html",
         {
             "form": form,
             "event": event,
@@ -919,7 +978,7 @@ def event_delete(
 
     return render(
         request,
-        "events/event_confirm_delete.html",
+        "events/event_confirm_delete_app.html",
         {
             "event": event,
         },
@@ -938,8 +997,8 @@ def update_rsvp(
     )
 
     if (
-        event.status
-        == Event.Status.CANCELLED
+        event.status == Event.Status.CANCELLED
+        or event.end_at <= timezone.now()
     ):
         return HttpResponseForbidden()
 

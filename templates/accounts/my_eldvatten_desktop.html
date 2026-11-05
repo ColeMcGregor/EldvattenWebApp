@@ -46,6 +46,14 @@
 
     <a
         class="my-eldvatten-navigation-link
+        {% if active_section == 'events' %}active{% endif %}"
+        href="{% url 'my_eldvatten' %}?section=events"
+    >
+        My Events
+    </a>
+
+    <a
+        class="my-eldvatten-navigation-link
         {% if active_section == 'todo' %}active{% endif %}"
         href="{% url 'my_eldvatten' %}?section=todo"
     >
@@ -79,6 +87,10 @@
     {% elif active_section == "posts" %}
 
         {% include "accounts/my_eldvatten/posts.html" %}
+
+    {% elif active_section == "events" %}
+
+        {% include "accounts/my_eldvatten/events.html" %}
 
     {% elif active_section == "todo" %}
 

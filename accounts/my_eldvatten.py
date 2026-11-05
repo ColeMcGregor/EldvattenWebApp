@@ -5,6 +5,8 @@ from django.utils import timezone
 from actions.models import ActionAssignment
 from community.models import ForumPost
 from community.services import user_can_access_thread
+from events.models import Event
+from events.services import can_view_event
 from notifications.forms import NotificationPreferenceForm
 from notifications.models import (
     Notification,
@@ -25,6 +27,7 @@ from .forms import (
 MY_ELDVATTEN_SECTIONS = (
     "profile",
     "posts",
+    "events",
     "todo",
     "notifications",
     "settings",
@@ -192,6 +195,23 @@ def get_posts_context(user):
     }
 
 
+def get_events_context(user):
+    events = (
+        Event.objects
+        .select_related("organizer")
+        .prefetch_related("targets")
+        .order_by("-start_at", "-id")
+    )
+
+    return {
+        "my_events": [
+            event for event in events
+            if can_view_event(user, event)
+        ],
+        "events_now": timezone.now(),
+    }
+
+
 def get_todo_context(user):
     now = timezone.now()
 
@@ -349,6 +369,9 @@ def build_my_eldvatten_context(
         context.update(
             get_posts_context(user)
         )
+
+    elif active_section == "events":
+        context.update(get_events_context(user))
 
     elif active_section == "todo":
         context.update(

@@ -1,0 +1,47 @@
+<article class="event-list-item">
+    <div class="event-date-tile" aria-hidden="true">
+        <span class="event-date-month">{{ event.start_at|date:"M" }}</span>
+        <span class="event-date-day">{{ event.start_at|date:"j" }}</span>
+        <span class="event-date-weekday">{{ event.start_at|date:"D" }}</span>
+    </div>
+
+    <div class="event-list-item-content">
+        <div class="event-list-item-heading">
+            <h3>
+                <a href="{% url 'events:event_detail' event.id %}">
+                    {{ event.title }}
+                </a>
+            </h3>
+
+            {% if event.status == "CANCELLED" %}
+                <span class="event-state event-state-cancelled">Cancelled</span>
+                {% if event.end_at < now %}<span class="event-state event-state-past">Past</span>{% endif %}
+            {% elif event.end_at < now %}
+                <span class="event-state event-state-past">Past</span>
+            {% elif event.start_at <= now %}
+                <span class="event-state event-state-current">Happening Now</span>
+            {% elif show_state %}
+                <span class="event-state">Upcoming</span>
+            {% endif %}
+        </div>
+
+        <p class="event-list-item-time">
+            <time datetime="{{ event.start_at|date:'c' }}">
+                {{ event.start_at|date:"l, M j, Y" }} at {{ event.start_at|date:"g:i A" }}
+            </time>
+            {% if event.end_at|date:"Y-m-d" == event.start_at|date:"Y-m-d" %}
+                – {{ event.end_at|date:"g:i A" }}
+            {% else %}
+                – <time datetime="{{ event.end_at|date:'c' }}">{{ event.end_at|date:"M j, Y" }} at {{ event.end_at|date:"g:i A" }}</time>
+            {% endif %}
+        </p>
+
+        {% if event.location %}
+            <p class="event-list-item-meta">{{ event.location }}</p>
+        {% endif %}
+
+        {% if event.description %}
+            <p class="event-list-item-description">{{ event.description|truncatechars:170 }}</p>
+        {% endif %}
+    </div>
+</article>

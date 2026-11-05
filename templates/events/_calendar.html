@@ -1,0 +1,38 @@
+<section class="event-calendar" aria-label="Event Calendar">
+    <header class="event-calendar-header">
+        <div class="event-calendar-navigation">
+            {% if calendar_previous_month %}
+                <a class="event-button" href="{% url 'events:event_list' %}?view=calendar&amp;scope={{ scope }}&amp;year={{ calendar_previous_month.year }}&amp;month={{ calendar_previous_month.month }}" aria-label="Previous month">Previous</a>
+            {% else %}
+                <span class="event-button event-button-disabled" aria-disabled="true">Previous</span>
+            {% endif %}
+            <h2>{{ calendar_month_name }} {{ calendar_year }}</h2>
+            <a class="event-button" href="{% url 'events:event_list' %}?view=calendar&amp;scope={{ scope }}&amp;year={{ calendar_next_month.year }}&amp;month={{ calendar_next_month.month }}" aria-label="Next month">Next</a>
+        </div>
+        <a href="{% url 'events:event_list' %}?view=calendar&amp;scope={{ scope }}">Today</a>
+    </header>
+
+    <div class="event-calendar-scroll" tabindex="0" role="region" aria-label="Monthly event calendar; scroll horizontally on smaller screens">
+        <div class="event-calendar-grid">
+            {% for weekday in calendar_weekday_names %}
+                <div class="event-calendar-weekday">{{ weekday }}</div>
+            {% endfor %}
+
+            {% for week in calendar_weeks %}
+                {% for day in week %}
+                    <div class="event-calendar-day{% if not day.in_month %} event-calendar-day-outside{% endif %}{% if day.is_today %} event-calendar-day-today{% endif %}{% if day.is_past %} event-calendar-day-past{% endif %}">
+                        <span class="event-calendar-date"{% if day.is_today %} aria-current="date"{% endif %}>{{ day.date.day }}</span>
+                        {% if day.in_month %}
+                            <div class="event-calendar-day-events">
+                                {% for event in day.events %}
+                                    <a href="{% url 'events:event_detail' event.id %}" class="event-calendar-event" title="{{ event.title }} — {{ event.start_at|date:'M j, g:i A' }}">{{ event.title }}</a>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+    <p class="event-muted event-calendar-footnote">Only currently running and future events you may access are shown. Select an event to see details and RSVP.</p>
+</section>

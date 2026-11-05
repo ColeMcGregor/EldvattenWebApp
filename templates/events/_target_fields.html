@@ -1,0 +1,24 @@
+<fieldset class="event-target-row" data-event-target-row>
+    <legend>{{ label }} target</legend>
+    {{ target_form.non_field_errors }}
+    {% for hidden_field in target_form.hidden_fields %}
+        {{ hidden_field }}
+    {% endfor %}
+
+    <div class="event-target-fields">
+        {% for field in target_form.visible_fields %}
+            {% if field.name == "DELETE" %}
+                <div class="event-target-delete" hidden>
+                    {{ field }}
+                </div>
+            {% else %}
+                <div class="event-form-field">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {{ field.errors }}
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    <button type="button" class="event-target-remove-button" data-remove-event-target>Remove target</button>
+</fieldset>

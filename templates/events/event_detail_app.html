@@ -1,0 +1,163 @@
+{% extends "app/base_desktop.html" %}
+
+{% block title %}{{ event.title }} | EldVatten Events{% endblock %}
+{% block nav_events %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+{% block app_content %}
+<article class="events-page event-detail-page">
+    <nav class="event-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'events:event_list' %}">Events</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{{ event.title }}</span>
+    </nav>
+
+    <header class="events-page-header event-detail-header">
+        <div>
+            <div class="event-detail-status">
+                {% if event.status == "CANCELLED" %}
+                    <span class="event-state event-state-cancelled">Cancelled</span>
+                {% elif event.end_at < now %}
+                    <span class="event-state event-state-past">Past Event</span>
+                {% elif event.start_at <= now %}
+                    <span class="event-state event-state-current">Happening Now</span>
+                {% else %}
+                    <span class="event-state">Upcoming</span>
+                {% endif %}
+                {% if is_invited %}<span class="event-state">You're Invited</span>{% endif %}
+            </div>
+            <h1 class="section-heading">{{ event.title }}</h1>
+        </div>
+        {% if perms.events.change_event or perms.events.delete_event %}
+            <div class="event-management-buttons">
+                {% if perms.events.change_event %}
+                    <a class="event-button" href="{% url 'events:event_edit' event.id %}">Edit</a>
+                {% endif %}
+                {% if perms.events.delete_event %}
+                    <a class="event-button" href="{% url 'events:event_delete' event.id %}">Delete</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </header>
+
+    <div class="event-detail-layout">
+        <div class="event-detail-main">
+            {% if event.status == "CANCELLED" %}
+                <section class="event-notice" aria-label="Cancellation notice">
+                    <strong>This event has been cancelled.</strong>
+                </section>
+            {% endif %}
+
+            <section class="event-detail-card" aria-labelledby="event-about-heading">
+                <h2 id="event-about-heading">About This Event</h2>
+                {% if event.description %}
+                    <div class="event-description">{{ event.description|linebreaks }}</div>
+                {% else %}
+                    <p class="event-muted">No description has been provided.</p>
+                {% endif %}
+            </section>
+
+            {% if rsvp_form %}
+                <section class="event-detail-card" aria-labelledby="event-rsvp-heading">
+                    <h2 id="event-rsvp-heading">Your RSVP</h2>
+                    {% if participation and participation.rsvp_status %}
+                        <p>Current response: <strong>{{ participation.get_rsvp_status_display }}</strong></p>
+                    {% else %}
+                        <p>You haven't responded to this invitation yet.</p>
+                    {% endif %}
+                    <form class="event-rsvp-form" method="post" action="{% url 'events:update_rsvp' event.id %}">
+                        {% csrf_token %}
+                        {{ rsvp_form.non_field_errors }}
+                        <div class="event-form-field">
+                            <label for="{{ rsvp_form.rsvp_status.id_for_label }}">Your response</label>
+                            {{ rsvp_form.rsvp_status }}
+                            {{ rsvp_form.rsvp_status.errors }}
+                        </div>
+                        <button class="event-button event-button-primary" type="submit">Save RSVP</button>
+                    </form>
+                </section>
+            {% elif is_invited and event.status == "ACTIVE" %}
+                <section class="event-detail-card">
+                    <h2>Your Invitation</h2>
+                    <p>You are invited to this event.</p>
+                </section>
+            {% endif %}
+
+            {% if perms.events.record_attendance %}
+                <section class="event-detail-card" aria-labelledby="event-attendance-heading">
+                    <h2 id="event-attendance-heading">Attendance</h2>
+                    {% if attendance_management_form %}
+                        <form method="post" class="event-attendance-create" action="{% url 'events:record_attendance' event.id %}">
+                            {% csrf_token %}
+                            {{ attendance_management_form.non_field_errors }}
+                            <div class="event-form-field">
+                                <label for="{{ attendance_management_form.user.id_for_label }}">Member</label>
+                                {{ attendance_management_form.user }}
+                                {{ attendance_management_form.user.errors }}
+                            </div>
+                            <div class="event-form-field">
+                                <label for="{{ attendance_management_form.attendance_status.id_for_label }}">Attendance</label>
+                                {{ attendance_management_form.attendance_status }}
+                                {{ attendance_management_form.attendance_status.errors }}
+                            </div>
+                            <button class="event-button event-button-primary" type="submit">Record Attendance</button>
+                        </form>
+                    {% endif %}
+                    <h3>Participation Records</h3>
+                    <div class="event-attendance-list">
+                        {% for event_participation in event.participations.all %}
+                            <div class="event-attendance-row">
+                                <div>
+                                    <strong>{{ event_participation.user.display_name|default:event_participation.user.username }}</strong>
+                                    <p class="event-muted">
+                                        RSVP: {{ event_participation.get_rsvp_status_display|default:"No RSVP" }}
+                                        · Attendance: {{ event_participation.get_attendance_status_display }}
+                                    </p>
+                                </div>
+                                <form method="post" action="{% url 'events:update_attendance' event.id event_participation.user.id %}">
+                                    {% csrf_token %}
+                                    <label class="visually-hidden" for="attendance-{{ event_participation.user.id }}">Attendance for {{ event_participation.user.username }}</label>
+                                    <select id="attendance-{{ event_participation.user.id }}" name="attendance_status">
+                                        <option value="UNKNOWN" {% if event_participation.attendance_status == "UNKNOWN" %}selected{% endif %}>Unknown</option>
+                                        <option value="ATTENDED" {% if event_participation.attendance_status == "ATTENDED" %}selected{% endif %}>Attended</option>
+                                        <option value="ABSENT" {% if event_participation.attendance_status == "ABSENT" %}selected{% endif %}>Absent</option>
+                                    </select>
+                                    <button type="submit" class="event-button">Save</button>
+                                </form>
+                            </div>
+                        {% empty %}
+                            <p class="event-muted">No participation records exist.</p>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+        </div>
+
+        <aside class="event-detail-sidebar" aria-label="Event information">
+            <section class="event-detail-card">
+                <h2>Details</h2>
+                <dl class="event-facts">
+                    <div>
+                        <dt>Starts</dt>
+                        <dd><time datetime="{{ event.start_at|date:'c' }}">{{ event.start_at|date:"l, M j, Y" }} at {{ event.start_at|date:"g:i A" }}</time></dd>
+                    </div>
+                    <div>
+                        <dt>Ends</dt>
+                        <dd><time datetime="{{ event.end_at|date:'c' }}">{{ event.end_at|date:"l, M j, Y" }} at {{ event.end_at|date:"g:i A" }}</time></dd>
+                    </div>
+                    {% if event.location %}
+                        <div><dt>Location</dt><dd>{{ event.location }}</dd></div>
+                    {% endif %}
+                    <div>
+                        <dt>Organizer</dt>
+                        <dd>{{ event.organizer.display_name|default:event.organizer.username }}</dd>
+                    </div>
+                    <div><dt>Visibility</dt><dd>{{ event.get_visibility_display }}</dd></div>
+                </dl>
+                <p class="event-muted event-facts-note">Invited members always have access, even when general visibility is restricted.</p>
+            </section>
+        </aside>
+    </div>
+</article>
+{% endblock %}

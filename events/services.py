@@ -328,7 +328,10 @@ def event_visibility_matches_invitation_targets(
     return (
         event.visibility == Event.Visibility.CUSTOM
         and bool(invitation_targets)
-        and invitation_targets == visibility_targets
+        and (
+            not visibility_targets
+            or invitation_targets == visibility_targets
+        )
     )
 
 
@@ -400,6 +403,9 @@ def can_view_event(
     if event.visibility == Event.Visibility.PUBLIC:
         return True
 
+    if user_is_invited(user, event):
+        return True
+
     if event.visibility == Event.Visibility.MEMBERS:
         return is_member(user)
 
@@ -407,6 +413,9 @@ def can_view_event(
         return False
 
     if not is_member(user):
+        return False
+
+    if event_visibility_matches_invitation_targets(event):
         return False
 
     visible_user_ids = resolve_event_visibility_targets(

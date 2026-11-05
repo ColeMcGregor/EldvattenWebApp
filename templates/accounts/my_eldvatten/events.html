@@ -1,0 +1,19 @@
+<section class="my-eldvatten-section">
+    <header class="my-eldvatten-section-header">
+        <h2>My Events</h2>
+    </header>
+    <div class="my-events-introduction">
+        <p>Your accessible event history, including events that are ongoing, upcoming, past, or cancelled.</p>
+    </div>
+    {% if my_events %}
+        <div class="event-list event-history-list">
+            {% for event in my_events %}
+                {% include "events/_event_row.html" with event=event now=events_now show_state=True %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="my-eldvatten-section-body">
+            <p>No accessible events are available.</p>
+        </div>
+    {% endif %}
+</section>

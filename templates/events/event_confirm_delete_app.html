@@ -1,0 +1,32 @@
+{% extends "app/base_desktop.html" %}
+
+{% block title %}Delete Event | EldVatten{% endblock %}
+{% block nav_events %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+{% block app_content %}
+<section class="events-page event-form-page" aria-labelledby="delete-event-heading">
+    <nav class="event-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'events:event_list' %}">Events</a>
+        <span aria-hidden="true">/</span>
+        <a href="{% url 'events:event_detail' event.id %}">{{ event.title }}</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Delete</span>
+    </nav>
+    <header class="events-page-header">
+        <h1 id="delete-event-heading" class="section-heading">Delete Event</h1>
+    </header>
+    <div class="event-form-container">
+        <section class="event-detail-card">
+            <p>Delete <strong>{{ event.title }}</strong>?</p>
+            <p class="event-muted">This also removes this event's invitations and participation records.</p>
+            <form class="event-form-actions" method="post">
+                {% csrf_token %}
+                <a class="event-button" href="{% url 'events:event_detail' event.id %}">Cancel</a>
+                <button class="event-button event-button-danger" type="submit">Delete Event</button>
+            </form>
+        </section>
+    </div>
+</section>
+{% endblock %}

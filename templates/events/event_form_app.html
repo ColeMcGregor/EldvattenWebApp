@@ -1,0 +1,142 @@
+{% extends "app/base_desktop.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }} | EldVatten{% endblock %}
+{% block nav_events %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+{% block app_content %}
+<section class="events-page event-form-page">
+    <nav class="event-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'events:event_list' %}">Events</a>
+        <span aria-hidden="true">/</span>
+        {% if event %}
+            <a href="{% url 'events:event_detail' event.id %}">{{ event.title }}</a>
+            <span aria-hidden="true">/</span>
+        {% endif %}
+        <span aria-current="page">{{ page_title }}</span>
+    </nav>
+    <header class="events-page-header">
+        <div>
+            <h1 class="section-heading">{{ page_title }}</h1>
+            <p class="events-page-subtitle">Set event details, invitations, and visibility.</p>
+        </div>
+    </header>
+
+    <div class="event-form-container">
+        <form class="event-editor-form" method="post" data-event-editor>
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <section class="event-detail-card" aria-labelledby="event-fields-heading">
+                <h2 id="event-fields-heading">Event Details</h2>
+                <div class="event-editor-grid">
+                    <div class="event-form-field event-field-wide">
+                        <label for="{{ form.title.id_for_label }}">Title</label>
+                        {{ form.title }}
+                        {{ form.title.errors }}
+                    </div>
+                    <div class="event-form-field event-field-wide">
+                        <label for="{{ form.description.id_for_label }}">Description</label>
+                        {{ form.description }}
+                        {{ form.description.errors }}
+                    </div>
+                    <div class="event-form-field">
+                        <label for="{{ form.start_at.id_for_label }}">Start date and time</label>
+                        {{ form.start_at }}
+                        {{ form.start_at.errors }}
+                    </div>
+                    <div class="event-form-field">
+                        <label for="{{ form.end_at.id_for_label }}">End date and time</label>
+                        {{ form.end_at }}
+                        {{ form.end_at.errors }}
+                    </div>
+                    <div class="event-form-field event-field-wide">
+                        <label for="{{ form.location.id_for_label }}">Location</label>
+                        {{ form.location }}
+                        {{ form.location.errors }}
+                    </div>
+                    {% if form.status %}
+                        <div class="event-form-field">
+                            <label for="{{ form.status.id_for_label }}">Status</label>
+                            {{ form.status }}
+                            {{ form.status.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <section class="event-detail-card" aria-labelledby="event-invitation-heading">
+                <div class="event-section-title-row">
+                    <div>
+                        <h2 id="event-invitation-heading">Invitations</h2>
+                        <p class="event-muted">Invite individual members or members matching organizational criteria. Multiple targets are alternatives; fields within one target must all match.</p>
+                    </div>
+                    <button type="button" class="event-button" data-add-event-target="invitation">Add Target</button>
+                </div>
+                {{ invitation_formset.management_form }}
+                {{ invitation_formset.non_form_errors }}
+                <div class="event-target-list" data-event-target-formset="invitation">
+                    {% for target_form in invitation_formset.forms %}
+                        {% include "events/_target_fields.html" with target_form=target_form label="Invitation" %}
+                    {% endfor %}
+                </div>
+                <template id="event-invitation-empty-form">
+                    {% include "events/_target_fields.html" with target_form=invitation_formset.empty_form label="Invitation" %}
+                </template>
+            </section>
+
+            <section class="event-detail-card" aria-labelledby="event-visibility-heading">
+                <h2 id="event-visibility-heading">Visibility</h2>
+                <p class="event-muted">All invited members are automatically included in the effective visible audience. Withdrawing an invitation removes that automatic access unless another visibility rule applies.</p>
+                <div class="event-form-field event-checkbox-field">
+                    <label for="{{ form.visible_to_invited_only.id_for_label }}">
+                        {{ form.visible_to_invited_only }}
+                        Visible to invited users only
+                    </label>
+                    {{ form.visible_to_invited_only.errors }}
+                </div>
+
+                <div id="separate-visibility-controls">
+                    <div class="event-form-field event-visibility-select">
+                        <label for="{{ form.visibility.id_for_label }}">Additional visibility</label>
+                        {{ form.visibility }}
+                        {{ form.visibility.errors }}
+                    </div>
+
+                    <div id="custom-visibility-targets">
+                        <div class="event-section-title-row">
+                            <div>
+                                <h3>Additional Visibility Targets</h3>
+                                <p class="event-muted">These groups may view the event even without an invitation. They are not automatically invited.</p>
+                            </div>
+                            <button type="button" class="event-button" data-add-event-target="visibility">Add Target</button>
+                        </div>
+                        {{ visibility_formset.management_form }}
+                        {{ visibility_formset.non_form_errors }}
+                        <div class="event-target-list" data-event-target-formset="visibility">
+                            {% for target_form in visibility_formset.forms %}
+                                {% include "events/_target_fields.html" with target_form=target_form label="Visibility" %}
+                            {% endfor %}
+                        </div>
+                        <template id="event-visibility-empty-form">
+                            {% include "events/_target_fields.html" with target_form=visibility_formset.empty_form label="Visibility" %}
+                        </template>
+                    </div>
+                </div>
+            </section>
+
+            <div class="event-form-actions">
+                {% if event %}
+                    <a class="event-button" href="{% url 'events:event_detail' event.id %}">Cancel</a>
+                {% else %}
+                    <a class="event-button" href="{% url 'events:event_list' %}">Cancel</a>
+                {% endif %}
+                <button class="event-button event-button-primary" type="submit">Save Event</button>
+            </div>
+        </form>
+    </div>
+</section>
+<script src="{% static 'js/events/event-form.js' %}" defer></script>
+{% endblock %}

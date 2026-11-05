@@ -1,0 +1,60 @@
+{% extends "app/base_desktop.html" %}
+
+{% block title %}Events | EldVatten{% endblock %}
+{% block nav_events %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+{% block app_content %}
+<section class="events-page" aria-labelledby="events-heading">
+    <header class="events-page-header">
+        <div>
+            <h1 class="section-heading" id="events-heading">Events</h1>
+            <p class="events-page-subtitle">Find gatherings happening now and coming up.</p>
+        </div>
+        {% if perms.events.add_event %}
+            <a class="event-button event-button-primary" href="{% url 'events:event_create' %}">Create Event</a>
+        {% endif %}
+    </header>
+
+    <nav class="event-view-navigation" aria-label="Event views">
+        <a href="{% url 'events:event_list' %}?view=agenda&amp;scope={{ scope }}&amp;year={{ calendar_year }}&amp;month={{ calendar_month }}" {% if event_view == 'agenda' %}aria-current="page" class="event-view-active"{% endif %}>Agenda</a>
+        <a href="{% url 'events:event_list' %}?view=calendar&amp;scope={{ scope }}&amp;year={{ calendar_year }}&amp;month={{ calendar_month }}" {% if event_view == 'calendar' %}aria-current="page" class="event-view-active"{% endif %}>Event Calendar</a>
+    </nav>
+
+    <nav class="event-filter-navigation" aria-label="Event audience filter">
+        <a href="{% url 'events:event_list' %}?view={{ event_view }}&amp;scope=all&amp;year={{ calendar_year }}&amp;month={{ calendar_month }}" {% if scope == 'all' %}aria-current="page" class="event-filter-active"{% endif %}>All Events</a>
+        <a href="{% url 'events:event_list' %}?view={{ event_view }}&amp;scope=invited&amp;year={{ calendar_year }}&amp;month={{ calendar_month }}" {% if scope == 'invited' %}aria-current="page" class="event-filter-active"{% endif %}>My Invitations</a>
+        <a href="{% url 'my_eldvatten' %}?section=events">My Events History</a>
+    </nav>
+
+    {% if event_view == 'calendar' %}
+        {% include "events/_calendar.html" %}
+    {% else %}
+        {% if happening_events %}
+            <section class="event-list-section" aria-labelledby="events-current-heading">
+                <h2 id="events-current-heading">Happening Now</h2>
+                <div class="event-list">
+                    {% for event in happening_events %}
+                        {% include "events/_event_row.html" with event=event %}
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+        <section class="event-list-section" aria-labelledby="events-upcoming-heading">
+            <h2 id="events-upcoming-heading">Upcoming Events</h2>
+            {% if upcoming_events %}
+                <div class="event-list">
+                    {% for event in upcoming_events %}
+                        {% include "events/_event_row.html" with event=event %}
+                    {% endfor %}
+                </div>
+            {% elif not happening_events %}
+                <p class="events-empty-state">{% if scope == 'invited' %}You have no upcoming invitations.{% else %}No upcoming events are available.{% endif %}</p>
+            {% else %}
+                <p class="events-empty-state">No additional upcoming events.</p>
+            {% endif %}
+        </section>
+    {% endif %}
+</section>
+{% endblock %}
