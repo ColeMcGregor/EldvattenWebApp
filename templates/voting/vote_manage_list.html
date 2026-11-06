@@ -1,12 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Vote Management</title>
-</head>
-<body>
-    <h1>Vote Management</h1>
-
+{% extends "app/base_desktop.html" %}
+{% load static %}
+{% block title %}Manage Votes | EldVatten{% endblock %}
+{% block nav_voting %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+{% block app_content %}
+<section class="voting-page voting-page-manage" data-vote-list>
+    <nav class="voting-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'voting:vote_list' %}">My Votes</a>
+        <span aria-hidden="true">/</span><span aria-current="page">Manage Votes</span>
+    </nav>
+    <header class="voting-page-header">
+        <div><h1>Manage Votes</h1><p>Manage vote settings, ballots, and results.</p></div>
+        {% if perms.voting.add_vote %}
+            <a class="voting-button voting-button-primary" href="{% url 'voting:vote_create' %}">Create Vote</a>
+        {% endif %}
+    </header>
+    <nav class="voting-tabs" aria-label="Voting navigation">
+        <a href="{% url 'voting:vote_list' %}">My Votes</a>
+        <a class="active" aria-current="page" href="{% url 'voting:vote_manage_list' %}">Manage Votes</a>
+    </nav>
+    <div class="voting-page-content">
     {% if messages %}
         <ul>
             {% for message in messages %}
@@ -24,6 +38,38 @@
     {% endif %}
 
     {% if votes %}
+        <div class="voting-filters" data-vote-controls hidden>
+            <label>Search by Title
+                <input type="search" data-vote-query placeholder="Find a vote">
+            </label>
+            <label>Sort By
+                <select data-vote-sort>
+                    <option value="default">Newest Created</option>
+                    <option value="oldest">Oldest Created</option>
+                    <option value="closes_soon">Deadline (Soonest)</option>
+                    <option value="closes_latest">Deadline (Latest)</option>
+                    <option value="title_asc">Title (A–Z)</option>
+                </select>
+            </label>
+            <label>Status
+                <select data-vote-status>
+                    <option value="all">All statuses</option>
+                    <option value="DRAFT">Draft</option>
+                    <option value="OPEN">Open</option>
+                    <option value="CLOSED">Closed</option>
+                </select>
+            </label>
+            <label>Ballot Type
+                <select data-vote-privacy>
+                    <option value="all">All types</option>
+                    <option value="anonymous">Anonymous</option>
+                    <option value="identified">Identified</option>
+                </select>
+            </label>
+            <button type="button" class="voting-button" data-vote-reset>Reset Filters</button>
+            <output class="voting-result-count" data-vote-count aria-live="polite"></output>
+        </div>
+        <div class="voting-table-scroll">
         <table>
             <thead>
                 <tr>
@@ -39,7 +85,12 @@
 
             <tbody>
                 {% for vote in votes %}
-                    <tr>
+                    <tr data-vote-item
+                        data-title="{{ vote.title }}"
+                        data-status="{{ vote.status }}"
+                        data-privacy="{{ vote.is_anonymous|yesno:'anonymous,identified' }}"
+                        data-created="{{ vote.created_at|date:'U' }}"
+                        data-closes="{{ vote.closes_at|date:'U' }}">
                         <td>
                             <a href="{% url 'voting:vote_manage_detail' vote.id %}">
                                 {{ vote.title }}
@@ -77,8 +128,12 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
+        <p class="voting-filter-empty" data-vote-empty hidden>No votes match these filters.</p>
     {% else %}
         <p>No votes have been created.</p>
     {% endif %}
-</body>
-</html>
+    </div>
+</section>
+<script src="{% static 'js/voting/voting.js' %}" defer></script>
+{% endblock %}

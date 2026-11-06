@@ -1,16 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>
-        {% if vote %}
-            Edit Vote
-        {% else %}
-            Create Vote
-        {% endif %}
-    </title>
-</head>
-<body>
+{% extends "app/base_desktop.html" %}
+{% load static %}
+{% block title %}{% if vote %}Edit Vote{% else %}Create Vote{% endif %} | EldVatten{% endblock %}
+{% block nav_voting %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+{% block app_content %}
+<section class="voting-page voting-page-form">
+    <nav class="voting-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'voting:vote_manage_list' %}">Manage Votes</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{% if vote %}Edit Vote{% else %}Create Vote{% endif %}</span>
+    </nav>
+    <div class="voting-page-content">
     <p>
         <a href="{% url 'voting:vote_manage_list' %}">
             Back to vote management
@@ -138,8 +139,9 @@
                 {{ option_formset.management_form }}
                 {{ option_formset.non_form_errors }}
 
+                <div data-vote-formset data-prefix="{{ option_formset.prefix }}">
                 {% for option_form in option_formset %}
-                    <div>
+                    <div class="voting-formset-row">
                         {{ option_form.id }}
 
                         <p>
@@ -161,9 +163,17 @@
                             </p>
                         {% endif %}
                     </div>
-
-                    <hr>
                 {% endfor %}
+                <template data-vote-empty-form>
+                    <div class="voting-formset-row">
+                        {% for hidden_field in option_formset.empty_form.hidden_fields %}{{ hidden_field }}{% endfor %}
+                        {% for field in option_formset.empty_form.visible_fields %}
+                            <p>{{ field.label_tag }} {{ field }} {{ field.errors }}</p>
+                        {% endfor %}
+                    </div>
+                </template>
+                <button type="button" class="voting-button" data-vote-add-row>Add Option</button>
+                </div>
             </fieldset>
         {% endif %}
 
@@ -179,8 +189,9 @@
                 {{ target_formset.management_form }}
                 {{ target_formset.non_form_errors }}
 
+                <div data-vote-formset data-prefix="{{ target_formset.prefix }}">
                 {% for target_form in target_formset %}
-                    <div>
+                    <div class="voting-formset-row">
                         {{ target_form.id }}
 
                         {{ target_form.non_field_errors }}
@@ -258,9 +269,17 @@
                             </p>
                         {% endif %}
                     </div>
-
-                    <hr>
                 {% endfor %}
+                <template data-vote-empty-form>
+                    <div class="voting-formset-row voting-target-grid">
+                        {% for hidden_field in target_formset.empty_form.hidden_fields %}{{ hidden_field }}{% endfor %}
+                        {% for field in target_formset.empty_form.visible_fields %}
+                            <p>{{ field.label_tag }} {{ field }} {{ field.errors }}</p>
+                        {% endfor %}
+                    </div>
+                </template>
+                <button type="button" class="voting-button" data-vote-add-row>Add Eligibility Target</button>
+                </div>
             </fieldset>
         {% else %}
             <p>
@@ -301,5 +320,7 @@
             </button>
         {% endif %}
     </form>
-</body>
-</html>
+    </div>
+</section>
+<script src="{% static 'js/voting/voting.js' %}" defer></script>
+{% endblock %}

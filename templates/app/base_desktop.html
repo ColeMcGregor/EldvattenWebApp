@@ -81,6 +81,14 @@
 
                 <a
                     class="app-navigation-link
+                    {% block nav_voting %}{% endblock %}"
+                    href="{% url 'voting:vote_list' %}"
+                >
+                    Voting
+                </a>
+
+                <a
+                    class="app-navigation-link
                     {% block nav_messages %}{% endblock %}"
                     href="{% url 'messaging:conversation_list' %}"
                 >

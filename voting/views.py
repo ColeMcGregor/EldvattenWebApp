@@ -474,14 +474,12 @@ def vote_submit(request, vote_id):
         )
 
     except ValidationError as error:
-        transaction.set_rollback(True)
-
         form.add_error(
             None,
             error,
         )
 
-        return render(
+        response = render(
             request,
             "voting/vote_detail.html",
             {
@@ -501,6 +499,10 @@ def vote_submit(request, vote_id):
                 "result": None,
             },
         )
+
+        transaction.set_rollback(True)
+
+        return response
 
     if vote.is_anonymous:
         record_audit_event(

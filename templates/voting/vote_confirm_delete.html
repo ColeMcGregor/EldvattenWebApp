@@ -1,10 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Delete Vote</title>
-</head>
-<body>
+{% extends "app/base_desktop.html" %}
+{% block title %}Delete Vote | EldVatten{% endblock %}
+{% block nav_voting %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+{% block app_content %}
+<section class="voting-page voting-page-delete">
+    <nav class="voting-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'voting:vote_manage_list' %}">Manage Votes</a>
+        <span aria-hidden="true">/</span><span aria-current="page">Delete Vote</span>
+    </nav>
+    <div class="voting-page-content">
     <h1>Delete Vote</h1>
 
     <p>
@@ -28,5 +33,6 @@
             Cancel
         </a>
     </p>
-</body>
-</html>
+    </div>
+</section>
+{% endblock %}

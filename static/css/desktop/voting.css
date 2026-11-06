@@ -1,0 +1,385 @@
+.voting-page {
+    min-width: 0;
+    padding-bottom: 2rem;
+    background: var(--page-background);
+}
+
+.voting-page [hidden] {
+    display: none !important;
+}
+
+.voting-breadcrumb {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    padding: 0.8rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    overflow-wrap: anywhere;
+}
+
+.voting-breadcrumb a {
+    color: var(--eldvatten-red);
+}
+
+.voting-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--surface);
+}
+
+.voting-page-header h1, .voting-page-content > h1 {
+    margin: 0;
+    font: normal 2.2rem/1.2 'EldVatten', Georgia, serif;
+    overflow-wrap: anywhere;
+}
+
+.voting-page-header p {
+    margin: 0.35rem 0 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.voting-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    padding: 0.8rem 1.5rem 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.voting-tabs a {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small) var(--radius-small) 0 0;
+    background: var(--surface-muted);
+    padding: 0.65rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.voting-tabs a.active {
+    color: var(--eldvatten-red);
+    background: var(--surface);
+    border-bottom-color: var(--surface);
+}
+
+.voting-page-content {
+    min-width: 0;
+    padding: 1.25rem 1.5rem;
+}
+
+.voting-page-content > h1 {
+    margin-bottom: 1rem;
+}
+
+.voting-page-content > h2 {
+    font-size: 1.15rem;
+    margin: 1.5rem 0 0.8rem;
+}
+
+.voting-page-content > p {
+    overflow-wrap: anywhere;
+}
+
+.voting-page-content > hr {
+    margin: 1.5rem 0;
+    border: 0;
+    border-top: 1px solid var(--border-color);
+}
+
+.voting-page-content > dl {
+    display: grid;
+    grid-template-columns: minmax(8rem, 14rem) minmax(0, 1fr);
+    gap: 0.5rem 1rem;
+    padding: 1.2rem;
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+}
+
+.voting-page-content > dl dt {
+    color: var(--text-muted);
+}
+
+.voting-page-content > dl dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.voting-page-content > ul, .voting-page-content > ol {
+    padding: 1.1rem 1.1rem 1.1rem 2.6rem;
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+}
+
+.voting-button, .voting-page button[type='submit'] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.45rem;
+    padding: 0.5rem 0.9rem;
+    background: var(--surface);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+    font: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.voting-button:hover, .voting-page button[type='submit']:hover {
+    color: var(--eldvatten-red);
+    border-color: var(--eldvatten-red);
+}
+
+.voting-button-primary, .voting-page button[type='submit'][value='open'], .voting-page button[type='submit'][value='draft'], .voting-page-detail button[type='submit'] {
+    color: white;
+    background: var(--eldvatten-red);
+    border-color: var(--eldvatten-red);
+}
+
+.voting-button-primary:hover, .voting-page button[type='submit'][value='open']:hover, .voting-page button[type='submit'][value='draft']:hover, .voting-page-detail button[type='submit']:hover {
+    color: white;
+    background: var(--eldvatten-red-dark);
+}
+
+.voting-page a:focus-visible, .voting-page button:focus-visible, .voting-page input:focus-visible, .voting-page select:focus-visible, .voting-page textarea:focus-visible {
+    outline: 2px solid var(--eldvatten-gold);
+    outline-offset: 2px;
+}
+
+.voting-page-content > ul:not(.errorlist) li, .voting-page-content > ol li {
+    margin: 0.4rem 0;
+}
+
+.voting-list-item, .voting-page-manage-detail article {
+    padding: 1.1rem 1.2rem;
+    margin: 0 0 0.8rem;
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+    overflow-wrap: anywhere;
+}
+
+.voting-list-item h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.15rem;
+}
+
+.voting-list-item h2 a {
+    color: var(--eldvatten-red);
+}
+
+.voting-list-item p {
+    margin: 0.35rem 0;
+    font-size: 0.92rem;
+}
+
+.voting-list-item p:last-child {
+    margin-top: 0.8rem;
+}
+
+.voting-list-item p:last-child a, .voting-page-content > p > a {
+    color: var(--eldvatten-red);
+    font-weight: 700;
+}
+
+.voting-page-list .voting-page-content > hr {
+    display: none;
+}
+
+.voting-filters {
+    display: flex;
+    align-items: end;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    padding: 0.9rem;
+    margin-bottom: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+}
+
+.voting-filters label {
+    display: grid;
+    gap: 0.3rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    min-width: 10rem;
+    flex: 1 1 10rem;
+}
+
+.voting-filters input, .voting-filters select {
+    width: 100%;
+    min-width: 0;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+    background: var(--surface);
+    color: var(--text-main);
+    font: inherit;
+    font-weight: normal;
+}
+
+.voting-result-count {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    flex-basis: 100%;
+}
+
+.voting-filter-empty {
+    background: var(--surface);
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+.voting-page table {
+    width: 100%;
+    min-width: 40rem;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.voting-table-scroll, .voting-page-manage-detail .voting-page-content {
+    overflow-x: auto;
+}
+
+.voting-page table th, .voting-page table td {
+    padding: 0.7rem;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.voting-page table th {
+    background: var(--surface-muted);
+}
+
+.voting-page table td {
+    background: var(--surface);
+}
+
+.voting-page table a {
+    color: var(--eldvatten-red);
+    font-weight: 700;
+}
+
+.voting-page form {
+    display: grid;
+    justify-items: start;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.voting-page fieldset {
+    width: 100%;
+    min-width: 0;
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+    padding: 1.2rem;
+}
+
+.voting-page legend {
+    font-weight: 700;
+    padding: 0 0.4rem;
+}
+
+.voting-page fieldset > p, .voting-formset-row > p {
+    display: grid;
+    gap: 0.3rem;
+    margin: 0.65rem 0;
+}
+
+.voting-page input:not([type='checkbox']):not([type='radio']):not([type='hidden']), .voting-page textarea, .voting-page select {
+    max-width: 100%;
+    padding: 0.55rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+    color: var(--text-main);
+    background: var(--surface);
+    font: inherit;
+}
+
+.voting-page textarea {
+    width: 100%;
+}
+
+.voting-page input[type='text'], .voting-page input[type='datetime-local'], .voting-page input[type='url'], .voting-page select {
+    width: min(100%, 32rem);
+}
+
+.voting-page .errorlist {
+    color: var(--eldvatten-red-dark);
+}
+
+.voting-page .voting-formset-row {
+    display: grid;
+    gap: 0.2rem 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--border-color);
+    background: var(--page-background);
+    border-radius: var(--radius-small);
+}
+
+.voting-page .voting-formset-row p {
+    min-width: 0;
+}
+
+.voting-page .voting-formset-row select, .voting-page .voting-formset-row input {
+    width: 100%;
+}
+
+.voting-page-form .voting-page-content {
+    max-width: 70rem;
+}
+
+.voting-page-detail .voting-page-content > form {
+    padding: 1.2rem;
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+}
+
+.voting-page-detail .voting-page-content > form fieldset {
+    background: var(--page-background);
+}
+
+.voting-page-detail .voting-page-content > form ul {
+    padding-left: 0;
+    list-style: none;
+}
+
+.voting-page-detail .voting-page-content > form ul li {
+    margin: 0.55rem 0;
+}
+
+.voting-page-delete .voting-page-content {
+    max-width: 50rem;
+}
+
+.voting-page-delete .voting-page-content > form {
+    background: var(--surface);
+    padding: 1.2rem;
+    border: 1px solid var(--border-color);
+}
+
+@media (max-width: 850px) {
+    .voting-page .voting-formset-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .voting-page-content > dl {
+        grid-template-columns: 1fr;
+    }
+}

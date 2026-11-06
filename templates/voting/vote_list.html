@@ -1,12 +1,27 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Votes</title>
-</head>
-<body>
-    <h1>Votes</h1>
-
+{% extends "app/base_desktop.html" %}
+{% load static %}
+{% block title %}My Votes | EldVatten{% endblock %}
+{% block nav_voting %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+{% block app_content %}
+<section class="voting-page voting-page-list" data-vote-list>
+    <nav class="voting-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'my_eldvatten' %}?section=todo">To-Do</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">My Votes</span>
+    </nav>
+    <header class="voting-page-header">
+        <div><h1>My Votes</h1><p>Review your ballots and responses.</p></div>
+        {% if perms.voting.view_vote %}
+            <a class="voting-button" href="{% url 'voting:vote_manage_list' %}">Manage Votes</a>
+        {% endif %}
+    </header>
+    <nav class="voting-tabs" aria-label="Voting navigation">
+        <a class="active" aria-current="page" href="{% url 'voting:vote_list' %}">My Votes</a>
+        {% if perms.voting.view_vote %}<a href="{% url 'voting:vote_manage_list' %}">Manage Votes</a>{% endif %}
+    </nav>
+    <div class="voting-page-content">
     {% if messages %}
         <ul>
             {% for message in messages %}
@@ -16,8 +31,41 @@
     {% endif %}
 
     {% if vote_rows %}
+        <div class="voting-filters" data-vote-controls hidden>
+            <label>Sort By
+                <select data-vote-sort>
+                    <option value="default">Deadline (Default)</option>
+                    <option value="closes_soon">Deadline (Soonest)</option>
+                    <option value="closes_latest">Deadline (Latest)</option>
+                    <option value="title_asc">Title (A–Z)</option>
+                    <option value="title_desc">Title (Z–A)</option>
+                </select>
+            </label>
+            <label>Status
+                <select data-vote-status>
+                    <option value="all">All statuses</option>
+                    <option value="OPEN">Open</option>
+                    <option value="CLOSED">Closed</option>
+                </select>
+            </label>
+            <label>Response
+                <select data-vote-response>
+                    <option value="all">All responses</option>
+                    <option value="pending">Not responded</option>
+                    <option value="responded">Responded</option>
+                </select>
+            </label>
+            <button type="button" class="voting-button" data-vote-reset>Reset Filters</button>
+            <output class="voting-result-count" data-vote-count aria-live="polite"></output>
+        </div>
+    {% endif %}
+    {% if vote_rows %}
         {% for row in vote_rows %}
-            <article>
+            <article class="voting-list-item" data-vote-item
+                     data-title="{{ row.vote.title }}"
+                     data-status="{{ row.vote.status }}"
+                     data-responded="{{ row.has_responded|yesno:'true,false' }}"
+                     data-closes="{{ row.vote.closes_at|date:'U' }}">
                 <h2>
                     <a href="{% url 'voting:vote_detail' row.vote.id %}">
                         {{ row.vote.title }}
@@ -69,11 +117,12 @@
                     </p>
                 {% endif %}
             </article>
-
-            <hr>
         {% endfor %}
+        <p class="voting-filter-empty" data-vote-empty hidden>No votes match these filters.</p>
     {% else %}
         <p>You do not have any votes.</p>
     {% endif %}
-</body>
-</html>
+    </div>
+</section>
+<script src="{% static 'js/voting/voting.js' %}" defer></script>
+{% endblock %}

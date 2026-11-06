@@ -28,6 +28,17 @@
                         Manage Actions
                     </a>
                 {% endif %}
+
+                <span aria-hidden="true"> | </span>
+                <a class="my-eldvatten-action-link" href="{% url 'voting:vote_list' %}">
+                    All My Votes
+                </a>
+                {% if perms.voting.view_vote %}
+                    <span aria-hidden="true"> | </span>
+                    <a class="my-eldvatten-action-link" href="{% url 'voting:vote_manage_list' %}">
+                        Manage Votes
+                    </a>
+                {% endif %}
             </p>
         </nav>
 

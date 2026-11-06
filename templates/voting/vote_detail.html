@@ -1,10 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ vote.title }}</title>
-</head>
-<body>
+{% extends "app/base_desktop.html" %}
+{% block title %}{{ vote.title }} | EldVatten{% endblock %}
+{% block nav_voting %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+{% block app_content %}
+<section class="voting-page voting-page-detail">
+    <nav class="voting-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'voting:vote_list' %}">My Votes</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{{ vote.title }}</span>
+    </nav>
+    <header class="voting-page-header">
+        <div><h1>{{ vote.title }}</h1><p>{{ vote.get_status_display }} · {{ vote.get_approval_rule_display }}</p></div>
+        {% if perms.voting.view_vote %}
+            <a class="voting-button" href="{% url 'voting:vote_manage_detail' vote.id %}">Manage Vote</a>
+        {% endif %}
+    </header>
+    <div class="voting-page-content">
     <p>
         <a href="{% url 'voting:vote_list' %}">
             Back to votes
@@ -212,5 +224,6 @@
             {% endfor %}
         </ul>
     {% endif %}
-</body>
-</html>
+    </div>
+</section>
+{% endblock %}
