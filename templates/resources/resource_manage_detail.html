@@ -1,0 +1,351 @@
+
+{% extends "app/base_desktop.html" %}
+
+{% block title %}Manage {{ resource.title }} | EldVatten{% endblock %}
+{% block nav_resources %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+{% block app_content %}
+
+<section class="resources-page resources-detail-page">
+
+    <nav class="resources-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'resources:manage_list' %}">
+            Manage Resources
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <span aria-current="page">
+            {{ resource.title }}
+        </span>
+    </nav>
+
+    <header class="resources-page-header">
+
+        <div>
+            <h1 class="section-heading">{{ resource.title }}</h1>
+
+            <p class="resources-page-subtitle">
+                Resource details and access configuration.
+            </p>
+        </div>
+
+        <a
+            class="resources-button resources-button-primary"
+            href="{% url 'resources:edit' resource.id %}"
+        >
+            Edit Resource
+        </a>
+
+    </header>
+
+    {% include "resources/_tabs.html" with active_tab="manage" %}
+
+    <div class="resources-page-content">
+
+        {% if messages %}
+            <ul class="resources-messages">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <section class="resources-panel">
+
+            <h2>Resource Details</h2>
+
+            <dl class="resources-detail-grid">
+
+                <dt>Title</dt>
+                <dd>{{ resource.title }}</dd>
+
+                <dt>Description</dt>
+                <dd>
+                    {% if resource.description %}
+                        {{ resource.description|linebreaksbr }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </dd>
+
+                <dt>Type</dt>
+                <dd>{{ resource.get_resource_type_display }}</dd>
+
+                <dt>Visibility</dt>
+                <dd>{{ resource.get_visibility_display }}</dd>
+
+                <dt>Status</dt>
+                <dd>
+                    {% if resource.is_active %}
+                        <span class="resources-status resources-status-active">
+                            Active
+                        </span>
+                    {% else %}
+                        <span class="resources-status resources-status-inactive">
+                            Inactive
+                        </span>
+                    {% endif %}
+                </dd>
+
+                <dt>Sort Order</dt>
+                <dd>{{ resource.sort_order }}</dd>
+
+                <dt>Created By</dt>
+                <dd>
+                    {{ resource.created_by.display_name|default:resource.created_by.username }}
+                </dd>
+
+                <dt>Created</dt>
+                <dd>{{ resource.created_at|date:"M j, Y, g:i A" }}</dd>
+
+                <dt>Last Updated</dt>
+                <dd>{{ resource.updated_at|date:"M j, Y, g:i A" }}</dd>
+
+                {% if resource.resource_type == "FILE" %}
+
+                    <dt>File</dt>
+                    <dd>
+                        {{ resource.filename }}
+                    </dd>
+
+                {% else %}
+
+                    <dt>External URL</dt>
+                    <dd class="resources-long-value">
+                        {{ resource.external_url }}
+                    </dd>
+
+                {% endif %}
+
+            </dl>
+
+            {% if resource.is_active %}
+                <div class="resources-panel-actions">
+
+                    {% if resource.resource_type == "FILE" %}
+
+                        {% if resource.file %}
+                            <a
+                                class="resources-button"
+                                href="{% url 'resources:download' resource.id %}"
+                            >
+                                Download File
+                            </a>
+                        {% endif %}
+
+                    {% elif resource.external_url %}
+
+                        <a
+                            class="resources-button"
+                            href="{% url 'resources:open' resource.id %}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Open Link
+                        </a>
+
+                    {% endif %}
+
+                </div>
+            {% endif %}
+
+        </section>
+
+        <section class="resources-panel">
+
+            <h2>Visibility Targets</h2>
+
+            <p class="resources-help-text">
+                Include targets define who can access a Custom resource.
+                Exclude targets remove access even when a member would
+                otherwise be included. Fields within a target are combined;
+                separate targets of the same effect are alternatives.
+            </p>
+
+            {% if targets %}
+
+                <div class="resources-target-summary">
+
+                    {% for target in targets %}
+
+                        <article class="resources-target-summary-item">
+
+                            <h3>
+                                {% if target.effect == "INCLUDE" %}
+                                    Include
+                                {% else %}
+                                    Exclude
+                                {% endif %}
+                            </h3>
+
+                            <ul class="resources-target-selector-list">
+
+                                {% if target.user %}
+                                    <li>
+                                        Member:
+                                        {{ target.user.display_name|default:target.user.username }}
+                                    </li>
+                                {% endif %}
+
+                                {% if target.citizenship_class %}
+                                    <li>
+                                        Citizenship:
+                                        {{ target.citizenship_class }}
+                                    </li>
+                                {% endif %}
+
+                                {% if target.social_rank %}
+                                    <li>
+                                        Social Rank:
+                                        {{ target.social_rank }}
+                                    </li>
+                                {% endif %}
+
+                                {% if target.office %}
+                                    <li>
+                                        Office:
+                                        {{ target.office }}
+                                    </li>
+                                {% endif %}
+
+                                {% if target.chapter %}
+                                    <li>
+                                        Chapter:
+                                        {{ target.chapter }}
+                                    </li>
+                                {% endif %}
+
+                                {% if target.household %}
+                                    <li>
+                                        Household:
+                                        {{ target.household }}
+                                    </li>
+                                {% endif %}
+
+                                {% if target.governance_body %}
+                                    <li>
+                                        Governance Body:
+                                        {{ target.governance_body }}
+                                    </li>
+                                {% endif %}
+
+                                {% if target.order %}
+                                    <li>
+                                        Order:
+                                        {{ target.order }}
+                                    </li>
+                                {% endif %}
+
+                                {% if target.order_rank %}
+                                    <li>
+                                        Order Rank:
+                                        {{ target.order_rank }}
+                                    </li>
+                                {% endif %}
+
+                                {% if target.community_group %}
+                                    <li>
+                                        Community Group:
+                                        {{ target.community_group }}
+                                    </li>
+                                {% endif %}
+
+                                {% if target.household_leadership_type %}
+                                    <li>
+                                        Household Leadership:
+                                        {{ target.household_leadership_type }}
+                                    </li>
+                                {% endif %}
+
+                            </ul>
+
+                        </article>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <p>
+                    No visibility targets are configured.
+                </p>
+
+            {% endif %}
+
+        </section>
+
+        <section class="resources-panel">
+
+            <div class="resources-panel-heading">
+
+                <div>
+                    <h2>Current Audience</h2>
+
+                    <p class="resources-help-text">
+                        This is a live preview based on current organizational
+                        memberships and visibility rules.
+                    </p>
+                </div>
+
+            </div>
+
+            <p class="resources-audience-count">
+                <strong>
+                    {{ audience_count }} active members currently
+                </strong>
+                have access through the normal visibility rules.
+            </p>
+
+            {% if not resource.is_active %}
+                <p class="resources-help-text">
+                    This resource is inactive, so nobody can currently
+                    access it through the normal resource endpoints.
+                </p>
+            {% endif %}
+
+            {% if audience %}
+
+                <div class="resources-audience-list">
+
+                    {% for member in audience %}
+
+                        <div class="resources-audience-member">
+
+                            <span class="resources-audience-name">
+                                {{ member.display_name|default:member.username }}
+                            </span>
+
+                            <span class="resources-audience-username">
+                                @{{ member.username }}
+                            </span>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <p>
+                    No active members currently match the access rules.
+                </p>
+
+            {% endif %}
+
+            <p class="resources-help-text">
+                Managers with the Resources management permission may
+                access active resources independently of this audience preview.
+            </p>
+
+        </section>
+
+    </div>
+
+</section>
+
+{% endblock %}

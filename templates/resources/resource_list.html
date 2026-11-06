@@ -1,0 +1,202 @@
+
+{% extends "app/base_desktop.html" %}
+{% load static %}
+
+{% block title %}Resources | EldVatten{% endblock %}
+{% block nav_resources %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+{% block app_content %}
+
+<section class="resources-page" data-resource-list>
+
+    <header class="resources-page-header">
+        <div>
+            <h1 class="section-heading">Resources</h1>
+            <p class="resources-page-subtitle">
+                Documents, files, and useful links from the EldVatten community.
+            </p>
+        </div>
+    </header>
+
+    {% include "resources/_tabs.html" with active_tab="list" %}
+
+    <div class="resources-page-content">
+
+        {% if messages %}
+            <ul class="resources-messages">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if resources %}
+
+            <div class="resources-filters" data-resource-controls hidden>
+
+                <div class="resources-filter-field">
+                    <label for="resource-search">
+                        Search Resources
+                    </label>
+
+                    <input
+                        type="search"
+                        id="resource-search"
+                        placeholder="Search by title or description"
+                        autocomplete="off"
+                        data-resource-query
+                    >
+                </div>
+
+                <div class="resources-filter-field">
+                    <label for="resource-type-filter">
+                        Resource Type
+                    </label>
+
+                    <select
+                        id="resource-type-filter"
+                        data-resource-type
+                    >
+                        <option value="all">All Types</option>
+                        <option value="FILE">Files</option>
+                        <option value="LINK">Links</option>
+                    </select>
+                </div>
+
+                <div class="resources-filter-field">
+                    <label for="resource-sort">
+                        Sort By
+                    </label>
+
+                    <select id="resource-sort" data-resource-sort>
+                        <option value="default">Default Order</option>
+                        <option value="title_asc">Title (A–Z)</option>
+                        <option value="title_desc">Title (Z–A)</option>
+                    </select>
+                </div>
+
+                <button
+                    type="button"
+                    class="resources-button"
+                    data-resource-reset
+                >
+                    Reset Filters
+                </button>
+
+                <output
+                    class="resources-result-count"
+                    data-resource-count
+                    aria-live="polite"
+                ></output>
+
+            </div>
+
+            <div class="resources-list" data-resource-items>
+
+                {% for resource in resources %}
+
+                    <article
+                        class="resources-list-item"
+                        data-resource-item
+                        data-title="{{ resource.title }}"
+                        data-description="{{ resource.description }}"
+                        data-type="{{ resource.resource_type }}"
+                        data-order="{{ resource.sort_order }}"
+                    >
+
+                        <div class="resources-item-icon" aria-hidden="true">
+                            {% if resource.resource_type == "FILE" %}
+                                <span class="resources-type-icon">DOC</span>
+                            {% else %}
+                                <span class="resources-type-icon">LINK</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="resources-item-content">
+
+                            <h2 class="resources-item-title">
+                                {% if resource.resource_type == "FILE" %}
+                                    <a href="{% url 'resources:download' resource.id %}">
+                                        {{ resource.title }}
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'resources:open' resource.id %}"
+                                       target="_blank"
+                                       rel="noopener noreferrer">
+                                        {{ resource.title }}
+                                    </a>
+                                {% endif %}
+                            </h2>
+
+                            {% if resource.description %}
+                                <p class="resources-item-description">
+                                    {{ resource.description|linebreaksbr }}
+                                </p>
+                            {% endif %}
+
+                            <div class="resources-item-meta">
+                                <span>
+                                    {{ resource.get_resource_type_display }}
+                                </span>
+
+                                {% if resource.resource_type == "FILE" %}
+                                    <span>
+                                        {{ resource.filename }}
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                        </div>
+
+                        <div class="resources-item-actions">
+
+                            {% if resource.resource_type == "FILE" %}
+                                <a
+                                    class="resources-button resources-button-primary"
+                                    href="{% url 'resources:download' resource.id %}"
+                                >
+                                    Download
+                                </a>
+                            {% else %}
+                                <a
+                                    class="resources-button resources-button-primary"
+                                    href="{% url 'resources:open' resource.id %}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    Open Link
+                                </a>
+                            {% endif %}
+
+                        </div>
+
+                    </article>
+
+                {% endfor %}
+
+            </div>
+
+            <p class="resources-filter-empty" data-resource-empty hidden>
+                No resources match your search or filters.
+            </p>
+
+        {% else %}
+
+            <div class="resources-empty-state">
+                <h2>No Resources Available</h2>
+                <p>
+                    There are currently no resources available to your account.
+                </p>
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</section>
+
+<script src="{% static 'js/resources/resources.js' %}" defer></script>
+
+{% endblock %}

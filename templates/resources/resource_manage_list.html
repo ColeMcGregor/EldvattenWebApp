@@ -1,0 +1,228 @@
+
+{% extends "app/base_desktop.html" %}
+{% load static %}
+
+{% block title %}Manage Resources | EldVatten{% endblock %}
+{% block nav_resources %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+{% block app_content %}
+
+<section class="resources-page resources-manage-page" data-resource-list>
+
+    <header class="resources-page-header">
+
+        <div>
+            <h1 class="section-heading">Manage Resources</h1>
+            <p class="resources-page-subtitle">
+                Create, organize, and manage access to community resources.
+            </p>
+        </div>
+
+        <a
+            class="resources-button resources-button-primary"
+            href="{% url 'resources:create' %}"
+        >
+            Create Resource
+        </a>
+
+    </header>
+
+    {% include "resources/_tabs.html" with active_tab="manage" %}
+
+    <div class="resources-page-content">
+
+        {% if messages %}
+            <ul class="resources-messages">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if resources %}
+
+            <div class="resources-filters" data-resource-controls hidden>
+
+                <div class="resources-filter-field">
+                    <label for="resource-manage-search">
+                        Search Resources
+                    </label>
+
+                    <input
+                        type="search"
+                        id="resource-manage-search"
+                        placeholder="Search by title or description"
+                        autocomplete="off"
+                        data-resource-query
+                    >
+                </div>
+
+                <div class="resources-filter-field">
+                    <label for="resource-manage-type">
+                        Type
+                    </label>
+
+                    <select id="resource-manage-type" data-resource-type>
+                        <option value="all">All Types</option>
+                        <option value="FILE">Files</option>
+                        <option value="LINK">Links</option>
+                    </select>
+                </div>
+
+                <div class="resources-filter-field">
+                    <label for="resource-manage-status">
+                        Status
+                    </label>
+
+                    <select id="resource-manage-status" data-resource-status>
+                        <option value="all">All Statuses</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+
+                <div class="resources-filter-field">
+                    <label for="resource-manage-sort">
+                        Sort By
+                    </label>
+
+                    <select id="resource-manage-sort" data-resource-sort>
+                        <option value="default">Default Order</option>
+                        <option value="title_asc">Title (A–Z)</option>
+                        <option value="title_desc">Title (Z–A)</option>
+                    </select>
+                </div>
+
+                <button
+                    type="button"
+                    class="resources-button"
+                    data-resource-reset
+                >
+                    Reset Filters
+                </button>
+
+                <output
+                    class="resources-result-count"
+                    data-resource-count
+                    aria-live="polite"
+                ></output>
+
+            </div>
+
+            <div class="resources-table-scroll">
+
+                <table class="resources-table">
+
+                    <thead>
+                        <tr>
+                            <th scope="col">Title</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Visibility</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Sort Order</th>
+                            <th scope="col">Updated</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody data-resource-items>
+
+                        {% for resource in resources %}
+
+                            <tr
+                                data-resource-item
+                                data-title="{{ resource.title }}"
+                                data-description="{{ resource.description }}"
+                                data-type="{{ resource.resource_type }}"
+                                data-status="{{ resource.is_active|yesno:'active,inactive' }}"
+                                data-order="{{ resource.sort_order }}"
+                            >
+
+                                <td>
+                                    <a href="{% url 'resources:manage_detail' resource.id %}">
+                                        {{ resource.title }}
+                                    </a>
+                                </td>
+
+                                <td>
+                                    {{ resource.get_resource_type_display }}
+                                </td>
+
+                                <td>
+                                    {{ resource.get_visibility_display }}
+                                </td>
+
+                                <td>
+                                    {% if resource.is_active %}
+                                        <span class="resources-status resources-status-active">
+                                            Active
+                                        </span>
+                                    {% else %}
+                                        <span class="resources-status resources-status-inactive">
+                                            Inactive
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {{ resource.sort_order }}
+                                </td>
+
+                                <td>
+                                    {{ resource.updated_at|date:"M j, Y" }}
+                                </td>
+
+                                <td>
+                                    <div class="resources-table-actions">
+                                        <a href="{% url 'resources:manage_detail' resource.id %}">
+                                            View
+                                        </a>
+
+                                        <a href="{% url 'resources:edit' resource.id %}">
+                                            Edit
+                                        </a>
+                                    </div>
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <p class="resources-filter-empty" data-resource-empty hidden>
+                No resources match these filters.
+            </p>
+
+        {% else %}
+
+            <div class="resources-empty-state">
+                <h2>No Resources Created</h2>
+
+                <p>
+                    No resources have been created yet.
+                </p>
+
+                <a
+                    class="resources-button resources-button-primary"
+                    href="{% url 'resources:create' %}"
+                >
+                    Create First Resource
+                </a>
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</section>
+
+<script src="{% static 'js/resources/resources.js' %}" defer></script>
+
+{% endblock %}

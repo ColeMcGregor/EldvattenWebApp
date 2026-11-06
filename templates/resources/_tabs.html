@@ -1,0 +1,28 @@
+
+<nav class="resources-tabs" aria-label="Resources navigation">
+
+    <a
+        href="{% url 'resources:list' %}"
+        class="{% if active_tab == 'list' %}active{% endif %}"
+        {% if active_tab == "list" %}
+            aria-current="page"
+        {% endif %}
+    >
+        Resources
+    </a>
+
+    {% if perms.resources.manage_resources %}
+
+        <a
+            href="{% url 'resources:manage_list' %}"
+            class="{% if active_tab == 'manage' %}active{% endif %}"
+            {% if active_tab == "manage" %}
+                aria-current="page"
+            {% endif %}
+        >
+            Manage Resources
+        </a>
+
+    {% endif %}
+
+</nav>

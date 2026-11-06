@@ -1,0 +1,343 @@
+
+{% extends "app/base_desktop.html" %}
+{% load static %}
+
+{% block title %}
+    {% if resource %}Edit Resource{% else %}Create Resource{% endif %} | EldVatten
+{% endblock %}
+
+{% block nav_resources %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+{% block app_content %}
+
+<section class="resources-page resources-form-page">
+
+    <nav class="resources-breadcrumb" aria-label="Breadcrumb">
+
+        <a href="{% url 'resources:manage_list' %}">
+            Manage Resources
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <span aria-current="page">
+            {% if resource %}
+                Edit Resource
+            {% else %}
+                Create Resource
+            {% endif %}
+        </span>
+
+    </nav>
+
+    <header class="resources-page-header">
+
+        <div>
+            <h1 class="section-heading">
+                {% if resource %}
+                    Edit Resource
+                {% else %}
+                    Create Resource
+                {% endif %}
+            </h1>
+
+            <p class="resources-page-subtitle">
+                Configure a resource and determine who may access it.
+            </p>
+        </div>
+
+    </header>
+
+    {% include "resources/_tabs.html" with active_tab="manage" %}
+
+    <div class="resources-page-content">
+
+        <form
+            method="post"
+            enctype="multipart/form-data"
+            class="resources-form"
+            data-resource-form
+        >
+            {% csrf_token %}
+
+            {{ form.non_field_errors }}
+
+            <section class="resources-panel">
+
+                <h2>Resource Information</h2>
+
+                <div class="resources-form-grid">
+
+                    <div class="resources-form-field resources-form-field-full">
+                        {{ form.title.label_tag }}
+                        {{ form.title }}
+                        {{ form.title.errors }}
+                    </div>
+
+                    <div class="resources-form-field resources-form-field-full">
+                        {{ form.description.label_tag }}
+                        {{ form.description }}
+                        {{ form.description.errors }}
+                    </div>
+
+                    <div class="resources-form-field">
+                        {{ form.resource_type.label_tag }}
+
+                        <div data-resource-type>
+                            {{ form.resource_type }}
+                        </div>
+
+                        {{ form.resource_type.errors }}
+                    </div>
+
+                    <div
+                        class="resources-form-field resources-form-field-full"
+                        data-resource-file-field
+                    >
+                        {{ form.file.label_tag }}
+                        {{ form.file }}
+                        {{ form.file.errors }}
+
+                        <p class="resources-help-text">
+                            Uploaded files are stored privately and served
+                            through the application's permission checks.
+                        </p>
+                    </div>
+
+                    <div
+                        class="resources-form-field resources-form-field-full"
+                        data-resource-link-field
+                    >
+                        {{ form.external_url.label_tag }}
+                        {{ form.external_url }}
+                        {{ form.external_url.errors }}
+
+                        <p class="resources-help-text">
+                            Enter the complete URL, including https://.
+                        </p>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <section class="resources-panel">
+
+                <h2>Visibility and Organization</h2>
+
+                <div class="resources-form-grid">
+
+                    <div class="resources-form-field">
+                        {{ form.visibility.label_tag }}
+                        {{ form.visibility }}
+                        {{ form.visibility.errors }}
+
+                        <p class="resources-help-text">
+                            All Members makes the resource available to active
+                            members unless excluded. Custom requires at least
+                            one Include target.
+                        </p>
+                    </div>
+
+                    <div class="resources-form-field">
+                        {{ form.sort_order.label_tag }}
+                        {{ form.sort_order }}
+                        {{ form.sort_order.errors }}
+
+                        <p class="resources-help-text">
+                            Lower numbers appear earlier in the default list.
+                        </p>
+                    </div>
+
+                    <div class="resources-form-field resources-form-field-full">
+
+                        <label class="resources-checkbox-label">
+                            {{ form.is_active }}
+                            <span>Active Resource</span>
+                        </label>
+
+                        {{ form.is_active.errors }}
+
+                        <p class="resources-help-text">
+                            Inactive resources are hidden from members and
+                            cannot be downloaded or opened.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <section class="resources-panel" data-resource-target-section>
+
+                <h2>Visibility Targets</h2>
+
+                <p class="resources-help-text">
+                    Use Include to grant access to selected members or groups.
+                    Use Exclude to deny access to selected members or groups.
+                    Multiple fields in the same target must all match.
+                    Separate targets provide alternative matches.
+                </p>
+
+                <p class="resources-help-text">
+                    For All Members visibility, Include targets do not
+                    restrict access; Exclude targets still apply.
+                    For Custom visibility, at least one valid Include
+                    target is required.
+                </p>
+
+                {{ target_formset.management_form }}
+                {{ target_formset.non_form_errors }}
+
+                <div
+                    class="resources-target-form-list"
+                    data-resource-target-list
+                    data-prefix="{{ target_formset.prefix }}"
+                >
+
+                    {% for target_form in target_formset %}
+
+                        <fieldset
+                            class="resources-target-form"
+                            data-resource-target-row
+                        >
+
+                            <legend>
+                                Visibility Target {{ forloop.counter }}
+                            </legend>
+
+                            {{ target_form.non_field_errors }}
+
+                            {% for hidden_field in target_form.hidden_fields %}
+                                {{ hidden_field }}
+                            {% endfor %}
+
+                            <div class="resources-target-grid">
+
+                                {% for field in target_form.visible_fields %}
+
+                                    {% if field.name != "DELETE" %}
+
+                                        <div class="resources-form-field">
+                                            {{ field.label_tag }}
+                                            {{ field }}
+                                            {{ field.errors }}
+                                        </div>
+
+                                    {% endif %}
+
+                                {% endfor %}
+
+                            </div>
+
+                            <div class="resources-target-form-footer">
+
+                                <label class="resources-checkbox-label">
+                                    {{ target_form.DELETE }}
+                                    <span>Remove this target</span>
+                                </label>
+
+                                {{ target_form.DELETE.errors }}
+
+                            </div>
+
+                        </fieldset>
+
+                    {% endfor %}
+
+                </div>
+
+                <template data-resource-target-template>
+
+                    <fieldset
+                        class="resources-target-form"
+                        data-resource-target-row
+                    >
+
+                        <legend>New Visibility Target</legend>
+
+                        {{ target_formset.empty_form.non_field_errors }}
+
+                        {% for hidden_field in target_formset.empty_form.hidden_fields %}
+                            {{ hidden_field }}
+                        {% endfor %}
+
+                        <div class="resources-target-grid">
+
+                            {% for field in target_formset.empty_form.visible_fields %}
+
+                                {% if field.name != "DELETE" %}
+
+                                    <div class="resources-form-field">
+                                        {{ field.label_tag }}
+                                        {{ field }}
+                                        {{ field.errors }}
+                                    </div>
+
+                                {% endif %}
+
+                            {% endfor %}
+
+                        </div>
+
+                        <div class="resources-target-form-footer">
+
+                            <label class="resources-checkbox-label">
+                                {{ target_formset.empty_form.DELETE }}
+                                <span>Remove this target</span>
+                            </label>
+
+                        </div>
+
+                    </fieldset>
+
+                </template>
+
+                <div class="resources-target-actions">
+
+                    <button
+                        type="button"
+                        class="resources-button"
+                        data-resource-add-target
+                    >
+                        Add Visibility Target
+                    </button>
+
+                </div>
+
+            </section>
+
+            <div class="resources-form-actions">
+
+                <button
+                    type="submit"
+                    class="resources-button resources-button-primary"
+                >
+                    {% if resource %}
+                        Save Changes
+                    {% else %}
+                        Create Resource
+                    {% endif %}
+                </button>
+
+                <a
+                    class="resources-button"
+                    href="{% if resource %}{% url 'resources:manage_detail' resource.id %}{% else %}{% url 'resources:manage_list' %}{% endif %}"
+                >
+                    Cancel
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</section>
+
+<script src="{% static 'js/resources/resource-form.js' %}" defer></script>
+
+{% endblock %}

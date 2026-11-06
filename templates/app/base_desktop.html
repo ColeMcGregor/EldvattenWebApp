@@ -1,3 +1,4 @@
+
 {% load static %}
 
 <!DOCTYPE html>
@@ -98,7 +99,7 @@
                 <a
                     class="app-navigation-link
                     {% block nav_resources %}{% endblock %}"
-                    href="#"
+                    href="{% url 'resources:list' %}"
                 >
                     Resources
                 </a>
