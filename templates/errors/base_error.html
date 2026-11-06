@@ -1,0 +1,53 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>{% block error_title %}Error{% endblock %} | EldVatten</title>
+    <link rel="stylesheet" href="{% static 'css/site.css' %}">
+    <link rel="stylesheet" href="{% static 'css/error_pages.css' %}">
+</head>
+<body class="error-body">
+    <main class="error-layout">
+        <header class="error-brand">
+            <a href="/" aria-label="EldVatten home">EldVatten</a>
+            <img
+                src="{% static 'images/Eldvatten_logo_black_rgb.png' %}"
+                alt=""
+                width="52"
+                height="52"
+            >
+        </header>
+
+        <section class="error-panel" aria-labelledby="error-heading">
+            <div class="error-number" aria-hidden="true">
+                {% block error_code %}Error{% endblock %}
+            </div>
+
+            <div class="error-content">
+                <p class="error-eyebrow">EldVatten</p>
+                <h1 id="error-heading">
+                    {% block error_heading %}A Problem Occurred{% endblock %}
+                </h1>
+                <p class="error-message">
+                    {% block error_message %}We could not complete your request.{% endblock %}
+                </p>
+                <p class="error-guidance">
+                    {% block error_guidance %}Return home and try again.{% endblock %}
+                </p>
+                <nav class="error-actions" aria-label="Page recovery">
+                    <a class="error-button error-button-primary" href="/">
+                        Return Home
+                    </a>
+                    <a class="error-button error-button-secondary" href="/community/">
+                        The Tavern
+                    </a>
+                </nav>
+            </div>
+        </section>
+        <p class="error-footer">EldVatten</p>
+    </main>
+</body>
+</html>

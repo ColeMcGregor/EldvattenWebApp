@@ -1,0 +1,165 @@
+.error-body {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at top left, rgba(200, 168, 78, 0.12), transparent 38%),
+        var(--page-background);
+}
+
+.error-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: min(100%, 1100px);
+    margin: 0 auto;
+    padding: clamp(1.25rem, 4vw, 3rem);
+}
+
+.error-brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.error-brand a {
+    font-family: "EldVatten", Georgia, serif;
+    font-size: clamp(1.8rem, 4vw, 2.7rem);
+    line-height: 1.1;
+}
+
+.error-brand img {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+}
+
+.error-panel {
+    display: grid;
+    grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1.4fr);
+    align-items: center;
+    gap: clamp(1.5rem, 5vw, 4rem);
+    width: 100%;
+    margin: auto 0;
+    padding: clamp(2rem, 6vw, 5rem);
+    border: 1px solid var(--border-color);
+    border-top: 5px solid var(--eldvatten-red);
+    border-radius: var(--radius-medium);
+    background: var(--surface);
+    box-shadow: var(--shadow-light);
+}
+
+.error-number {
+    color: var(--eldvatten-red-dark);
+    font-family: "EldVatten", Georgia, serif;
+    font-size: clamp(5.5rem, 14vw, 10rem);
+    line-height: 1;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.error-content {
+    min-width: 0;
+}
+
+.error-eyebrow {
+    margin: 0 0 0.4rem;
+    color: var(--eldvatten-red-dark);
+    font-size: 0.85rem;
+    font-weight: bold;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.error-content h1 {
+    margin: 0 0 1rem;
+    font-family: "EldVatten", Georgia, serif;
+    font-size: clamp(2.2rem, 5vw, 3.6rem);
+    font-weight: normal;
+    line-height: 1.12;
+}
+
+.error-message {
+    margin: 0 0 0.65rem;
+    font-size: clamp(1rem, 2vw, 1.15rem);
+}
+
+.error-guidance {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.98rem;
+}
+
+.error-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+}
+
+.error-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.65rem 1.1rem;
+    border: 1px solid var(--eldvatten-red);
+    border-radius: var(--radius-small);
+    font-weight: bold;
+    text-align: center;
+}
+
+.error-button-primary {
+    background: var(--eldvatten-red);
+    color: white;
+}
+
+.error-button-primary:hover {
+    background: var(--eldvatten-red-dark);
+    color: white;
+}
+
+.error-button-secondary {
+    background: transparent;
+    color: var(--eldvatten-red-dark);
+}
+
+.error-button-secondary:hover {
+    background: var(--surface-muted);
+}
+
+.error-button:focus-visible,
+.error-brand a:focus-visible {
+    outline: 3px solid var(--eldvatten-gold);
+    outline-offset: 3px;
+}
+
+.error-footer {
+    margin: 2rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+@media (max-width: 700px) {
+    .error-panel {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.75rem;
+        margin: 2rem 0 auto;
+        text-align: center;
+    }
+
+    .error-number {
+        font-size: clamp(4.5rem, 22vw, 8rem);
+    }
+
+    .error-actions {
+        justify-content: center;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .error-body,
+    .error-button {
+        scroll-behavior: auto;
+        transition: none;
+    }
+}
