@@ -1,0 +1,8 @@
+{% if selected_member %}
+    {% include "accounts/my_eldvatten/profile.html" %}
+{% else %}
+    <div class="directory-empty-profile">
+        <h2>Member Profile</h2>
+        <p>Select a member to view their profile.</p>
+    </div>
+{% endif %}

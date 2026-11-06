@@ -51,5 +51,6 @@ urlpatterns = [
     path("votes/", include("voting.urls")),
     path("notifications/", include("notifications.urls")),
     path("resources/", include("resources.urls")),
+    path("directory/", include("accounts.directory_urls")),
     path("", include("core.urls")),
 ]

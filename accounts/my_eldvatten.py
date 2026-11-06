@@ -144,6 +144,7 @@ def get_profile_context(user):
     )
 
     return {
+        "profile_user": user,
         "profile_citizenship": citizenship_record,
         "profile_social_rank": social_rank_record,
         "profile_households": household_memberships,

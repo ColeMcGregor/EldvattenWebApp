@@ -1,0 +1,98 @@
+{% extends "app/base_desktop.html" %}
+{% load static %}
+
+{% block title %}Directory | EldVatten{% endblock %}
+{% block nav_directory %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+{% block app_content %}
+<section class="directory-page">
+    <header class="directory-header">
+        <h1 class="section-heading">Directory</h1>
+        <p>Search members or browse groups.</p>
+    </header>
+
+    <nav class="directory-group-tabs" aria-label="Directory group types">
+        <a
+            href="{% url 'directory:index' %}?q={{ search_query|urlencode }}"
+            class="directory-tab{% if selected_category == 'all' %} active{% endif %}"
+            {% if selected_category == 'all' %}aria-current="page"{% endif %}
+        >All Members</a>
+        {% for section in directory_groups %}
+            <a
+                href="{% url 'directory:index' %}?q={{ search_query|urlencode }}&amp;category={{ section.key }}"
+                class="directory-tab{% if selected_category == section.key %} active{% endif %}"
+                {% if selected_category == section.key %}aria-current="page"{% endif %}
+            >{{ section.title }}</a>
+        {% endfor %}
+    </nav>
+
+    <form class="directory-filters" method="get" action="{% url 'directory:index' %}" role="search">
+        <label for="directory-search">Search members</label>
+        <div class="directory-filter-row">
+            <input type="hidden" name="category" value="{{ selected_category }}">
+            <input
+                id="directory-search"
+                type="search"
+                name="q"
+                value="{{ search_query }}"
+                maxlength="100"
+                placeholder="Search by name or username"
+            >
+            {% if selected_category != 'all' %}
+                <label for="directory-group">Group</label>
+                <select id="directory-group" name="group">
+                    <option value="">Choose a group</option>
+                    {% for section in directory_groups %}
+                        {% if selected_category == section.key %}
+                            {% for choice in section.choices %}
+                                <option value="{{ choice.value }}" {% if selected_group == choice.value %}selected{% endif %}>
+                                    {{ choice.label }}
+                                </option>
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            {% endif %}
+            <button type="submit">Search</button>
+            <a class="directory-reset" href="{% url 'directory:index' %}">Reset</a>
+        </div>
+    </form>
+
+    <div class="directory-layout">
+        <section class="directory-member-list" aria-label="Directory members" data-directory-list>
+            <h2>Members</h2>
+            {% for member in directory_members %}
+                <a
+                    class="directory-member{% if selected_member.pk == member.pk %} active{% endif %}"
+                    href="{% url 'directory:index' %}?q={{ search_query|urlencode }}&amp;category={{ selected_category|urlencode }}&amp;group={{ selected_group|urlencode }}&amp;member={{ member.pk }}"
+                    data-directory-member
+                    data-member-id="{{ member.pk }}"
+                    {% if selected_member.pk == member.pk %}aria-current="true"{% endif %}
+                >
+                    <span>{{ member.display_name|default:member.username }}</span>
+                    <small>{{ member.username }}</small>
+                </a>
+            {% empty %}
+                {% if selected_category != 'all' and not selected_group %}
+                    <p class="directory-empty">Choose a group to view its members.</p>
+                {% else %}
+                    <p class="directory-empty">No accessible members match this search.</p>
+                {% endif %}
+            {% endfor %}
+        </section>
+
+        <section
+            class="directory-profile"
+            id="directory-profile"
+            aria-label="Selected member profile"
+            aria-live="polite"
+            data-directory-profile
+        >
+            {% include "accounts/directory/profile_panel.html" %}
+        </section>
+    </div>
+</section>
+<script src="{% static 'js/accounts/directory.js' %}" defer></script>
+{% endblock %}

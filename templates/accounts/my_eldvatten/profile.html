@@ -2,7 +2,11 @@
 
     <header class="my-eldvatten-section-header">
         <h2>
-            My Profile
+            {% if profile_heading %}
+                {{ profile_heading }}
+            {% else %}
+                My Profile
+            {% endif %}
         </h2>
     </header>
 
@@ -16,8 +20,8 @@
                 </dt>
 
                 <dd>
-                    {% if request.user.display_name %}
-                        {{ request.user.display_name }}
+                    {% if profile_user.display_name %}
+                        {{ profile_user.display_name }}
                     {% else %}
                         —
                     {% endif %}
@@ -30,7 +34,7 @@
                 </dt>
 
                 <dd>
-                    {{ request.user.username }}
+                    {{ profile_user.username }}
                 </dd>
             </div>
 
@@ -40,7 +44,7 @@
                 </dt>
 
                 <dd>
-                    {{ request.user.get_account_status_display }}
+                    {{ profile_user.get_account_status_display }}
                 </dd>
             </div>
 

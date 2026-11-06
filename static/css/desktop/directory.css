@@ -1,0 +1,163 @@
+.directory-page {
+    min-width: 0;
+}
+
+.directory-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.directory-header .section-heading {
+    margin: 0;
+    font-family: "EldVatten", Georgia, serif;
+    font-size: 2.2rem;
+    font-weight: normal;
+}
+
+.directory-header p {
+    margin: 0.5rem 0 0;
+    color: var(--text-muted);
+}
+
+.directory-group-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem 0;
+}
+
+.directory-tab {
+    padding: 0.5rem 0.85rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+}
+
+.directory-tab:hover,
+.directory-tab.active {
+    color: var(--eldvatten-red);
+    background: var(--surface-muted);
+}
+
+.directory-tab.active {
+    font-weight: 700;
+}
+
+.directory-filters {
+    display: grid;
+    gap: 0.5rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.directory-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.directory-filter-row input,
+.directory-filter-row select {
+    min-height: 2.5rem;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+    background: var(--surface);
+    color: var(--text-main);
+    font: inherit;
+}
+
+.directory-filter-row input {
+    flex: 1 1 14rem;
+    min-width: 0;
+}
+
+.directory-filter-row select {
+    width: 18rem;
+    min-width: 16rem;
+    max-width: 100%;
+}
+
+.directory-filter-row button {
+    padding: 0.55rem 1rem;
+    border: 0;
+    border-radius: var(--radius-small);
+    background: var(--eldvatten-red);
+    color: white;
+    font: inherit;
+    cursor: pointer;
+}
+
+.directory-reset {
+    text-decoration: underline;
+}
+
+.directory-layout {
+    display: grid;
+    grid-template-columns: minmax(14rem, 1fr) minmax(0, 2fr);
+    min-width: 0;
+    min-height: 24rem;
+}
+
+.directory-member-list {
+    min-width: 0;
+    border-right: 1px solid var(--border-color);
+}
+
+.directory-member-list h2 {
+    margin: 0;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 1.2rem;
+}
+
+.directory-member {
+    display: flex;
+    flex-direction: column;
+    padding: 0.8rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    overflow-wrap: anywhere;
+}
+
+.directory-member small {
+    color: var(--text-muted);
+}
+
+.directory-member:hover,
+.directory-member.active {
+    background: var(--surface-muted);
+}
+
+.directory-member.active {
+    border-left: 3px solid var(--eldvatten-red);
+}
+
+.directory-profile {
+    min-width: 0;
+}
+
+.directory-empty,
+.directory-empty-profile {
+    padding: 1.5rem;
+    color: var(--text-muted);
+}
+
+.directory-empty-profile h2 {
+    margin-top: 0;
+    color: var(--text-main);
+}
+
+@media (max-width: 760px) {
+    .directory-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .directory-member-list {
+        border-right: 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .directory-filter-row select {
+        max-width: 100%;
+    }
+}
