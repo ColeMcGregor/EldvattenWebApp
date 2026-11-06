@@ -156,6 +156,70 @@
     padding: 1.3rem 1.5rem 0;
 }
 
+.action-filter-panel {
+    display: flex;
+    align-items: end;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    padding: 1rem 1.5rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.action-filter-field {
+    display: grid;
+    gap: 0.3rem;
+    min-width: 11rem;
+    flex: 1 1 11rem;
+}
+
+.action-filter-search {
+    flex-grow: 2;
+}
+
+.action-filter-field label {
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.action-filter-field select,
+.action-filter-field input {
+    width: 100%;
+    min-height: 2.4rem;
+    padding: 0.35rem 0.6rem;
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+    color: var(--text-main);
+    font: inherit;
+    font-size: 0.87rem;
+}
+
+.action-filter-field select:focus-visible,
+.action-filter-field input:focus-visible {
+    outline: 2px solid var(--eldvatten-gold);
+    outline-offset: 2px;
+}
+
+.action-filter-summary {
+    margin: 0;
+    padding: 0.65rem 1.5rem 0;
+    color: var(--text-muted);
+    font-size: 0.84rem;
+}
+
+.action-filter-empty {
+    margin: 1.3rem 1.5rem 0;
+}
+
+.action-filter-panel[hidden],
+.action-filter-summary[hidden],
+.action-filter-empty[hidden],
+.action-list-section[hidden],
+.action-list-item[hidden] {
+    display: none !important;
+}
+
 .action-list-section > h2 {
     margin: 0 0 0.7rem;
     font-size: 1.12rem;
@@ -420,8 +484,8 @@
 }
 
 .action-assignment-table {
-    width: 100%;
-    min-width: 48rem;
+    width: max-content;
+    min-width: 100%;
     border-collapse: collapse;
     font-size: 0.83rem;
 }
@@ -432,6 +496,7 @@
     border-bottom: 1px solid var(--border-color);
     text-align: left;
     vertical-align: top;
+    white-space: nowrap;
 }
 
 .action-assignment-table thead th {

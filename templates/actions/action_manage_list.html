@@ -1,4 +1,5 @@
 {% extends "app/base_desktop.html" %}
+{% load static %}
 
 {% block title %}Manage Actions | EldVatten{% endblock %}
 {% block nav_my_eldvatten %}active{% endblock %}
@@ -7,7 +8,7 @@
 
 {% block app_content %}
 
-<section class="actions-page" aria-labelledby="manage-actions-heading">
+<section class="actions-page" data-action-list-page aria-labelledby="manage-actions-heading">
 
     <nav class="action-breadcrumb" aria-label="Breadcrumb">
         <a href="{% url 'actions:list' %}">My Actions</a>
@@ -57,17 +58,67 @@
         </a>
     </nav>
 
-    <section class="action-list-section" aria-labelledby="all-managed-actions-heading">
+    <section class="action-filter-panel" data-action-filters aria-label="Action management controls" hidden>
+        <div class="action-filter-field">
+            <label for="manage-action-sort">Sort By</label>
+            <select id="manage-action-sort" data-action-sort>
+                <option value="default">Default Order</option>
+                <option value="created_desc">Newest Created</option>
+                <option value="created_asc">Oldest Created</option>
+                <option value="deadline_asc">Deadline (Soonest)</option>
+                <option value="title_asc">Title (A–Z)</option>
+                <option value="assignments_desc">Most Assignments</option>
+            </select>
+        </div>
+        <div class="action-filter-field">
+            <label for="manage-action-required">Requirement</label>
+            <select id="manage-action-required" data-action-required>
+                <option value="all">All Actions</option>
+                <option value="required">Required Only</option>
+                <option value="optional">Optional Only</option>
+            </select>
+        </div>
+        <div class="action-filter-field">
+            <label for="manage-action-assignments">Assignments</label>
+            <select id="manage-action-assignments" data-action-assignment-filter>
+                <option value="all">All Actions</option>
+                <option value="active">Has Active Assignments</option>
+                <option value="no_active">No Active Assignments</option>
+                <option value="no_targets">No Targets</option>
+            </select>
+        </div>
+        <div class="action-filter-field action-filter-search">
+            <label for="manage-action-search">Search by Title</label>
+            <input id="manage-action-search" type="search" data-action-search placeholder="Action title">
+        </div>
+        <button class="action-button" type="button" data-action-reset>Reset Filters</button>
+    </section>
+    <p class="action-filter-summary" data-action-results aria-live="polite" hidden></p>
+    <div class="action-empty-state action-filter-empty" data-action-no-results hidden>
+        <p>No actions match these filters.</p>
+    </div>
+
+    <section class="action-list-section" data-action-section aria-labelledby="all-managed-actions-heading">
         <h2 id="all-managed-actions-heading">
             All Actions
         </h2>
 
         {% if actions %}
 
-            <div class="action-list">
+            <div class="action-list" data-action-list>
                 {% for action in actions %}
 
-                    <article class="action-list-item">
+                    <article
+                        class="action-list-item"
+                        data-action-item
+                        data-title="{{ action.title }}"
+                        data-deadline="{{ action.deadline|date:'U' }}"
+                        data-created="{{ action.created_at|date:'U' }}"
+                        data-required="{{ action.is_required|yesno:'1,0' }}"
+                        data-total-assignments="{{ action.assignments.count }}"
+                        data-active-assignments="{{ action.active_assignment_count }}"
+                        data-targets="{{ action.targets.count }}"
+                    >
                         <div class="action-list-item-main">
                             <div class="action-list-item-heading">
                                 <h3>
@@ -132,6 +183,7 @@
             </div>
 
         {% endif %}
+        <script src="{% static 'js/actions/action-list.js' %}" defer></script>
     </section>
 
 </section>

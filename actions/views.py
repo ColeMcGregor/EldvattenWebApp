@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.db.models import Case, F, IntegerField, Value, When
+from django.db.models import Case, Count, F, IntegerField, Q, Value, When
 from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
@@ -472,6 +472,13 @@ def action_manage_list(request):
     actions = (
         Action.objects
         .select_related("created_by")
+        .annotate(
+            active_assignment_count=Count(
+                "assignments",
+                filter=Q(assignments__is_active=True),
+                distinct=True,
+            )
+        )
         .prefetch_related("targets", "assignments")
         .all()
     )

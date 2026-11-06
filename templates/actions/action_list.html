@@ -1,5 +1,6 @@
 
 {% extends "app/base_desktop.html" %}
+{% load static %}
 
 {% block title %}My Actions | EldVatten{% endblock %}
 {% block nav_my_eldvatten %}active{% endblock %}
@@ -8,7 +9,7 @@
 
 {% block app_content %}
 
-<section class="actions-page" aria-labelledby="actions-heading">
+<section class="actions-page" data-action-list-page aria-labelledby="actions-heading">
 
     <nav class="action-breadcrumb" aria-label="Breadcrumb">
         <a href="{% url 'my_eldvatten' %}?section=todo">To-Do</a>
@@ -58,18 +59,63 @@
         </a>
     </nav>
 
+    <section class="action-filter-panel" data-action-filters aria-label="Action list controls" hidden>
+        <div class="action-filter-field">
+            <label for="member-action-sort">Sort By</label>
+            <select id="member-action-sort" data-action-sort>
+                <option value="default">Default Order</option>
+                <option value="deadline_asc">Deadline (Soonest)</option>
+                <option value="deadline_desc">Deadline (Latest)</option>
+                <option value="assigned_desc">Recently Assigned</option>
+                <option value="title_asc">Title (A–Z)</option>
+                <option value="title_desc">Title (Z–A)</option>
+                <option value="required_first">Required First</option>
+            </select>
+        </div>
+        <div class="action-filter-field">
+            <label for="member-action-status">Status</label>
+            <select id="member-action-status" data-action-status>
+                <option value="all">All Statuses</option>
+                <option value="NOT_STARTED">Not Started</option>
+                <option value="OPENED">Opened</option>
+                <option value="COMPLETED">Completed</option>
+            </select>
+        </div>
+        <div class="action-filter-field">
+            <label for="member-action-required">Requirement</label>
+            <select id="member-action-required" data-action-required>
+                <option value="all">All Actions</option>
+                <option value="required">Required Only</option>
+                <option value="optional">Optional Only</option>
+            </select>
+        </div>
+        <button class="action-button" type="button" data-action-reset>Reset Filters</button>
+    </section>
+    <p class="action-filter-summary" data-action-results aria-live="polite" hidden></p>
+    <div class="action-empty-state action-filter-empty" data-action-no-results hidden>
+        <p>No actions match these filters.</p>
+    </div>
+
     {% if outstanding_assignments %}
 
-        <section class="action-list-section" aria-labelledby="outstanding-actions-heading">
+        <section class="action-list-section" data-action-section aria-labelledby="outstanding-actions-heading">
             <h2 id="outstanding-actions-heading">
                 Outstanding Actions
             </h2>
 
-            <div class="action-list">
+            <div class="action-list" data-action-list>
 
                 {% for assignment in outstanding_assignments %}
 
-                    <article class="action-list-item">
+                    <article
+                        class="action-list-item"
+                        data-action-item
+                        data-title="{{ assignment.action.title }}"
+                        data-deadline="{{ assignment.action.deadline|date:'U' }}"
+                        data-assigned="{{ assignment.assigned_at|date:'U' }}"
+                        data-required="{{ assignment.action.is_required|yesno:'1,0' }}"
+                        data-status="{{ assignment.status }}"
+                    >
 
                         <div class="action-list-item-main">
 
@@ -140,16 +186,24 @@
 
     {% if completed_assignments %}
 
-        <section class="action-list-section" aria-labelledby="completed-actions-heading">
+        <section class="action-list-section" data-action-section aria-labelledby="completed-actions-heading">
             <h2 id="completed-actions-heading">
                 Completed Actions
             </h2>
 
-            <div class="action-list">
+            <div class="action-list" data-action-list>
 
                 {% for assignment in completed_assignments %}
 
-                    <article class="action-list-item action-list-item-completed">
+                    <article
+                        class="action-list-item action-list-item-completed"
+                        data-action-item
+                        data-title="{{ assignment.action.title }}"
+                        data-deadline="{{ assignment.action.deadline|date:'U' }}"
+                        data-assigned="{{ assignment.assigned_at|date:'U' }}"
+                        data-required="{{ assignment.action.is_required|yesno:'1,0' }}"
+                        data-status="{{ assignment.status }}"
+                    >
 
                         <div class="action-list-item-main">
 
@@ -214,5 +268,7 @@
     {% endif %}
 
 </section>
+
+<script src="{% static 'js/actions/action-list.js' %}" defer></script>
 
 {% endblock %}
