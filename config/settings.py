@@ -1,3 +1,4 @@
+
 """
 Django settings for config project.
 
@@ -29,6 +30,18 @@ ALLOWED_HOSTS = os.environ.get(
     "DJANGO_ALLOWED_HOSTS",
     ""
 ).split(",")
+
+
+# Trusted proxies for audit IP identification
+
+AUDIT_TRUSTED_PROXY_CIDRS = tuple(
+    address.strip()
+    for address in os.environ.get(
+        "AUDIT_TRUSTED_PROXY_CIDRS",
+        "",
+    ).split(",")
+    if address.strip()
+)
 
 
 # Application definition
@@ -133,7 +146,6 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = 'static/'
 
