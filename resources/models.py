@@ -1,8 +1,15 @@
+
 from pathlib import Path
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.signals import (
+    post_delete,
+    post_save,
+    pre_save,
+)
+from django.dispatch import receiver
 
 from organization.models import (
     Chapter,
@@ -303,3 +310,96 @@ class ResourceTarget(models.Model):
                 "A user target cannot be combined "
                 "with organization selectors."
             )
+
+
+@receiver(
+    pre_save,
+    sender=Resource,
+)
+def capture_previous_resource_file(
+    sender,
+    instance,
+    raw=False,
+    using=None,
+    update_fields=None,
+    **kwargs,
+):
+    instance._previous_resource_file = None
+
+    if raw or not instance.pk:
+        return
+
+    if (
+        update_fields is not None
+        and "file" not in update_fields
+    ):
+        return
+
+    instance._previous_resource_file = (
+        sender.objects.using(using)
+        .filter(pk=instance.pk)
+        .values_list("file", flat=True)
+        .first()
+    )
+
+
+@receiver(
+    post_save,
+    sender=Resource,
+)
+def cleanup_replaced_resource_file(
+    sender,
+    instance,
+    created,
+    raw=False,
+    using=None,
+    **kwargs,
+):
+    if created or raw:
+        return
+
+    previous_file = getattr(
+        instance,
+        "_previous_resource_file",
+        None,
+    )
+
+    if not previous_file:
+        return
+
+    current_file = (
+        instance.file.name
+        if instance.file
+        else ""
+    )
+
+    if previous_file == current_file:
+        return
+
+    from .services import schedule_resource_file_cleanup
+
+    schedule_resource_file_cleanup(
+        previous_file,
+        using=using,
+    )
+
+
+@receiver(
+    post_delete,
+    sender=Resource,
+)
+def cleanup_deleted_resource_file(
+    sender,
+    instance,
+    using=None,
+    **kwargs,
+):
+    if not instance.file:
+        return
+
+    from .services import schedule_resource_file_cleanup
+
+    schedule_resource_file_cleanup(
+        instance.file.name,
+        using=using,
+    )

@@ -1,3 +1,9 @@
+
+import logging
+from pathlib import PurePosixPath
+
+from django.db import transaction
+
 from accounts.models import AccountStatus, User
 from organization.models import (
     CitizenshipRecord,
@@ -14,6 +20,10 @@ from .models import (
     Resource,
     ResourceTarget,
 )
+from .storage import private_resource_storage
+
+
+logger = logging.getLogger(__name__)
 
 
 def is_member(user):
@@ -308,4 +318,55 @@ def visible_resources_for_user(user):
     ).order_by(
         "sort_order",
         "title",
+    )
+
+
+def schedule_resource_file_cleanup(
+    file_name,
+    *,
+    using,
+):
+    if not file_name:
+        return
+
+    path = PurePosixPath(file_name)
+
+    if (
+        path.is_absolute()
+        or len(path.parts) < 2
+        or path.parts[0] != "resources"
+        or ".." in path.parts
+        or "\\" in file_name
+    ):
+        logger.warning(
+            "Skipped cleanup of invalid Resource file path: %s",
+            file_name,
+        )
+        return
+
+    def delete_if_unreferenced():
+        try:
+            is_referenced = (
+                Resource.objects.using(using)
+                .filter(file=file_name)
+                .exists()
+            )
+
+            if is_referenced:
+                return
+
+            private_resource_storage.delete(
+                file_name
+            )
+
+        except Exception:
+            logger.exception(
+                "Failed to clean up Resource file: %s",
+                file_name,
+            )
+
+    transaction.on_commit(
+        delete_if_unreferenced,
+        using=using,
+        robust=True,
     )

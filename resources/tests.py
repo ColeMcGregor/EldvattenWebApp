@@ -1,9 +1,14 @@
-
-from io import BytesIO
+from io import BytesIO, StringIO
+from pathlib import Path
+import os
+import tempfile
+import time
 from unittest.mock import patch
 
 from django.contrib.auth.models import AnonymousUser, Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
+from django.db import transaction
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -13,7 +18,11 @@ from audit.models import AuditLog
 from organization.models import CommunityGroup, GroupMembership
 
 from .models import Resource, ResourceTarget
-from .services import can_view_resource, visible_resources_for_user
+from .services import (
+    can_view_resource,
+    schedule_resource_file_cleanup,
+    visible_resources_for_user,
+)
 from .storage import private_resource_storage
 
 
@@ -382,4 +391,279 @@ class ResourceManagementTests(ResourceTestBase):
         self.assertEqual(
             self.client.get(self.url("manage_detail", self.custom)).status_code,
             403,
+        )
+
+class ResourceFileLifecycleTests(ResourceTestBase):
+    def make_file_resource(
+        self,
+        filename="resources/old-file.txt",
+    ):
+        return Resource.objects.create(
+            title="Lifecycle Resource",
+            resource_type=Resource.ResourceType.FILE,
+            file=filename,
+            created_by=self.manager,
+        )
+
+    def test_replacement_deletes_previous_file_after_commit(self):
+        resource = self.make_file_resource()
+
+        with patch.object(
+            private_resource_storage,
+            "delete",
+        ) as delete_file:
+            with self.captureOnCommitCallbacks(
+                execute=True
+            ) as callbacks:
+                resource.file = "resources/new-file.txt"
+                resource.save()
+                delete_file.assert_not_called()
+
+            self.assertEqual(len(callbacks), 1)
+            delete_file.assert_called_once_with(
+                "resources/old-file.txt"
+            )
+
+    def test_switching_file_to_link_deletes_previous_file(self):
+        resource = self.make_file_resource()
+
+        with patch.object(
+            private_resource_storage,
+            "delete",
+        ) as delete_file:
+            with self.captureOnCommitCallbacks(execute=True):
+                resource.resource_type = Resource.ResourceType.LINK
+                resource.file = None
+                resource.external_url = "https://example.org/new"
+                resource.save()
+
+            delete_file.assert_called_once_with(
+                "resources/old-file.txt"
+            )
+
+    def test_deactivation_does_not_delete_file(self):
+        resource = self.make_file_resource()
+
+        with patch.object(
+            private_resource_storage,
+            "delete",
+        ) as delete_file:
+            with self.captureOnCommitCallbacks(
+                execute=True
+            ) as callbacks:
+                resource.is_active = False
+                resource.save(update_fields=["is_active"])
+
+            self.assertEqual(callbacks, [])
+            delete_file.assert_not_called()
+
+    def test_metadata_only_update_does_not_delete_file(self):
+        resource = self.make_file_resource()
+
+        with patch.object(
+            private_resource_storage,
+            "delete",
+        ) as delete_file:
+            with self.captureOnCommitCallbacks(
+                execute=True
+            ) as callbacks:
+                resource.title = "Updated Title"
+                resource.save(update_fields=["title"])
+
+            self.assertEqual(callbacks, [])
+            delete_file.assert_not_called()
+
+    def test_deleting_resource_deletes_file_after_commit(self):
+        resource = self.make_file_resource()
+
+        with patch.object(
+            private_resource_storage,
+            "delete",
+        ) as delete_file:
+            with self.captureOnCommitCallbacks(
+                execute=True
+            ) as callbacks:
+                resource.delete()
+                delete_file.assert_not_called()
+
+            self.assertEqual(len(callbacks), 1)
+            delete_file.assert_called_once_with(
+                "resources/old-file.txt"
+            )
+
+    def test_queryset_delete_also_deletes_file(self):
+        resource = self.make_file_resource()
+
+        with patch.object(
+            private_resource_storage,
+            "delete",
+        ) as delete_file:
+            with self.captureOnCommitCallbacks(execute=True):
+                Resource.objects.filter(pk=resource.pk).delete()
+
+            delete_file.assert_called_once_with(
+                "resources/old-file.txt"
+            )
+
+    def test_shared_file_is_not_deleted_while_referenced(self):
+        resource = self.make_file_resource()
+        self.make_file_resource(
+            filename="resources/old-file.txt"
+        )
+
+        with patch.object(
+            private_resource_storage,
+            "delete",
+        ) as delete_file:
+            with self.captureOnCommitCallbacks(execute=True):
+                resource.file = "resources/new-file.txt"
+                resource.save()
+
+            delete_file.assert_not_called()
+
+    def test_rolled_back_replacement_does_not_delete_file(self):
+        resource = self.make_file_resource()
+
+        with patch.object(
+            private_resource_storage,
+            "delete",
+        ) as delete_file:
+            with self.captureOnCommitCallbacks(
+                execute=True
+            ) as callbacks:
+                with self.assertRaises(RuntimeError):
+                    with transaction.atomic():
+                        resource.file = "resources/new-file.txt"
+                        resource.save()
+                        raise RuntimeError("rollback")
+
+            self.assertEqual(callbacks, [])
+            delete_file.assert_not_called()
+
+        resource.refresh_from_db()
+        self.assertEqual(
+            resource.file.name,
+            "resources/old-file.txt",
+        )
+
+    def test_invalid_cleanup_path_is_rejected(self):
+        with patch.object(
+            private_resource_storage,
+            "delete",
+        ) as delete_file:
+            with self.captureOnCommitCallbacks(
+                execute=True
+            ) as callbacks:
+                schedule_resource_file_cleanup(
+                    "../secret.txt",
+                    using="default",
+                )
+
+            self.assertEqual(callbacks, [])
+            delete_file.assert_not_called()
+
+    def test_cleanup_error_does_not_break_committed_operation(self):
+        resource = self.make_file_resource()
+
+        with patch.object(
+            private_resource_storage,
+            "delete",
+            side_effect=OSError("storage unavailable"),
+        ) as delete_file:
+            with self.assertLogs(
+                "resources.services",
+                level="ERROR",
+            ):
+                with self.captureOnCommitCallbacks(execute=True):
+                    resource.delete()
+
+            delete_file.assert_called_once_with(
+                "resources/old-file.txt"
+            )
+
+
+class OrphanResourceFileCommandTests(ResourceTestBase):
+    def setUp(self):
+        self.temporary_directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary_directory.cleanup)
+
+        storage_patch = patch.object(
+            private_resource_storage,
+            "location",
+            self.temporary_directory.name,
+        )
+        storage_patch.start()
+        self.addCleanup(storage_patch.stop)
+
+    def make_stored_file(self, filename, *, age_hours=49):
+        path = Path(
+            private_resource_storage.path(filename)
+        )
+
+        path.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
+        path.write_bytes(b"temporary test data")
+
+        timestamp = time.time() - age_hours * 3600
+        os.utime(path, (timestamp, timestamp))
+
+        return path
+
+    def test_dry_run_lists_orphan_without_deleting(self):
+        orphan = self.make_stored_file(
+            "resources/orphan.txt"
+        )
+
+        output = StringIO()
+
+        call_command(
+            "cleanup_orphaned_resource_files",
+            stdout=output,
+        )
+
+        self.assertTrue(orphan.exists())
+        self.assertIn(
+            "resources/orphan.txt",
+            output.getvalue(),
+        )
+
+    def test_delete_removes_old_orphan_but_keeps_referenced_and_recent(self):
+        orphan = self.make_stored_file(
+            "resources/orphan.txt"
+        )
+
+        referenced = self.make_stored_file(
+            "resources/referenced.txt"
+        )
+
+        recent = self.make_stored_file(
+            "resources/recent.txt",
+            age_hours=1,
+        )
+
+        Resource.objects.create(
+            title="Referenced File",
+            resource_type=Resource.ResourceType.FILE,
+            file="resources/referenced.txt",
+            created_by=self.manager,
+        )
+
+        output = StringIO()
+
+        call_command(
+            "cleanup_orphaned_resource_files",
+            "--delete",
+            stdout=output,
+        )
+
+        self.assertFalse(orphan.exists())
+        self.assertTrue(referenced.exists())
+        self.assertTrue(recent.exists())
+
+        self.assertIn(
+            "Deleted: resources/orphan.txt",
+            output.getvalue(),
         )
