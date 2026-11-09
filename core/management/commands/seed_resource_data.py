@@ -53,18 +53,99 @@ class Command(BaseCommand):
         samples = [
             {
                 "title": "[DEV] Member Handbook",
-                "description": "General reference material for members.",
+                "description": (
+                    "A practical guide to participating in EldVatten, "
+                    "including events, volunteer work, community "
+                    "conduct, and organizational roles. "
+                    "Revision: Autumn 2026."
+                ),
                 "filename": "member_handbook.md",
                 "content": (
                     "# EldVatten Member Handbook\n\n"
-                    "Development sample. Not an official handbook.\n\n"
-                    "## Community\n\n"
-                    "EldVatten is a volunteer educational organization "
-                    "focused on Viking-era history, research, and "
-                    "reenactment.\n\n"
-                    "## Participation\n\n"
-                    "Members can participate in chapters, households, "
-                    "Orders, and community groups.\n"
+                    "Autumn 2026 | Community reference edition\n\n"
+                    "This fictional handbook is provided for "
+                    "development and demonstration purposes. "
+                    "It is not an official statement of society law.\n\n"
+
+                    "## Welcome to EldVatten\n\n"
+                    "EldVatten is a volunteer educational society "
+                    "dedicated to the study and interpretation of "
+                    "Viking-era life, material culture, technology, "
+                    "seafaring, and the cultures connected by "
+                    "historical trade routes.\n\n"
+                    "Our activities include research, practical "
+                    "crafts, public demonstrations, living-history "
+                    "events, and community gatherings.\n\n"
+
+                    "## Getting Involved\n\n"
+                    "New participants are welcome to attend open "
+                    "workshops and public educational events. "
+                    "Members can also help with event preparation, "
+                    "equipment maintenance, research projects, "
+                    "and group activities.\n\n"
+                    "If you are new to an activity, contact the "
+                    "organizer before the event. They can explain "
+                    "what materials to bring and whether prior "
+                    "training is required.\n\n"
+
+                    "## Community Structure\n\n"
+                    "EldVatten recognizes several citizenship "
+                    "classes, including Active Citizen, Honorary "
+                    "Citizen, Initiate Citizen, and Allied Individual.\n\n"
+                    "Citizenship is distinct from social rank. "
+                    "The society's social ranks include Lysingr, "
+                    "Karl, Thegn, Jarl, and Godi.\n\n"
+                    "Officers help administer society activities. "
+                    "These positions include Lawspeaker, Hersir, "
+                    "Skafari, Kesserer, Stallari, Skald, and Vard.\n\n"
+                    "Refer to the society's current governing "
+                    "documents for official duties, rights, "
+                    "and procedures.\n\n"
+
+                    "## Chapters and Households\n\n"
+                    "Chapters coordinate local activities. "
+                    "Households provide additional opportunities "
+                    "for cooperation, study, and shared projects.\n\n"
+                    "Members may also participate in recognized "
+                    "Orders and community groups when eligible.\n\n"
+
+                    "## Attending Events\n\n"
+                    "Before attending an event:\n\n"
+                    "1. Read the event description and location.\n"
+                    "2. Confirm whether registration is required.\n"
+                    "3. Review clothing and equipment guidance.\n"
+                    "4. Tell the organizer about relevant access needs.\n"
+                    "5. Follow the site's safety and conduct rules.\n\n"
+
+                    "## Shared Equipment\n\n"
+                    "Tools, tents, tables, books, and other society "
+                    "property must be returned in suitable condition. "
+                    "Report damage or missing items to the person "
+                    "responsible for the equipment.\n\n"
+                    "Do not repair specialized equipment without "
+                    "approval from the responsible officer or "
+                    "equipment coordinator.\n\n"
+
+                    "## Research and Interpretation\n\n"
+                    "Members should distinguish historical evidence "
+                    "from reconstruction, interpretation, and "
+                    "modern convenience.\n\n"
+                    "When presenting information to the public, "
+                    "identify uncertainty and cite useful sources "
+                    "when practical.\n\n"
+
+                    "## Community Conduct\n\n"
+                    "Treat members and visitors with respect. "
+                    "Follow instructions from authorized event "
+                    "staff. Report safety concerns promptly.\n\n"
+                    "Disagreements should be addressed through "
+                    "the appropriate society procedures rather "
+                    "than through personal disputes.\n\n"
+
+                    "## Questions\n\n"
+                    "Contact an event organizer, chapter officer, "
+                    "or the appropriate society officer if you "
+                    "need clarification about an activity.\n"
                 ),
                 "visibility": Resource.Visibility.MEMBERS,
                 "sort_order": 10,
@@ -72,18 +153,71 @@ class Command(BaseCommand):
             },
             {
                 "title": "[DEV] Event Planning Checklist",
-                "description": "Example event preparation checklist.",
+                "description": (
+                    "Planning checklist for a proposed autumn "
+                    "living-history demonstration at North Meadow. "
+                    "Includes staffing, equipment, safety, "
+                    "and public access tasks."
+                ),
                 "filename": "event_checklist.md",
                 "content": (
-                    "# Event Planning Checklist\n\n"
-                    "- [ ] Define event goals\n"
-                    "- [ ] Select a location\n"
-                    "- [ ] Confirm organizers\n"
-                    "- [ ] Prepare equipment\n"
-                    "- [ ] Review safety requirements\n"
-                    "- [ ] Confirm accessibility needs\n"
-                    "- [ ] Announce the event\n"
-                    "- [ ] Collect feedback\n"
+                    "# North Meadow Living-History Day\n\n"
+                    "## Event Planning Checklist\n\n"
+                    "**Proposed date:** October 17, 2026\n\n"
+                    "**Location:** North Meadow Heritage Grounds\n\n"
+                    "**Coordinator:** Event Planning Committee\n\n"
+                    "**Expected attendance:** 35 members and "
+                    "approximately 80 public visitors\n\n"
+
+                    "## Eight Weeks Before the Event\n\n"
+                    "- [x] Confirm the educational purpose.\n"
+                    "- [x] Request use of the site.\n"
+                    "- [x] Prepare a draft activity schedule.\n"
+                    "- [x] Identify lead volunteers.\n"
+                    "- [ ] Confirm available event funding.\n\n"
+
+                    "## Four Weeks Before the Event\n\n"
+                    "- [x] Inspect the shared tent inventory.\n"
+                    "- [x] Request tables and display stands.\n"
+                    "- [ ] Confirm the weaving demonstration team.\n"
+                    "- [ ] Arrange a first-aid point.\n"
+                    "- [ ] Review the site accessibility plan.\n"
+                    "- [ ] Confirm visitor parking and signs.\n"
+                    "- [ ] Publish the public announcement.\n\n"
+
+                    "## One Week Before the Event\n\n"
+                    "- [ ] Send the final schedule to volunteers.\n"
+                    "- [ ] Confirm the arrival time for each team.\n"
+                    "- [ ] Check the weather forecast.\n"
+                    "- [ ] Prepare visitor information sheets.\n"
+                    "- [ ] Confirm the drinking-water supply.\n"
+                    "- [ ] Inspect ropes, pegs, and tent poles.\n"
+                    "- [ ] Prepare equipment sign-out records.\n\n"
+
+                    "## Event Day\n\n"
+                    "- [ ] Mark the vehicle unloading area.\n"
+                    "- [ ] Inspect the site before setup.\n"
+                    "- [ ] Establish emergency access routes.\n"
+                    "- [ ] Complete the volunteer briefing.\n"
+                    "- [ ] Confirm that displays are stable.\n"
+                    "- [ ] Open the visitor welcome table.\n"
+                    "- [ ] Record incidents or equipment problems.\n"
+                    "- [ ] Complete the closing site inspection.\n\n"
+
+                    "## After the Event\n\n"
+                    "- [ ] Return borrowed equipment.\n"
+                    "- [ ] Record damaged or missing items.\n"
+                    "- [ ] Reconcile receipts and expenses.\n"
+                    "- [ ] Collect volunteer feedback.\n"
+                    "- [ ] Save final attendance figures.\n"
+                    "- [ ] Prepare a short report for the chapter.\n\n"
+
+                    "## Planning Notes\n\n"
+                    "Keep the main walking route clear. "
+                    "Place craft demonstrations where visitors "
+                    "can watch without entering work areas.\n\n"
+                    "The site coordinator must approve any "
+                    "changes to the fire or cooking areas.\n"
                 ),
                 "visibility": Resource.Visibility.MEMBERS,
                 "sort_order": 20,
@@ -96,17 +230,67 @@ class Command(BaseCommand):
             },
             {
                 "title": "[DEV] Chapter Meeting Agenda",
-                "description": "Example resource restricted to one chapter.",
+                "description": (
+                    "Draft agenda for the Fyr Draca Chapter's "
+                    "November planning meeting, covering the "
+                    "winter workshop schedule, shared equipment, "
+                    "and volunteer assignments."
+                ),
                 "filename": "chapter_agenda.md",
                 "content": (
-                    "# Chapter Meeting Agenda\n\n"
-                    "Development sample.\n\n"
-                    "1. Opening\n"
-                    "2. Attendance\n"
-                    "3. Previous business\n"
-                    "4. Current business\n"
-                    "5. Upcoming activities\n"
-                    "6. Closing\n"
+                    "# Fyr Draca Chapter\n\n"
+                    "## November Planning Meeting\n\n"
+                    "**Date:** November 14, 2026\n\n"
+                    "**Time:** 1:00 PM - 3:00 PM\n\n"
+                    "**Location:** Alderbrook Community Hall\n\n"
+                    "**Meeting type:** Chapter planning session\n\n"
+
+                    "## Agenda\n\n"
+
+                    "### 1. Opening and Attendance\n\n"
+                    "- Call the meeting to order.\n"
+                    "- Record attending members.\n"
+                    "- Confirm that the meeting can proceed.\n\n"
+
+                    "### 2. Previous Business\n\n"
+                    "- Review the October meeting notes.\n"
+                    "- Confirm the status of earlier assignments.\n"
+                    "- Review unresolved equipment requests.\n\n"
+
+                    "### 3. Winter Workshop Program\n\n"
+                    "- Discuss the proposed tablet-weaving class.\n"
+                    "- Review the nalbinding workshop outline.\n"
+                    "- Identify instructors and support volunteers.\n"
+                    "- Review proposed dates and venue needs.\n\n"
+
+                    "### 4. Equipment and Storage\n\n"
+                    "- Review the autumn tent inspection report.\n"
+                    "- Discuss replacement ropes and pegs.\n"
+                    "- Confirm the winter storage arrangements.\n"
+                    "- Assign the next inventory check.\n\n"
+
+                    "### 5. Public Education\n\n"
+                    "- Review feedback from recent demonstrations.\n"
+                    "- Discuss potential library partnerships.\n"
+                    "- Identify suitable introductory activities.\n\n"
+
+                    "### 6. Financial Update\n\n"
+                    "- Review outstanding reimbursements.\n"
+                    "- Discuss the proposed workshop materials budget.\n"
+                    "- Record any items requiring further approval.\n\n"
+
+                    "### 7. New Business\n\n"
+                    "- Receive additional member proposals.\n"
+                    "- Assign owners to approved follow-up tasks.\n\n"
+
+                    "### 8. Next Meeting and Closing\n\n"
+                    "- Confirm the next meeting date.\n"
+                    "- Review outstanding action items.\n"
+                    "- Close the meeting.\n\n"
+
+                    "## Preparation\n\n"
+                    "Members should review the shared inventory "
+                    "notes and bring proposed workshop dates.\n"
                 ),
                 "visibility": Resource.Visibility.CUSTOM,
                 "sort_order": 30,
@@ -119,16 +303,69 @@ class Command(BaseCommand):
             },
             {
                 "title": "[DEV] Community Group Notes",
-                "description": "Example resource restricted to a community group.",
+                "description": (
+                    "Working notes from a small textile research "
+                    "group. Covers sample documentation, "
+                    "tablet-weaving experiments, source material, "
+                    "and upcoming study sessions."
+                ),
                 "filename": "group_notes.md",
                 "content": (
-                    "# Community Group Notes\n\n"
-                    "Development sample.\n\n"
-                    "## Discussion Topics\n\n"
-                    "- Group activities\n"
-                    "- Upcoming projects\n"
-                    "- Equipment and materials\n"
-                    "- Member participation\n"
+                    "# Textile Research Working Group\n\n"
+                    "## Notes from the October Study Session\n\n"
+                    "**Date:** October 24, 2026\n\n"
+                    "**Location:** Willowbank Craft House\n\n"
+                    "**Status:** Working notes; not a final "
+                    "research publication\n\n"
+
+                    "## Current Research Questions\n\n"
+                    "The group is comparing several narrow-band "
+                    "weaving methods and recording how changes "
+                    "in yarn tension affect the finished fabric.\n\n"
+                    "The current samples are practical "
+                    "reconstructions. They must not be presented "
+                    "as direct copies of historical finds.\n\n"
+
+                    "## Sample TW-014\n\n"
+                    "**Technique:** Four-hole tablet weaving\n\n"
+                    "**Material:** Wool yarn\n\n"
+                    "**Colors:** Dark blue and natural white\n\n"
+                    "**Target width:** 18 mm\n\n"
+                    "**Measured width:** 20 mm\n\n"
+                    "**Observation:** The sample became wider "
+                    "after several changes in tablet direction. "
+                    "Uneven tension may explain part of the result.\n\n"
+
+                    "## Sample TW-015\n\n"
+                    "**Technique:** Alternating tablet turns\n\n"
+                    "**Material:** Wool yarn\n\n"
+                    "**Colors:** Red and natural brown\n\n"
+                    "**Target width:** 22 mm\n\n"
+                    "**Measured width:** 21 mm\n\n"
+                    "**Observation:** The edges remained even "
+                    "through most of the sample. The group will "
+                    "repeat the test with a longer working length.\n\n"
+
+                    "## Materials Inventory\n\n"
+                    "- 16 weaving tablets in good condition\n"
+                    "- 6 practice shuttles\n"
+                    "- 3 portable weaving frames\n"
+                    "- 12 small yarn samples\n"
+                    "- 1 digital measuring gauge\n"
+                    "- 2 reference binders\n\n"
+
+                    "## Next Tasks\n\n"
+                    "- Photograph the completed samples.\n"
+                    "- Record yarn types and approximate thickness.\n"
+                    "- Repeat sample TW-014 with even tension.\n"
+                    "- Check the sources listed in the reference binder.\n"
+                    "- Prepare a short public demonstration outline.\n\n"
+
+                    "## Next Meeting\n\n"
+                    "**Proposed date:** November 21, 2026\n\n"
+                    "**Location:** Willowbank Craft House\n\n"
+                    "Bring the sample records and any revised "
+                    "weaving diagrams.\n"
                 ),
                 "visibility": Resource.Visibility.CUSTOM,
                 "sort_order": 40,
@@ -141,14 +378,24 @@ class Command(BaseCommand):
             },
             {
                 "title": "[DEV] Budget Template",
-                "description": "Example CSV accessible to one selected member.",
+                "description": (
+                    "Sample CSV budget for a proposed community "
+                    "craft day. Includes projected costs, "
+                    "recorded expenses, and unspent allocations. "
+                    "All figures are fictional."
+                ),
                 "filename": "budget_template.csv",
                 "content": (
                     "Category,Description,Estimated Cost,Actual Cost\n"
-                    "Venue,Event location,0,0\n"
-                    "Materials,Workshop supplies,0,0\n"
-                    "Travel,Transportation,0,0\n"
-                    "Other,Miscellaneous,0,0\n"
+                    "Venue,Community hall rental,125.00,125.00\n"
+                    "Materials,Wool yarn and weaving cards,86.50,79.20\n"
+                    "Materials,Wood for display repairs,42.00,38.75\n"
+                    "Printing,Visitor handouts and signs,30.00,24.60\n"
+                    "Travel,Instructor mileage reimbursement,65.00,65.00\n"
+                    "Refreshments,Water tea and light snacks,48.00,41.35\n"
+                    "Equipment,Replacement tent ropes,55.00,0.00\n"
+                    "Other,Contingency allowance,50.00,0.00\n"
+                    "Total,Event operating costs,501.50,373.90\n"
                 ),
                 "visibility": Resource.Visibility.CUSTOM,
                 "sort_order": 50,
@@ -161,7 +408,14 @@ class Command(BaseCommand):
             },
             {
                 "title": "[DEV] Birka Historical Reference",
-                "description": "External historical reference link.",
+                "description": (
+                    "External background reading about Birka, "
+                    "a Viking Age trading settlement in Sweden. "
+                    "Useful as an introductory reference for "
+                    "members preparing educational displays. "
+                    "Use specialist publications for detailed "
+                    "historical claims."
+                ),
                 "external_url": "https://en.wikipedia.org/wiki/Birka",
                 "visibility": Resource.Visibility.MEMBERS,
                 "sort_order": 60,
@@ -169,7 +423,12 @@ class Command(BaseCommand):
             },
             {
                 "title": "[DEV] Archived Reference Link",
-                "description": "Example inactive resource for management testing.",
+                "description": (
+                    "Retired reference entry from a previous "
+                    "research collection. This item is inactive "
+                    "and remains in the management interface "
+                    "for recordkeeping."
+                ),
                 "external_url": "https://example.org/",
                 "visibility": Resource.Visibility.MEMBERS,
                 "sort_order": 70,

@@ -26,10 +26,215 @@ TEST_GROUP_NAME = "Test Custom Group"
 TEST_CHAPTER_NAME = "Fyr Draca Chapter"
 
 FILLER_TEXT = (
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
-    "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
-    "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris."
+    "Please arrive with enough time to sign in and set out your materials. "
+    "Wear suitable clothing for the activity and bring any tools listed "
+    "in the event notes. Volunteers can ask the organizer for a task "
+    "when they reach the site."
 )
+
+EVENT_DESCRIPTIONS = {
+    "Open Workshop: Tablet Weaving": (
+        "Visitors can watch a tablet-weaving demonstration and try a short "
+        "pattern on the practice loom. All sample yarn and cards are provided."
+    ),
+    "Member Camp Check-In": (
+        "Check the shared equipment, confirm the tent assignments, and "
+        "review the safety plan before the public activities begin."
+    ),
+    "Planning Session: Storage Inventory": (
+        "An invited working session to reconcile the storage ledger with "
+        "the crates on hand. Bring notes on items your team borrowed."
+    ),
+    "Morning Bread and Hearth Demonstration": (
+        "Learn how flatbread dough is prepared and cooked on a safe "
+        "demonstration hearth. The session includes a short tasting."
+    ),
+    "Living History Camp: Visitor Hours": (
+        "Open camp hours with craft displays, daily-life demonstrations, "
+        "and a staffed welcome table for visiting families."
+    ),
+    "Camp Kitchen Coordination": (
+        "Kitchen volunteers will assign work areas, check ingredients, "
+        "and review food-safety and cleanup responsibilities."
+    ),
+    "Introductory Runic Lettering": (
+        "Try a short writing exercise using historical rune forms. "
+        "Paper, pencils, and example inscriptions are provided."
+    ),
+    "Quick Tool Safety Briefing": (
+        "A short briefing on tool handling, shared workspaces, and "
+        "first-aid contacts before craft work begins."
+    ),
+    "Night Watch and Stargazing": (
+        "An evening gathering to observe the sky and discuss how "
+        "travelers used stars and landmarks for orientation."
+    ),
+    "Autumn Encampment and Craft Fair": (
+        "Three days of member camping, craft teaching, camp maintenance, "
+        "and scheduled visitor demonstrations. See the duty roster."
+    ),
+    "Metalwork Demonstration Within the Encampment": (
+        "The smithing team will explain forging equipment and show "
+        "sample work in the marked demonstration area."
+    ),
+    "Seven-Day Textile Research Residency": (
+        "A week of supervised weaving, dye-sample documentation, and "
+        "comparison of historical textile techniques."
+    ),
+    "Month-End Maritime Heritage Gathering": (
+        "A multi-day display of ship models, ropework, and navigation "
+        "research that continues into the next calendar month."
+    ),
+    "Detailed Workshop Registration Notes": (
+        "The workshop packet includes station assignments, a supplies "
+        "list, setup notes, and instructions for returning shared tools."
+    ),
+    "Long-Form Inventory Ledger Review": (
+        "Review the storage ledger and identify any inventory IDs that "
+        "do not match the physical labels on their crates."
+    ),
+    "Annual Living History Planning Guide": (
+        "Members will review goals for interpretation, public education, "
+        "accessibility, travel, equipment, and training."
+    ),
+    "Finding the Riverside Annex Workshop": (
+        "Meet at the annex entrance. Follow signs to the classroom, "
+        "and avoid the loading area while supplies are unloaded."
+    ),
+    "Guest Craft Demonstration": (
+        "The public can observe a short demonstration of everyday "
+        "Viking-era crafts and ask questions about the tools."
+    ),
+    "Sagas & 'Skalds' <Open Circle>": (
+        "A facilitated reading and discussion of short translated saga "
+        "passages, with time for questions from new members."
+    ),
+    "Morning Bell and Site Access": (
+        "The grounds are reserved for setup and access coordination "
+        "during the full-day boundary test period."
+    ),
+    "Late-Day Shield Painting": (
+        "Participants will prepare wood samples and paint simple "
+        "shield patterns with the workshop's supplied materials."
+    ),
+    "Spring Research Symposium": (
+        "A public meeting for short talks on material culture, "
+        "craft documentation, and plans for future research."
+    ),
+    "Household Textile Study Group": (
+        "A private work session for group members to examine weave "
+        "patterns and record sample measurements."
+    ),
+    "Fyr Draca Chapter Planning Meeting": (
+        "Chapter members will review the local activity calendar, "
+        "volunteer needs, and shared equipment requests."
+    ),
+    "Research Library Viewing Appointment": (
+        "A limited-access viewing session to review the current "
+        "reference collection and discuss catalog updates."
+    ),
+    "Private Equipment Handoff": (
+        "An equipment pickup has been arranged for the invited member. "
+        "A separate participant can view this calendar record."
+    ),
+    "Camp Crew Equipment Check": (
+        "The camp crew will count tent poles, inspect ropes, and note "
+        "replacement supplies for the next trip."
+    ),
+    "Public Introduction to Nalbinding": (
+        "An open introduction to looped textile techniques with "
+        "samples for visitors to examine."
+    ),
+    "Updated Invitations: Cooking Practice": (
+        "A small cooking-practice session. One earlier invitation was "
+        "withdrawn after the volunteer roster changed."
+    ),
+    "Small-Group Embroidery Workshop": (
+        "A hands-on session for invited members with a separate "
+        "view-only audience for scheduling purposes."
+    ),
+    "Completed: Public Ropework Demonstration": (
+        "Visitors learned three basic knots and watched a rope-making "
+        "demonstration. The session has ended."
+    ),
+    "Completed: Camp Grounds Cleanup": (
+        "Members cleared the work areas, sorted equipment, and "
+        "returned borrowed tables to storage."
+    ),
+    "Completed: Community Craft Market": (
+        "An earlier public market featuring demonstrations, examples "
+        "of reconstructed goods, and educational displays."
+    ),
+    "Completed: Officers' Research Review": (
+        "An invited review of the research notes submitted for the "
+        "previous quarter."
+    ),
+    "Completed: Annual General Gathering": (
+        "The society met for reports, planning, and shared workshops. "
+        "The event record remains available for history."
+    ),
+    "Completed: Unanswered Workshop Invitation": (
+        "A private workshop record kept to check the display of "
+        "an invitation that did not receive a response."
+    ),
+    "Cancelled: Outdoor Archery Introduction": (
+        "This public archery introduction was cancelled. The record "
+        "remains on the calendar to inform visitors."
+    ),
+    "Cancelled: Member Tool Maintenance Day": (
+        "The volunteer tool-care session was cancelled. Members "
+        "should not travel to the workshop site."
+    ),
+    "Cancelled: Open-Air Dye Demonstration": (
+        "The outdoor dye demonstration was cancelled after setup. "
+        "No participants should report to the location."
+    ),
+    "Cancelled: Winter Hearth Workshop": (
+        "This earlier workshop was cancelled and remains visible "
+        "as a historic record."
+    ),
+}
+
+EVENT_LOCATIONS = {
+    "Open Workshop: Tablet Weaving": "Alderbrook Public Hall, Workshop Room",
+    "Member Camp Check-In": "North Meadow Campground",
+    "Planning Session: Storage Inventory": "West Storehouse, Inventory Room",
+    "Morning Bread and Hearth Demonstration": "Alderbrook Heritage Hall, Hearth Area",
+    "Living History Camp: Visitor Hours": "North Meadow Campground, Public Walkway",
+    "Camp Kitchen Coordination": "North Meadow Campground, Kitchen Shelter",
+    "Introductory Runic Lettering": "Alderbrook Heritage Hall, Classroom 2",
+    "Quick Tool Safety Briefing": "North Meadow Campground, Tool Shelter",
+    "Night Watch and Stargazing": "North Meadow, Eastern Field",
+    "Autumn Encampment and Craft Fair": "North Meadow Campground",
+    "Metalwork Demonstration Within the Encampment": "North Meadow Campground, Smithing Area",
+    "Seven-Day Textile Research Residency": "Willowbank Craft House",
+    "Month-End Maritime Heritage Gathering": "Harborview Heritage Center",
+    "Detailed Workshop Registration Notes": "Willowbank Craft House",
+    "Long-Form Inventory Ledger Review": "West Storehouse",
+    "Annual Living History Planning Guide": "Alderbrook Public Hall",
+    "Finding the Riverside Annex Workshop": "Riverside Annex",
+    "Sagas & 'Skalds' <Open Circle>": "Alderbrook Public Hall, Reading Room",
+    "Late-Day Shield Painting": "Willowbank Craft House",
+    "Spring Research Symposium": "Harborview Heritage Center",
+    "Household Textile Study Group": "Willowbank Craft House, Study Room",
+    "Fyr Draca Chapter Planning Meeting": "North Meadow Campground, Meeting Shelter",
+    "Research Library Viewing Appointment": "Alderbrook Research Library",
+    "Private Equipment Handoff": "West Storehouse, Rear Entrance",
+    "Camp Crew Equipment Check": "North Meadow Campground, Equipment Shelter",
+    "Public Introduction to Nalbinding": "Harborview Heritage Center, Classroom",
+    "Updated Invitations: Cooking Practice": "North Meadow Campground, Kitchen Shelter",
+    "Small-Group Embroidery Workshop": "Willowbank Craft House, Workshop 1",
+    "Completed: Public Ropework Demonstration": "Harborview Heritage Center",
+    "Completed: Camp Grounds Cleanup": "North Meadow Campground",
+    "Completed: Community Craft Market": "Alderbrook Public Hall",
+    "Completed: Officers' Research Review": "Alderbrook Public Hall, Meeting Room",
+    "Completed: Annual General Gathering": "North Meadow Campground",
+    "Completed: Unanswered Workshop Invitation": "Willowbank Craft House",
+    "Cancelled: Outdoor Archery Introduction": "North Meadow Campground, Range",
+    "Cancelled: Member Tool Maintenance Day": "West Storehouse",
+    "Cancelled: Open-Air Dye Demonstration": "North Meadow Campground, Dye Area",
+    "Cancelled: Winter Hearth Workshop": "Alderbrook Heritage Hall",
+}
 
 
 class Command(BaseCommand):
@@ -214,13 +419,18 @@ class Command(BaseCommand):
         visibility=Event.Visibility.MEMBERS,
         status=Event.Status.ACTIVE,
         description=FILLER_TEXT,
-        location="Development Location",
+        location=None,
         organizer="organizer",
         invitation_targets=(),
         visibility_targets=(),
         participation=(),
         revoked_invites=(),
     ):
+        if description == FILLER_TEXT:
+            description = EVENT_DESCRIPTIONS.get(title, FILLER_TEXT)
+        if location is None:
+            location = EVENT_LOCATIONS.get(title, "Alderbrook Community Center")
+
         event = Event(
             title=f"{SEED_PREFIX} {title}",
             description=description,
@@ -314,24 +524,24 @@ class Command(BaseCommand):
         attendance = EventParticipation.AttendanceStatus
 
         self.create_event(
-            "Happening Now - Public",
+            'Open Workshop: Tablet Weaving',
             self.now - timedelta(hours=2),
             self.now + timedelta(hours=4),
             visibility=Event.Visibility.PUBLIC,
-            location="Development Hall",
+            location="Alderbrook Public Hall, Workshop Room",
             invitation_targets=({"user": "member"},),
             participation=(("member", rsvp.GOING, attendance.UNKNOWN),),
         )
 
         self.create_event(
-            "Happening Now - Members",
+            'Member Camp Check-In',
             self.now - timedelta(hours=9),
             self.now + timedelta(hours=2),
-            location="Development Grounds",
+            location="North Meadow Campground",
         )
 
         self.create_event(
-            "Happening Now - Invited Only",
+            'Planning Session: Storage Inventory',
             self.now - timedelta(minutes=30),
             self.now + timedelta(hours=6),
             visibility=Event.Visibility.CUSTOM,
@@ -340,7 +550,7 @@ class Command(BaseCommand):
         )
 
         self.create_event(
-            "Tomorrow - Morning",
+            'Morning Bread and Hearth Demonstration',
             self.local_datetime(day + timedelta(days=1), 9),
             self.local_datetime(day + timedelta(days=1), 11),
             visibility=Event.Visibility.PUBLIC,
@@ -348,7 +558,7 @@ class Command(BaseCommand):
 
         overlap_day = day + timedelta(days=2)
         self.create_event(
-            "Overlap A - Morning Through Afternoon",
+            'Living History Camp: Visitor Hours',
             self.local_datetime(overlap_day, 9),
             self.local_datetime(overlap_day, 14),
             visibility=Event.Visibility.PUBLIC,
@@ -363,51 +573,51 @@ class Command(BaseCommand):
         )
 
         self.create_event(
-            "Overlap B - Concurrent Event",
+            'Camp Kitchen Coordination',
             self.local_datetime(overlap_day, 10),
             self.local_datetime(overlap_day, 12),
-            location="Second Development Location",
+            location="North Meadow Campground, Kitchen Shelter",
             invitation_targets=({"user": "member_three"},),
         )
 
         self.create_event(
-            "Overlap C - Same Start Time",
+            'Introductory Runic Lettering',
             self.local_datetime(overlap_day, 10),
             self.local_datetime(overlap_day, 11, 30),
             visibility=Event.Visibility.PUBLIC,
         )
 
         self.create_event(
-            "Overlap D - Short Event Within Longer Event",
+            'Quick Tool Safety Briefing',
             self.local_datetime(overlap_day, 10, 15),
             self.local_datetime(overlap_day, 10, 30),
         )
 
         overnight = day + timedelta(days=3)
         self.create_event(
-            "Crossing Midnight",
+            'Night Watch and Stargazing',
             self.local_datetime(overnight, 23, 15),
             self.local_datetime(overnight + timedelta(days=1), 3, 30),
             visibility=Event.Visibility.PUBLIC,
         )
 
         self.create_event(
-            "Three-Day Event",
+            'Autumn Encampment and Craft Fair',
             self.local_datetime(day + timedelta(days=5), 9),
             self.local_datetime(day + timedelta(days=7), 18),
-            location="Development Site",
+            location="North Meadow Campground",
             invitation_targets=({"user": "member"},),
         )
 
         self.create_event(
-            "Overlap Within Three-Day Event",
+            'Metalwork Demonstration Within the Encampment',
             self.local_datetime(day + timedelta(days=6), 13),
             self.local_datetime(day + timedelta(days=6), 16),
-            location="Development Site - Area B",
+            location="North Meadow Campground, Smithing Area",
         )
 
         self.create_event(
-            "Week-Long Event",
+            'Seven-Day Textile Research Residency',
             self.local_datetime(day + timedelta(days=10), 9),
             self.local_datetime(day + timedelta(days=17), 16),
             visibility=Event.Visibility.PUBLIC,
@@ -415,44 +625,50 @@ class Command(BaseCommand):
 
         boundary = self.month_boundary_date()
         self.create_event(
-            "Cross-Month Event",
+            'Month-End Maritime Heritage Gathering',
             self.local_datetime(boundary, 12),
             self.local_datetime(boundary + timedelta(days=3), 14),
             visibility=Event.Visibility.PUBLIC,
         )
 
         self.create_event(
-            "Long Title - " + "RepeatedTitleSegment" * 8,
+            "Detailed Workshop Registration Notes: "
+            + "Bring the full tool and material checklist. " * 3,
             self.local_datetime(day + timedelta(days=4), 11),
             self.local_datetime(day + timedelta(days=4), 14),
             description=FILLER_TEXT * 3,
         )
 
         self.create_event(
-            "Unbroken Body Text",
+            'Long-Form Inventory Ledger Review',
             self.local_datetime(day + timedelta(days=8), 13),
             self.local_datetime(day + timedelta(days=8), 16),
             description=(
-                FILLER_TEXT + "\n\n" + "UnbrokenToken" * 55
+                FILLER_TEXT
+                + "\n\n"
+                + "NORTHMEADOWSUPPLYINVENTORYREFERENCE" * 55
             ),
         )
 
         self.create_event(
-            "Very Long Description",
+            'Annual Living History Planning Guide',
             self.local_datetime(day + timedelta(days=9), 12),
             self.local_datetime(day + timedelta(days=9), 16),
             description=(FILLER_TEXT + "\n\n") * 48,
         )
 
         self.create_event(
-            "Long Location Field",
+            'Finding the Riverside Annex Workshop',
             self.local_datetime(day + timedelta(days=11), 12),
             self.local_datetime(day + timedelta(days=11), 15),
-            location=("Development Location - " + "LongBuildingName" * 13),
+            location=(
+                "Riverside Annex, East Workshop Wing, "
+                + "Second Corridor, Historic Collections Room, " * 4
+            ),
         )
 
         self.create_event(
-            "Empty Description and Location",
+            'Guest Craft Demonstration',
             self.local_datetime(day + timedelta(days=12), 10),
             self.local_datetime(day + timedelta(days=12), 13),
             visibility=Event.Visibility.PUBLIC,
@@ -461,7 +677,7 @@ class Command(BaseCommand):
         )
 
         self.create_event(
-            "Punctuation & 'Quotes' <Angle Brackets>",
+            "Sagas & 'Skalds' <Open Circle>",
             self.local_datetime(day + timedelta(days=17), 10),
             self.local_datetime(day + timedelta(days=17), 12),
             visibility=Event.Visibility.PUBLIC,
@@ -472,27 +688,27 @@ class Command(BaseCommand):
         )
 
         self.create_event(
-            "Zero-Duration Event",
+            'Site Opening Notice (Instant)',
             self.local_datetime(day + timedelta(days=23), 9),
             self.local_datetime(day + timedelta(days=23), 9),
             visibility=Event.Visibility.PUBLIC,
         )
 
         self.create_event(
-            "All-Day Boundary - 24 Hours",
+            'Morning Bell and Site Access',
             self.local_datetime(day + timedelta(days=24), 0),
             self.local_datetime(day + timedelta(days=25), 0),
             visibility=Event.Visibility.PUBLIC,
         )
 
         self.create_event(
-            "Late Afternoon Event",
+            'Late-Day Shield Painting',
             self.local_datetime(day + timedelta(days=18), 16, 30),
             self.local_datetime(day + timedelta(days=18), 19, 30),
         )
 
         self.create_event(
-            "Far Future Event",
+            'Spring Research Symposium',
             self.local_datetime(day + timedelta(days=180), 9),
             self.local_datetime(day + timedelta(days=180), 12),
             visibility=Event.Visibility.PUBLIC,
@@ -504,7 +720,7 @@ class Command(BaseCommand):
         attendance = EventParticipation.AttendanceStatus
 
         self.create_event(
-            "Custom - Group Visibility",
+            'Household Textile Study Group',
             self.local_datetime(day + timedelta(days=13), 10),
             self.local_datetime(day + timedelta(days=13), 12),
             visibility=Event.Visibility.CUSTOM,
@@ -513,7 +729,7 @@ class Command(BaseCommand):
         )
 
         self.create_event(
-            "Custom - Chapter Visibility",
+            'Fyr Draca Chapter Planning Meeting',
             self.local_datetime(day + timedelta(days=14), 14),
             self.local_datetime(day + timedelta(days=14), 17),
             visibility=Event.Visibility.CUSTOM,
@@ -521,7 +737,7 @@ class Command(BaseCommand):
         )
 
         self.create_event(
-            "Custom - Visible But Not Invited",
+            'Research Library Viewing Appointment',
             self.local_datetime(day + timedelta(days=15), 11),
             self.local_datetime(day + timedelta(days=15), 13),
             visibility=Event.Visibility.CUSTOM,
@@ -529,7 +745,7 @@ class Command(BaseCommand):
         )
 
         self.create_event(
-            "Custom - Invite Plus Separate Visibility",
+            'Private Equipment Handoff',
             self.local_datetime(day + timedelta(days=16), 10),
             self.local_datetime(day + timedelta(days=16), 12),
             visibility=Event.Visibility.CUSTOM,
@@ -539,7 +755,7 @@ class Command(BaseCommand):
         )
 
         self.create_event(
-            "Members - Group Invitation Targets",
+            'Camp Crew Equipment Check',
             self.local_datetime(day + timedelta(days=19), 10),
             self.local_datetime(day + timedelta(days=19), 13),
             invitation_targets=({"community_group": True},),
@@ -550,7 +766,7 @@ class Command(BaseCommand):
         )
 
         self.create_event(
-            "Public - Only Selected Members Invited",
+            'Public Introduction to Nalbinding',
             self.local_datetime(day + timedelta(days=20), 11),
             self.local_datetime(day + timedelta(days=20), 13),
             visibility=Event.Visibility.PUBLIC,
@@ -562,7 +778,7 @@ class Command(BaseCommand):
         )
 
         self.create_event(
-            "Custom - Previously Invited Member Revoked",
+            'Updated Invitations: Cooking Practice',
             self.local_datetime(day + timedelta(days=21), 11),
             self.local_datetime(day + timedelta(days=21), 14),
             visibility=Event.Visibility.CUSTOM,
@@ -571,7 +787,7 @@ class Command(BaseCommand):
         )
 
         self.create_event(
-            "Custom - Two Invitation Targets",
+            'Small-Group Embroidery Workshop',
             self.local_datetime(day + timedelta(days=22), 11),
             self.local_datetime(day + timedelta(days=22), 14),
             visibility=Event.Visibility.CUSTOM,
@@ -588,7 +804,7 @@ class Command(BaseCommand):
         attendance = EventParticipation.AttendanceStatus
 
         self.create_event(
-            "Past - Yesterday",
+            'Completed: Public Ropework Demonstration',
             self.local_datetime(day - timedelta(days=1), 9),
             self.local_datetime(day - timedelta(days=1), 12),
             visibility=Event.Visibility.PUBLIC,
@@ -597,7 +813,7 @@ class Command(BaseCommand):
         )
 
         self.create_event(
-            "Past - Last Week",
+            'Completed: Camp Grounds Cleanup',
             self.local_datetime(day - timedelta(days=7), 10),
             self.local_datetime(day - timedelta(days=7), 15),
             invitation_targets=(
@@ -611,14 +827,14 @@ class Command(BaseCommand):
         )
 
         self.create_event(
-            "Past - Last Month",
+            'Completed: Community Craft Market',
             self.local_datetime(day - timedelta(days=30), 10),
             self.local_datetime(day - timedelta(days=30), 16),
             visibility=Event.Visibility.PUBLIC,
         )
 
         self.create_event(
-            "Past - Three Months Ago",
+            "Completed: Officers' Research Review",
             self.local_datetime(day - timedelta(days=90), 11),
             self.local_datetime(day - timedelta(days=90), 14),
             visibility=Event.Visibility.CUSTOM,
@@ -627,7 +843,7 @@ class Command(BaseCommand):
         )
 
         self.create_event(
-            "Past - Over One Year Ago",
+            'Completed: Annual General Gathering',
             self.local_datetime(day - timedelta(days=395), 10),
             self.local_datetime(day - timedelta(days=395), 17),
             invitation_targets=({"user": "member"},),
@@ -635,7 +851,7 @@ class Command(BaseCommand):
         )
 
         self.create_event(
-            "Past - Unanswered Invitation",
+            'Completed: Unanswered Workshop Invitation',
             self.local_datetime(day - timedelta(days=15), 9),
             self.local_datetime(day - timedelta(days=15), 12),
             visibility=Event.Visibility.CUSTOM,
@@ -644,8 +860,9 @@ class Command(BaseCommand):
 
     def create_cancelled_events(self):
         day = self.today
+
         self.create_event(
-            "Cancelled - Upcoming Public Event",
+            'Cancelled: Outdoor Archery Introduction',
             self.local_datetime(day + timedelta(days=4), 9),
             self.local_datetime(day + timedelta(days=4), 12),
             visibility=Event.Visibility.PUBLIC,
@@ -653,7 +870,7 @@ class Command(BaseCommand):
         )
 
         self.create_event(
-            "Cancelled - Upcoming Member Event",
+            'Cancelled: Member Tool Maintenance Day',
             self.local_datetime(day + timedelta(days=25), 10),
             self.local_datetime(day + timedelta(days=25), 15),
             status=Event.Status.CANCELLED,
@@ -661,7 +878,7 @@ class Command(BaseCommand):
         )
 
         self.create_event(
-            "Cancelled - During Its Scheduled Time",
+            'Cancelled: Open-Air Dye Demonstration',
             self.now - timedelta(hours=1),
             self.now + timedelta(hours=3),
             visibility=Event.Visibility.PUBLIC,
@@ -669,7 +886,7 @@ class Command(BaseCommand):
         )
 
         self.create_event(
-            "Cancelled - Historic Event",
+            'Cancelled: Winter Hearth Workshop',
             self.local_datetime(day - timedelta(days=50), 10),
             self.local_datetime(day - timedelta(days=50), 14),
             visibility=Event.Visibility.PUBLIC,

@@ -1,3 +1,4 @@
+
 from datetime import timedelta
 
 from django.conf import settings
@@ -44,10 +45,175 @@ SEED_PREFIX = "[DEV VOTE]"
 TEST_GROUP_NAME = "Test Custom Group"
 
 FILLER_TEXT = (
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
-    "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
-    "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris."
+    "The proposal concerns the society's shared equipment, educational programs, "
+    "or administration. Review the scope and expected cost before responding. "
+    "The organizer will record the final decision in the meeting notes."
 )
+
+PROPOSAL_DETAILS = {
+    "Approve Replacement Tent Lines": (
+        "The camping team requests funds to replace worn guy lines "
+        "before the next public encampment."
+    ),
+    "Schedule the Winter Textile Workshop": (
+        "Confirm the proposed winter workshop date so instructors "
+        "can reserve the teaching room."
+    ),
+    "Anonymous Feedback on the Gathering Program": (
+        "Choose whether to keep the current annual gathering format. "
+        "Individual ballot choices must remain private."
+    ),
+    "Choose a Location for the Spring Symposium": (
+        "Choose one of four potential sites for the spring educational "
+        "symposium. The organizing team will verify availability after the vote."
+    ),
+    "Approve the Required Equipment Transfer Record": (
+        "Approve the final transfer record for shared equipment. "
+        "Every eligible reviewer must respond."
+    ),
+    "Accept Custody of the Loaned Display Kit": (
+        "Confirm that the named volunteer will accept responsibility "
+        "for the display kit until it is returned."
+    ),
+    "Confirm the Workshop Supply Request": (
+        "Authorize the list of yarn, needles, and practice materials "
+        "needed for the next class."
+    ),
+    "Select the Next Shared Equipment Purchase": (
+        "Decide whether to buy replacement display supports "
+        "using the remaining equipment budget."
+    ),
+    "Private Ballot on Camp Quiet Hours": (
+        "Vote on the proposed camp quiet-hours policy without "
+        "associating a response with a named voter."
+    ),
+    "Private Ballot on Member Orientation Format": (
+        "Choose whether new-member orientation should include "
+        "a separate practical workshop."
+    ),
+    "Buy New Tablet-Weaving Cards": (
+        "The textile group requests additional weaving tablets "
+        "for introductory workshops."
+    ),
+    "Set the Fyr Draca Winter Meeting Schedule": (
+        "Approve the winter meeting schedule for the Fyr Draca chapter."
+    ),
+    "Replace House Kraken Tent Pegs": (
+        "Approve replacement of damaged tent pegs "
+        "from the household inventory."
+    ),
+    "Approve the Annual Community Program": (
+        "Approve the proposed annual schedule of research, "
+        "public education, and society gatherings."
+    ),
+    "Review the Godi Council Meeting Format": (
+        "Consider a revised format for the council's "
+        "recordkeeping and meeting agenda."
+    ),
+    "Plan the Order of Air Research Display": (
+        "Authorize preparation of a small research display "
+        "by Order of Air members."
+    ),
+    "Schedule Larling Skills Practice": (
+        "Select the next skills-practice session "
+        "for members holding Larling rank."
+    ),
+    "Approve the Lawspeaker Document Review Schedule": (
+        "Review the proposed schedule for checking "
+        "and publishing society documents."
+    ),
+    "Approve the Council Record Archive Plan": (
+        "Decide whether to organize older council records "
+        "in the revised archive structure."
+    ),
+    "Choose a Household Inventory Process": (
+        "Choose a standard method for recording "
+        "and signing out household equipment."
+    ),
+    "Fund the Chapter Textile Demonstration": (
+        "Approve materials for the chapter textile demonstration "
+        "led by the working group."
+    ),
+    "Select the Air Order Apprentice Workshop": (
+        "Choose whether the upcoming training session should "
+        "focus on practical research methods."
+    ),
+    "Approve a Shared Loom Purchase": (
+        "Approve purchase of one portable loom for use "
+        "by the designated members and working group."
+    ),
+    "Fund Replacement Camp Lanterns": (
+        "The camp crew requests replacement lanterns. "
+        "A minimum participation threshold applies."
+    ),
+    "Approve Public Handout Printing": (
+        "Approve printing a small set of public education "
+        "handouts for the next open event."
+    ),
+    "Admit a New Society Citizen": (
+        "Review a fictional citizenship application. "
+        "The decision requires unanimous agreement."
+    ),
+    "Confirm the Revision to the Chapter Rules": (
+        "Review the proposed chapter rule revision. "
+        "Each eligible citizen must submit a response."
+    ),
+    "Choose the Spring Gathering Theme": (
+        "Choose between maritime crafts, textile traditions, "
+        "and trade routes for the spring event."
+    ),
+    "Select Future Research Topics": (
+        "Choose whether the proposed research topics "
+        "should enter the next planning cycle."
+    ),
+    "Approve the September Storage Lease": (
+        "Review the proposed storage lease that reached "
+        "its deadline without administrative closure."
+    ),
+    "Approve the Volunteer Safety Briefing": (
+        "Approve the standard safety briefing for volunteers "
+        "who help with public events."
+    ),
+    "Approve the Equipment Checkout Form": (
+        "Approve the revised form for recording loans "
+        "of shared equipment."
+    ),
+    "Purchase Two Folding Display Tables": (
+        "Authorize two folding display tables "
+        "for public education events."
+    ),
+    "Choose the Autumn Workshop Venue": (
+        "Select the venue for the autumn workshop "
+        "from the two proposed options."
+    ),
+    "Fund a Second Public Demonstration Tent": (
+        "Consider funding a second teaching tent. "
+        "The proposal has a required quorum."
+    ),
+    "Approve a New Citizenship Application": (
+        "Review a fictional application for society citizenship; "
+        "unanimous approval is required."
+    ),
+    "Approve a Proposed Citizenship Application": (
+        "Review a separate fictional citizenship application; "
+        "unanimous approval is required."
+    ),
+    "Select the Annual Member Gathering Format": (
+        "Choose the gathering format using a private ballot."
+    ),
+    "Approve the Final Inventory Sign-Off": (
+        "Approve the final inventory record after all "
+        "assigned reviewers have responded."
+    ),
+    "Adopt the Revised Workshop Calendar": (
+        "Approve the revised workshop dates after "
+        "reviewing the member comments."
+    ),
+    "Extend the Shared Tool Storage Hours": (
+        "Consider extending weekly access hours "
+        "for the shared equipment room."
+    ),
+}
 
 VOTING_PERMISSIONS = (
     "view_vote",
@@ -318,7 +484,10 @@ class Command(BaseCommand):
         title = f"{SEED_PREFIX} {name}"
         vote = Vote(
             title=title,
-            description=(FILLER_TEXT + "\n\n") * 6 if long_description else FILLER_TEXT,
+            description=(
+                (PROPOSAL_DETAILS.get(name, FILLER_TEXT) + "\n\n") * 6
+                if long_description else PROPOSAL_DETAILS.get(name, FILLER_TEXT)
+            ),
             status=Vote.Status.DRAFT,
             approval_rule=approval_rule,
             is_anonymous=anonymous,
@@ -446,29 +615,34 @@ class Command(BaseCommand):
 
     def create_draft_votes(self):
         self.make_vote(
-            "Draft - Empty Configuration", options=(), targets=(),
+            "Proposal Under Preparation", options=(), targets=(),
         )
         self.make_vote(
-            "Draft - Ready to Open",
+            "Approve Replacement Tent Lines",
             targets=self.individual_targets("testuser01", "testuser02"),
         )
         self.make_vote(
-            "Draft - Future Scheduled Open",
+            "Schedule the Winter Textile Workshop",
             targets=({"community_group": TEST_GROUP_NAME},),
             opens_in_days=2, closes_in_days=10,
         )
         self.make_vote(
-            "Draft - Anonymous Ballot",
+            "Anonymous Feedback on the Gathering Program",
             anonymous=True,
             targets=({"community_group": TEST_GROUP_NAME},),
         )
         self.make_vote(
-            "Draft - No Eligible Members",
+            "Review the Suspended Application Request",
             targets=self.individual_targets("testuser03", "testuser06"),
         )
         self.make_vote(
-            "Draft - Multiple Options and Targets",
-            options=("Option A", "Option B", "Option C", "Option D"),
+            "Choose a Location for the Spring Symposium",
+            options=(
+                "Riverside Hall",
+                "North Meadow",
+                "Harborview Center",
+                "Willowbank House",
+            ),
             targets=(
                 {"user": "testuser01"},
                 {"community_group": TEST_GROUP_NAME},
@@ -476,12 +650,12 @@ class Command(BaseCommand):
             ),
         )
         self.make_vote(
-            "Draft - Long Title and Description: " + "Lorem ipsum " * 8,
+            "Review the Long-Term Equipment and Education Plan",
             long_description=True,
             targets=self.individual_targets("testuser01"),
         )
         self.make_vote(
-            "Draft - All Responses Required",
+            "Approve the Required Equipment Transfer Record",
             requires_all_responses=True,
             requires_quorum=True,
             quorum=(2, 3),
@@ -492,91 +666,99 @@ class Command(BaseCommand):
 
     def create_open_votes(self):
         self.make_vote(
-            "Individual - Awaiting Response",
+            "Accept Custody of the Loaned Display Kit",
             status=Vote.Status.OPEN,
             targets=self.individual_targets("testuser01"),
             closes_in_days=2,
         )
         self.make_vote(
-            "Individual - Identified Response",
+            "Confirm the Workshop Supply Request",
             status=Vote.Status.OPEN,
             targets=self.individual_targets("testuser01"),
             responses=(("testuser01", 0),),
         )
         self.make_vote(
-            "Identified - Changeable Ballot",
+            "Select the Next Shared Equipment Purchase",
             status=Vote.Status.OPEN,
             targets=self.individual_targets("testuser01", "testuser02"),
             responses=(("testuser01", 1),),
-            comments=(("testuser01", FILLER_TEXT),),
+            comments=((
+                "testuser01",
+                "The proposed purchase may conflict with our existing "
+                "equipment plan. Can we review the budget first?",
+            ),),
         )
         self.make_vote(
-            "Anonymous - Awaiting Response",
+            "Private Ballot on Camp Quiet Hours",
             status=Vote.Status.OPEN,
             anonymous=True,
             targets=self.individual_targets("testuser01", "testuser02"),
         )
         self.make_vote(
-            "Anonymous - Member 01 Already Responded",
+            "Private Ballot on Member Orientation Format",
             status=Vote.Status.OPEN,
             anonymous=True,
             targets=self.individual_targets("testuser01", "testuser02"),
             responses=(("testuser01", 0),),
-            comments=(("testuser01", FILLER_TEXT),),
+            comments=((
+                "testuser01",
+                "A practical introduction could help new members "
+                "prepare for their first camp.",
+            ),),
         )
         self.make_vote(
-            "Custom Group - Open",
+            "Buy New Tablet-Weaving Cards",
             status=Vote.Status.OPEN,
             targets=({"community_group": TEST_GROUP_NAME},),
             responses=(("testuser01", 0), ("testuser16", 1)),
         )
         self.make_vote(
-            "Chapter - Fyr Draca",
+            "Set the Fyr Draca Winter Meeting Schedule",
             status=Vote.Status.OPEN,
             targets=({"chapter": "Fyr Draca Chapter"},),
         )
         self.make_vote(
-            "Household - Kraken",
+            "Replace House Kraken Tent Pegs",
             status=Vote.Status.OPEN,
             targets=({"household": "House Kraken"},),
         )
         self.make_vote(
-            "Citizenship - Active Citizen",
+            "Approve the Annual Community Program",
             status=Vote.Status.OPEN,
             targets=({"citizenship_class": "Active Citizen"},),
         )
         self.make_vote(
-            "Social Rank - Godi",
+            "Review the Godi Council Meeting Format",
             status=Vote.Status.OPEN,
             targets=({"social_rank": "Godi"},),
         )
         self.make_vote(
-            "Order - Air",
+            "Plan the Order of Air Research Display",
             status=Vote.Status.OPEN,
             targets=({"order": "Order of Air"},),
         )
         self.make_vote(
-            "Order Rank - Larling",
+            "Schedule Larling Skills Practice",
             status=Vote.Status.OPEN,
             targets=({"order_rank": "Larling"},),
         )
         self.make_vote(
-            "Office - Lawspeaker",
+            "Approve the Lawspeaker Document Review Schedule",
             status=Vote.Status.OPEN,
             targets=({"office": "Lawspeaker"},),
         )
         self.make_vote(
-            "Governance - Godi Council",
+            "Approve the Council Record Archive Plan",
             status=Vote.Status.OPEN,
             targets=({"governance_body": "Godi Council"},),
         )
         self.make_vote(
-            "Household Leadership - Leading Jarl",
+            "Choose a Household Inventory Process",
             status=Vote.Status.OPEN,
             targets=({"household_leadership_type": "Leading Jarl"},),
         )
         self.make_vote(
-            "Intersection - Group and Chapter",
+            "Fund the Chapter Textile Demonstration",
             status=Vote.Status.OPEN,
             targets=({
                 "community_group": TEST_GROUP_NAME,
@@ -584,12 +766,12 @@ class Command(BaseCommand):
             },),
         )
         self.make_vote(
-            "Intersection - Order and Rank",
+            "Select the Air Order Apprentice Workshop",
             status=Vote.Status.OPEN,
             targets=({"order": "Order of Air", "order_rank": "Larling"},),
         )
         self.make_vote(
-            "Union - Individual and Group",
+            "Approve a Shared Loom Purchase",
             status=Vote.Status.OPEN,
             targets=(
                 {"user": "testuser02"},
@@ -597,7 +779,7 @@ class Command(BaseCommand):
             ),
         )
         self.make_vote(
-            "Quorum - Not Met",
+            "Fund Replacement Camp Lanterns",
             status=Vote.Status.OPEN,
             requires_quorum=True, quorum=(3, 4),
             targets=self.individual_targets(
@@ -607,7 +789,7 @@ class Command(BaseCommand):
             expected_reason="Quorum was not met.",
         )
         self.make_vote(
-            "Quorum - Met",
+            "Approve Public Handout Printing",
             status=Vote.Status.OPEN,
             requires_quorum=True, quorum=(3, 4),
             targets=self.individual_targets(
@@ -621,7 +803,7 @@ class Command(BaseCommand):
             expected_reason="An option received a simple majority.",
         )
         self.make_vote(
-            "Unanimous - Split Responses",
+            "Admit a New Society Citizen",
             status=Vote.Status.OPEN,
             approval_rule=Vote.ApprovalRule.UNANIMOUS,
             targets=self.individual_targets(
@@ -635,7 +817,7 @@ class Command(BaseCommand):
             expected_reason="The vote did not reach unanimous agreement.",
         )
         self.make_vote(
-            "All Responses Required - Still Pending",
+            "Confirm the Revision to the Chapter Rules",
             status=Vote.Status.OPEN,
             requires_all_responses=True,
             targets=self.individual_targets(
@@ -645,9 +827,13 @@ class Command(BaseCommand):
             expected_reason="All required responses have not been received.",
         )
         self.make_vote(
-            "Three Options - Tie",
+            "Choose the Spring Gathering Theme",
             status=Vote.Status.OPEN,
-            options=("Option A", "Option B", "Option C"),
+            options=(
+                "Maritime Crafts",
+                "Textile Traditions",
+                "Trade Routes",
+            ),
             targets=self.individual_targets(
                 "testuser01", "testuser02", "testuser04"
             ),
@@ -655,26 +841,26 @@ class Command(BaseCommand):
             expected_reason="The vote ended in a tie.",
         )
         self.make_vote(
-            "No Deadline - Open",
+            "Select Future Research Topics",
             status=Vote.Status.OPEN,
             closes_in_days=None,
             targets=self.individual_targets("testuser01", "testuser02"),
         )
         self.make_vote(
-            "Expired - Awaiting Manual Closure",
+            "Approve the September Storage Lease",
             status=Vote.Status.OPEN,
             expired=True,
             targets=self.individual_targets("testuser01", "testuser02"),
         )
         self.make_vote(
-            "Ineligible Accounts Excluded",
+            "Approve the Volunteer Safety Briefing",
             status=Vote.Status.OPEN,
             targets=self.individual_targets(
                 "testuser03", "testuser06", "testuser09", "testuser01"
             ),
         )
         self.make_vote(
-            "Created by Action Manager",
+            "Approve the Equipment Checkout Form",
             status=Vote.Status.OPEN,
             created_by="testuser40",
             targets=self.individual_targets("testuser02"),
@@ -682,7 +868,7 @@ class Command(BaseCommand):
 
     def create_closed_votes(self):
         self.make_vote(
-            "Closed - Majority Approved",
+            "Purchase Two Folding Display Tables",
             status=Vote.Status.CLOSED,
             requires_quorum=True, quorum=(2, 3),
             targets=self.individual_targets(
@@ -696,7 +882,7 @@ class Command(BaseCommand):
             expected_reason="An option received a simple majority.",
         )
         self.make_vote(
-            "Closed - Tied Vote",
+            "Choose the Autumn Workshop Venue",
             status=Vote.Status.CLOSED,
             targets=self.individual_targets(
                 "testuser01", "testuser02", "testuser04", "testuser05"
@@ -710,7 +896,7 @@ class Command(BaseCommand):
             expected_reason="The vote ended in a tie.",
         )
         self.make_vote(
-            "Closed - Quorum Not Met",
+            "Fund a Second Public Demonstration Tent",
             status=Vote.Status.CLOSED,
             requires_quorum=True, quorum=(3, 4),
             targets=self.individual_targets(
@@ -720,7 +906,7 @@ class Command(BaseCommand):
             expected_reason="Quorum was not met.",
         )
         self.make_vote(
-            "Closed - Unanimous Approved",
+            "Approve a New Citizenship Application",
             status=Vote.Status.CLOSED,
             approval_rule=Vote.ApprovalRule.UNANIMOUS,
             targets=self.individual_targets(
@@ -734,7 +920,7 @@ class Command(BaseCommand):
             expected_reason="The vote reached unanimous agreement.",
         )
         self.make_vote(
-            "Closed - Unanimous Rejected",
+            "Approve a Proposed Citizenship Application",
             status=Vote.Status.CLOSED,
             approval_rule=Vote.ApprovalRule.UNANIMOUS,
             targets=self.individual_targets(
@@ -748,7 +934,7 @@ class Command(BaseCommand):
             expected_reason="The vote did not reach unanimous agreement.",
         )
         self.make_vote(
-            "Closed - Anonymous Results",
+            "Select the Annual Member Gathering Format",
             status=Vote.Status.CLOSED,
             anonymous=True,
             targets=self.individual_targets(
@@ -762,7 +948,7 @@ class Command(BaseCommand):
             expected_reason="An option received a simple majority.",
         )
         self.make_vote(
-            "Closed - All Responses Received",
+            "Approve the Final Inventory Sign-Off",
             status=Vote.Status.CLOSED,
             requires_all_responses=True,
             targets=self.individual_targets(
@@ -776,15 +962,20 @@ class Command(BaseCommand):
             expected_reason="An option received a simple majority.",
         )
         self.make_vote(
-            "Closed - Identified With Reviewer Comment",
+            "Adopt the Revised Workshop Calendar",
             status=Vote.Status.CLOSED,
             targets=self.individual_targets("testuser01", "testuser02"),
             responses=(("testuser01", 0), ("testuser02", 0)),
-            comments=(("testuser01", FILLER_TEXT),),
+            comments=((
+                "testuser01",
+                "The proposed schedule conflicts with the second "
+                "Saturday workday. Can we review the dates "
+                "before closing the vote?",
+            ),),
             expected_reason="An option received a simple majority.",
         )
         self.make_vote(
-            "Closed - No Responses",
+            "Extend the Shared Tool Storage Hours",
             status=Vote.Status.CLOSED,
             targets=self.individual_targets("testuser01", "testuser02"),
             expected_reason="No responses were submitted.",

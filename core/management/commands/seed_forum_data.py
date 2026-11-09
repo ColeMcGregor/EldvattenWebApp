@@ -1,3 +1,4 @@
+
 from datetime import timedelta
 
 from django.conf import settings
@@ -28,15 +29,34 @@ from organization.models import CommunityGroup
 
 User = get_user_model()
 
-
 SEED_PREFIX = "[DEV]"
-
 TEST_GROUP_NAME = "Test Custom Group"
 
 FILLER_TEXT = (
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
-    "Lorem ipsum dolor sit amet."
+    "We will share the final work schedule after the next planning meeting. "
+    "Please post any equipment needs here so volunteers can prepare."
 )
+
+TENT_DISCUSSION = [
+    "I checked the canvas tents after the last camp. Two guy ropes need replacing before we pack again. Does anyone have spare braided line?",
+    "I can bring a coil of rope. Please send the diameter you need so I do not cut the wrong stock.",
+    "The ridge poles are dry and sound, but the west tent has a loose joint. I marked it with blue tape for inspection.",
+    "I have a small repair kit and waxed thread. I can help with the seam repairs on Saturday morning.",
+    "The site team asked us to keep the main path clear. Can we put the storage tent beyond the cooking shelter this year?",
+    "That should work. I will check the field measurements and add the new layout to our setup notes.",
+    "Please do not pack damp canvas. We need enough space to air every panel before the crates go into storage.",
+    "I found a box of wooden pegs in the shed. Some are split, so I will sort out the damaged ones this week.",
+    "Could we label the ropes by tent? We lost time last event trying to match the sets.",
+    "Yes. I have cloth labels that we can sew to the storage bags without marking the canvas itself.",
+    "I reviewed the ridge-pole notes and agree that the west tent needs a new joint pin. I can bring a replacement.",
+    "Is the repair morning still open to new members? I would like to learn how the tent frames are assembled.",
+    "Absolutely. We will start with safe lifting and frame assembly before anyone works on the larger canvas panels.",
+    "I have added the repair supplies to the shared packing list. Let me know by Thursday if anything is missing.",
+    "One more note: the ground at the south end was soft last time. We should use the firmer upper field for the larger tents.",
+    "I can arrive early to help mark the tent corners and check the distance from the fire area.",
+    "The final layout looks good. The kitchen shelter has clear access, and there is space for visitors to pass safely.",
+    "Thanks, everyone. I will post the updated packing sheet tonight and bring printed copies for setup.",
+]
 
 
 class Command(BaseCommand):
@@ -164,19 +184,14 @@ class Command(BaseCommand):
 
         for key, username in required_usernames.items():
             try:
-                user = User.objects.get(
-                    username=username
-                )
+                user = User.objects.get(username=username)
             except User.DoesNotExist as error:
                 raise CommandError(
                     f"Required development user {username} "
                     "does not exist. Run seed_dev_data first."
                 ) from error
 
-            if (
-                user.account_status
-                != AccountStatus.MEMBER
-            ):
+            if user.account_status != AccountStatus.MEMBER:
                 raise CommandError(
                     f"Required development user {username} "
                     "must have MEMBER account status."
@@ -224,44 +239,51 @@ class Command(BaseCommand):
         boards.delete()
         categories.delete()
 
-    def create_categories(
-        self,
-        *,
-        users,
-        now,
-    ):
+    def create_categories(self, *, users, now):
         general = ForumCategory.objects.create(
             name=f"{SEED_PREFIX} General",
-            description=FILLER_TEXT,
+            description=(
+                "Introductions, society updates, and daily "
+                "conversations for the whole community."
+            ),
             display_order=10,
         )
 
         activities = ForumCategory.objects.create(
             name=f"{SEED_PREFIX} Activities",
-            description=FILLER_TEXT,
+            description=(
+                "Plans and reports for workshops, camps, "
+                "demonstrations, and research days."
+            ),
             display_order=20,
         )
 
         restricted = ForumCategory.objects.create(
             name=f"{SEED_PREFIX} Restricted",
-            description=FILLER_TEXT,
+            description=(
+                "Discussions with limited access for designated "
+                "members and working groups."
+            ),
             display_order=30,
         )
 
         empty = ForumCategory.objects.create(
-            name=f"{SEED_PREFIX} Empty Category",
-            description=FILLER_TEXT,
+            name=f"{SEED_PREFIX} New Topic Space",
+            description=(
+                "A reserved section for future topics; "
+                "there are no boards here yet."
+            ),
             display_order=40,
         )
 
         archived = ForumCategory.objects.create(
-            name=f"{SEED_PREFIX} Archived Category",
-            description=FILLER_TEXT,
-            display_order=50,
-            archived_at=(
-                now
-                - timedelta(days=30)
+            name=f"{SEED_PREFIX} Past Seasons",
+            description=(
+                "Old category kept for archive browsing "
+                "and permission checks."
             ),
+            display_order=50,
+            archived_at=now - timedelta(days=30),
             archived_by=users["administrator"],
         )
 
@@ -284,79 +306,98 @@ class Command(BaseCommand):
         camp_planning = ForumBoard.objects.create(
             category=categories["general"],
             name="Camp Planning",
-            description=FILLER_TEXT,
+            description=(
+                "Tent preparation, camp layouts, shared equipment, "
+                "and volunteer work schedules."
+            ),
             display_order=10,
         )
 
         general_discussion = ForumBoard.objects.create(
             category=categories["general"],
             name="General Discussion",
-            description=FILLER_TEXT,
+            description=(
+                "Questions, introductions, announcements, "
+                "and discussion among members."
+            ),
             display_order=20,
         )
 
         empty_board = ForumBoard.objects.create(
             category=categories["general"],
-            name="Empty Board",
-            description=FILLER_TEXT,
+            name="New Member Questions",
+            description=(
+                "This board has no threads yet; it is ready "
+                "for a future discussion."
+            ),
             display_order=30,
         )
 
         staff_announcements = ForumBoard.objects.create(
             category=categories["general"],
             name="Staff Announcements",
-            description=FILLER_TEXT,
+            description=(
+                "Official notices from officers and approved "
+                "forum moderators."
+            ),
             display_order=40,
             thread_creation_policy=(
-                ForumBoard
-                .ThreadCreationPolicy
-                .STAFF_ONLY
+                ForumBoard.ThreadCreationPolicy.STAFF_ONLY
             ),
         )
 
         event_discussion = ForumBoard.objects.create(
             category=categories["activities"],
             name="Event Discussion",
-            description=FILLER_TEXT,
+            description=(
+                "Coordination for upcoming camps, public visits, "
+                "and educational activities."
+            ),
             display_order=10,
         )
 
         arts_and_sciences = ForumBoard.objects.create(
             category=categories["activities"],
             name="Arts and Sciences",
-            description=FILLER_TEXT,
+            description=(
+                "Research, reconstruction, sewing, weaving, "
+                "and practical craft techniques."
+            ),
             display_order=20,
         )
 
         locked_board = ForumBoard.objects.create(
             category=categories["activities"],
-            name="Locked Board",
-            description=FILLER_TEXT,
+            name="Completed Workshops",
+            description=(
+                "A closed historical discussion space; "
+                "new posts are not permitted."
+            ),
             display_order=30,
             is_locked=True,
-            locked_at=(
-                now
-                - timedelta(days=5)
-            ),
+            locked_at=now - timedelta(days=5),
             locked_by=users["moderator"],
         )
 
         archived_board = ForumBoard.objects.create(
             category=categories["activities"],
-            name="Archived Board",
-            description=FILLER_TEXT,
-            display_order=40,
-            archived_at=(
-                now
-                - timedelta(days=20)
+            name="Past Gathering Notes",
+            description=(
+                "Older event conversations retained for "
+                "reference without new activity."
             ),
+            display_order=40,
+            archived_at=now - timedelta(days=20),
             archived_by=users["administrator"],
         )
 
         test_group_board = ForumBoard.objects.create(
             category=categories["restricted"],
-            name="Test Group Board",
-            description=FILLER_TEXT,
+            name="Household Workshop Plans",
+            description=(
+                "Private planning space for the designated "
+                "member group."
+            ),
             display_order=10,
         )
 
@@ -367,13 +408,14 @@ class Command(BaseCommand):
 
         targeted_creation = ForumBoard.objects.create(
             category=categories["restricted"],
-            name="Targeted Thread Creation",
-            description=FILLER_TEXT,
+            name="Committee Planning Desk",
+            description=(
+                "Only designated group members can start "
+                "new discussions here."
+            ),
             display_order=20,
             thread_creation_policy=(
-                ForumBoard
-                .ThreadCreationPolicy
-                .TARGETED
+                ForumBoard.ThreadCreationPolicy.TARGETED
             ),
         )
 
@@ -382,13 +424,14 @@ class Command(BaseCommand):
             community_group=test_group,
         )
 
-        archived_category_board = (
-            ForumBoard.objects.create(
-                category=categories["archived"],
-                name="Archived Category Board",
-                description=FILLER_TEXT,
-                display_order=10,
-            )
+        archived_category_board = ForumBoard.objects.create(
+            category=categories["archived"],
+            name="Past Seasons Index",
+            description=(
+                "Earlier category material kept "
+                "for historical reference."
+            ),
+            display_order=10,
         )
 
         return {
@@ -402,9 +445,7 @@ class Command(BaseCommand):
             "archived_board": archived_board,
             "test_group_board": test_group_board,
             "targeted_creation": targeted_creation,
-            "archived_category_board": (
-                archived_category_board
-            ),
+            "archived_category_board": archived_category_board,
         }
 
     def create_threads(
@@ -419,84 +460,54 @@ class Command(BaseCommand):
             board=boards["camp_planning"],
             title="Prepping Tents",
             created_by=users["member"],
-            created_at=(
-                now
-                - timedelta(days=12)
-            ),
+            created_at=now - timedelta(days=12),
             is_pinned=True,
             pinned_by=users["moderator"],
-            pinned_at=(
-                now
-                - timedelta(days=11)
-            ),
+            pinned_at=now - timedelta(days=11),
         )
 
         camp_setup = self.create_thread(
             board=boards["camp_planning"],
             title="Camp Setup",
             created_by=users["member_two"],
-            created_at=(
-                now
-                - timedelta(days=9)
-            ),
+            created_at=now - timedelta(days=9),
         )
 
         carpool_planning = self.create_thread(
             board=boards["camp_planning"],
             title="Carpool Planning",
             created_by=users["member_three"],
-            created_at=(
-                now
-                - timedelta(days=8)
-            ),
+            created_at=now - timedelta(days=8),
             is_locked=True,
             locked_by=users["moderator"],
-            locked_at=(
-                now
-                - timedelta(days=2)
-            ),
+            locked_at=now - timedelta(days=2),
         )
 
         empty_thread = self.create_thread(
             board=boards["camp_planning"],
-            title="Empty Thread",
+            title="Tent Repair Photo Log",
             created_by=users["member_four"],
-            created_at=(
-                now
-                - timedelta(days=6)
-            ),
+            created_at=now - timedelta(days=6),
         )
 
         welcome = self.create_thread(
             board=boards["general_discussion"],
-            title="Welcome Thread",
+            title="Welcome to the EldVatten Tavern",
             created_by=users["administrator"],
-            created_at=(
-                now
-                - timedelta(days=15)
-            ),
+            created_at=now - timedelta(days=15),
             is_pinned=True,
             pinned_by=users["administrator"],
-            pinned_at=(
-                now
-                - timedelta(days=15)
-            ),
+            pinned_at=now - timedelta(days=15),
             is_locked=True,
             locked_by=users["administrator"],
-            locked_at=(
-                now
-                - timedelta(days=15)
-            ),
+            locked_at=now - timedelta(days=15),
         )
 
         targeted_thread = self.create_thread(
             board=boards["general_discussion"],
-            title="User Target Test",
+            title="Loan of the Reference Books",
             created_by=users["member_two"],
-            created_at=(
-                now
-                - timedelta(days=5)
-            ),
+            created_at=now - timedelta(days=5),
         )
 
         ForumThreadTarget.objects.create(
@@ -506,89 +517,60 @@ class Command(BaseCommand):
 
         event_planning = self.create_thread(
             board=boards["event_discussion"],
-            title="Event Planning",
+            title="Preparing for the Harvest Gathering",
             created_by=users["member_four"],
-            created_at=(
-                now
-                - timedelta(days=10)
-            ),
+            created_at=now - timedelta(days=10),
         )
 
         archived_thread = self.create_thread(
             board=boards["event_discussion"],
-            title="Archived Thread",
+            title="Notes from the Spring Encampment",
             created_by=users["member_five"],
-            created_at=(
-                now
-                - timedelta(days=25)
-            ),
-            archived_at=(
-                now
-                - timedelta(days=18)
-            ),
+            created_at=now - timedelta(days=25),
+            archived_at=now - timedelta(days=18),
             archived_by=users["moderator"],
         )
 
         arts_thread = self.create_thread(
             board=boards["arts_and_sciences"],
-            title="Project Discussion",
+            title="Tablet-Weaving Pattern Exchange",
             created_by=users["member_three"],
-            created_at=(
-                now
-                - timedelta(days=7)
-            ),
+            created_at=now - timedelta(days=7),
         )
 
         locked_board_thread = self.create_thread(
             board=boards["locked_board"],
-            title="Thread in Locked Board",
+            title="Completed Knife-Sheath Workshop Notes",
             created_by=users["administrator"],
-            created_at=(
-                now
-                - timedelta(days=7)
-            ),
+            created_at=now - timedelta(days=7),
         )
 
         archived_board_thread = self.create_thread(
             board=boards["archived_board"],
-            title="Thread in Archived Board",
+            title="Last Season Camp Lessons",
             created_by=users["administrator"],
-            created_at=(
-                now
-                - timedelta(days=22)
-            ),
+            created_at=now - timedelta(days=22),
         )
 
         test_group_thread = self.create_thread(
             board=boards["test_group_board"],
-            title="Restricted Group Discussion",
+            title="Household Equipment Inventory",
             created_by=users["member"],
-            created_at=(
-                now
-                - timedelta(days=4)
-            ),
+            created_at=now - timedelta(days=4),
         )
 
-        targeted_creation_thread = (
-            self.create_thread(
-                board=boards["targeted_creation"],
-                title="Targeted Creation Test",
-                created_by=users["member"],
-                created_at=(
-                    now
-                    - timedelta(days=3)
-                ),
-            )
+        targeted_creation_thread = self.create_thread(
+            board=boards["targeted_creation"],
+            title="Committee Agenda for Next Meeting",
+            created_by=users["member"],
+            created_at=now - timedelta(days=3),
         )
 
         group_targeted_thread = self.create_thread(
             board=boards["general_discussion"],
-            title="Group Target Test",
+            title="Private Textile Work Session",
             created_by=users["member"],
-            created_at=(
-                now
-                - timedelta(days=3)
-            ),
+            created_at=now - timedelta(days=3),
         )
 
         ForumThreadTarget.objects.create(
@@ -596,18 +578,11 @@ class Command(BaseCommand):
             community_group=test_group,
         )
 
-        archived_category_thread = (
-            self.create_thread(
-                board=boards[
-                    "archived_category_board"
-                ],
-                title="Archived Category Thread",
-                created_by=users["administrator"],
-                created_at=(
-                    now
-                    - timedelta(days=35)
-                ),
-            )
+        archived_category_thread = self.create_thread(
+            board=boards["archived_category_board"],
+            title="Early Camp Records and Photos",
+            created_by=users["administrator"],
+            created_at=now - timedelta(days=35),
         )
 
         return {
@@ -620,24 +595,12 @@ class Command(BaseCommand):
             "event_planning": event_planning,
             "archived_thread": archived_thread,
             "arts_thread": arts_thread,
-            "locked_board_thread": (
-                locked_board_thread
-            ),
-            "archived_board_thread": (
-                archived_board_thread
-            ),
-            "test_group_thread": (
-                test_group_thread
-            ),
-            "targeted_creation_thread": (
-                targeted_creation_thread
-            ),
-            "group_targeted_thread": (
-                group_targeted_thread
-            ),
-            "archived_category_thread": (
-                archived_category_thread
-            ),
+            "locked_board_thread": locked_board_thread,
+            "archived_board_thread": archived_board_thread,
+            "test_group_thread": test_group_thread,
+            "targeted_creation_thread": targeted_creation_thread,
+            "group_targeted_thread": group_targeted_thread,
+            "archived_category_thread": archived_category_thread,
         }
 
     def create_thread(
@@ -690,7 +653,6 @@ class Command(BaseCommand):
         now,
     ):
         posts = {}
-
         posts["prepping_tents"] = []
 
         authors = [
@@ -705,26 +667,17 @@ class Command(BaseCommand):
             post_time = (
                 now
                 - timedelta(days=11)
-                + timedelta(
-                    hours=index * 12
-                )
+                + timedelta(hours=index * 12)
             )
 
             post = self.create_post(
                 thread=threads["prepping_tents"],
-                author=authors[
-                    index % len(authors)
-                ],
-                body=(
-                    f"Development post {index + 1}.\n\n"
-                    f"{FILLER_TEXT}"
-                ),
+                author=authors[index % len(authors)],
+                body=TENT_DISCUSSION[index],
                 created_at=post_time,
             )
 
-            posts["prepping_tents"].append(
-                post
-            )
+            posts["prepping_tents"].append(post)
 
         archived_post = posts["prepping_tents"][6]
 
@@ -741,53 +694,51 @@ class Command(BaseCommand):
         )
 
         archived_post.archived_at = archived_at
-        archived_post.archived_by = (
-            users["moderator"]
-        )
+        archived_post.archived_by = users["moderator"]
 
         posts["camp_setup"] = [
             self.create_post(
                 thread=threads["camp_setup"],
                 author=users["member_two"],
-                body=FILLER_TEXT,
-                created_at=(
-                    now
-                    - timedelta(days=8)
+                body=(
+                    "I will arrive at eight with the camp plan "
+                    "and the first equipment trailer. Can two "
+                    "volunteers help mark out the tent spaces?"
                 ),
+                created_at=now - timedelta(days=8),
             ),
             self.create_post(
                 thread=threads["camp_setup"],
                 author=users["member"],
-                body=FILLER_TEXT,
-                created_at=(
-                    now
-                    - timedelta(days=2)
+                body=(
+                    "I can be there at eight. I will bring "
+                    "the stakes and check the access route "
+                    "before the trailer moves in."
                 ),
+                created_at=now - timedelta(days=2),
             ),
         ]
 
         posts["carpool_planning"] = [
             self.create_post(
-                thread=threads[
-                    "carpool_planning"
-                ],
+                thread=threads["carpool_planning"],
                 author=users["member_three"],
-                body=FILLER_TEXT,
-                created_at=(
-                    now
-                    - timedelta(days=7)
+                body=(
+                    "I have three spare seats leaving from "
+                    "the western meeting point at seven. "
+                    "Please reply before Friday if you need a ride."
                 ),
+                created_at=now - timedelta(days=7),
             ),
             self.create_post(
-                thread=threads[
-                    "carpool_planning"
-                ],
+                thread=threads["carpool_planning"],
                 author=users["member_four"],
-                body=FILLER_TEXT,
-                created_at=(
-                    now
-                    - timedelta(days=3)
+                body=(
+                    "Thanks for arranging this. I can meet "
+                    "you there, and I will bring the folded "
+                    "display banners."
                 ),
+                created_at=now - timedelta(days=3),
             ),
         ]
 
@@ -795,185 +746,174 @@ class Command(BaseCommand):
             self.create_post(
                 thread=threads["welcome"],
                 author=users["administrator"],
-                body=FILLER_TEXT,
-                created_at=(
-                    now
-                    - timedelta(days=15)
+                body=(
+                    "Welcome to the Tavern. Use these boards "
+                    "to share research, coordinate events, "
+                    "and ask for help. Keep discussions "
+                    "respectful and on topic."
                 ),
-            )
+                created_at=now - timedelta(days=15),
+            ),
         ]
 
         posts["targeted_thread"] = [
             self.create_post(
-                thread=threads[
-                    "targeted_thread"
-                ],
+                thread=threads["targeted_thread"],
                 author=users["member_two"],
-                body=FILLER_TEXT,
-                created_at=(
-                    now
-                    - timedelta(days=4)
+                body=(
+                    "I have the two reference books we discussed. "
+                    "I can hand them over at the next monthly "
+                    "meeting, or arrange another time."
                 ),
-            )
+                created_at=now - timedelta(days=4),
+            ),
         ]
 
         posts["event_planning"] = [
             self.create_post(
-                thread=threads[
-                    "event_planning"
-                ],
+                thread=threads["event_planning"],
                 author=users["member_four"],
-                body=FILLER_TEXT,
-                created_at=(
-                    now
-                    - timedelta(days=9)
+                body=(
+                    "The Harvest Gathering is six weeks away. "
+                    "We need volunteers for the welcome desk, "
+                    "craft tables, and closing cleanup."
                 ),
+                created_at=now - timedelta(days=9),
             ),
             self.create_post(
-                thread=threads[
-                    "event_planning"
-                ],
+                thread=threads["event_planning"],
                 author=users["member_five"],
-                body=FILLER_TEXT,
-                created_at=(
-                    now
-                    - timedelta(days=6)
+                body=(
+                    "I can take the morning welcome shift. "
+                    "I also have signs from last year "
+                    "that we can reuse."
                 ),
+                created_at=now - timedelta(days=6),
             ),
             self.create_post(
-                thread=threads[
-                    "event_planning"
-                ],
+                thread=threads["event_planning"],
                 author=users["member"],
-                body=FILLER_TEXT,
-                created_at=(
-                    now
-                    - timedelta(days=1)
+                body=(
+                    "The cooking group would like a sheltered "
+                    "table near the public demonstration area. "
+                    "Could that be added to the site plan?"
                 ),
+                created_at=now - timedelta(days=1),
             ),
         ]
 
         posts["archived_thread"] = [
             self.create_post(
-                thread=threads[
-                    "archived_thread"
-                ],
+                thread=threads["archived_thread"],
                 author=users["member_five"],
-                body=FILLER_TEXT,
-                created_at=(
-                    now
-                    - timedelta(days=24)
+                body=(
+                    "I have archived our spring camp notes here "
+                    "so the setup team can refer to the packing "
+                    "and weather lessons."
                 ),
-            )
+                created_at=now - timedelta(days=24),
+            ),
         ]
 
         posts["arts_thread"] = [
             self.create_post(
-                thread=threads[
-                    "arts_thread"
-                ],
+                thread=threads["arts_thread"],
                 author=users["member_three"],
-                body=FILLER_TEXT,
-                created_at=(
-                    now
-                    - timedelta(days=6)
+                body=(
+                    "I finished a narrow tablet-woven border "
+                    "with a two-color pattern. Has anyone compared "
+                    "this method with the museum samples?"
                 ),
+                created_at=now - timedelta(days=6),
             ),
             self.create_post(
-                thread=threads[
-                    "arts_thread"
-                ],
+                thread=threads["arts_thread"],
                 author=users["member_two"],
-                body=FILLER_TEXT,
-                created_at=(
-                    now
-                    - timedelta(hours=18)
+                body=(
+                    "I tried a similar turn sequence. The edges "
+                    "were much neater after I adjusted the yarn "
+                    "tension; I can share a small sample."
                 ),
+                created_at=now - timedelta(hours=18),
             ),
         ]
 
         posts["locked_board_thread"] = [
             self.create_post(
-                thread=threads[
-                    "locked_board_thread"
-                ],
+                thread=threads["locked_board_thread"],
                 author=users["administrator"],
-                body=FILLER_TEXT,
-                created_at=(
-                    now
-                    - timedelta(days=6)
+                body=(
+                    "This workshop is closed to new replies. "
+                    "The instructor's notes and safe-tool checklist "
+                    "are still available to read."
                 ),
-            )
+                created_at=now - timedelta(days=6),
+            ),
         ]
 
         posts["archived_board_thread"] = [
             self.create_post(
-                thread=threads[
-                    "archived_board_thread"
-                ],
+                thread=threads["archived_board_thread"],
                 author=users["administrator"],
-                body=FILLER_TEXT,
-                created_at=(
-                    now
-                    - timedelta(days=21)
+                body=(
+                    "These are the lessons we recorded after "
+                    "last season's event, including what worked "
+                    "well with the visitor route."
                 ),
-            )
+                created_at=now - timedelta(days=21),
+            ),
         ]
 
         posts["test_group_thread"] = [
             self.create_post(
-                thread=threads[
-                    "test_group_thread"
-                ],
+                thread=threads["test_group_thread"],
                 author=users["member"],
-                body=FILLER_TEXT,
-                created_at=(
-                    now
-                    - timedelta(days=3)
+                body=(
+                    "Our household needs to check its tool chest "
+                    "before the next public camp. Please note "
+                    "anything you have borrowed."
                 ),
-            )
+                created_at=now - timedelta(days=3),
+            ),
         ]
 
         posts["targeted_creation_thread"] = [
             self.create_post(
-                thread=threads[
-                    "targeted_creation_thread"
-                ],
+                thread=threads["targeted_creation_thread"],
                 author=users["member"],
-                body=FILLER_TEXT,
-                created_at=(
-                    now
-                    - timedelta(days=2)
+                body=(
+                    "For the committee meeting, I propose we "
+                    "review the volunteer schedule and the "
+                    "draft research display plan."
                 ),
-            )
+                created_at=now - timedelta(days=2),
+            ),
         ]
 
         posts["group_targeted_thread"] = [
             self.create_post(
-                thread=threads[
-                    "group_targeted_thread"
-                ],
+                thread=threads["group_targeted_thread"],
                 author=users["member"],
-                body=FILLER_TEXT,
-                created_at=(
-                    now
-                    - timedelta(days=2)
+                body=(
+                    "We will use this private thread to schedule "
+                    "the next textile study session and divide "
+                    "the sample documentation work."
                 ),
-            )
+                created_at=now - timedelta(days=2),
+            ),
         ]
 
         posts["archived_category_thread"] = [
             self.create_post(
-                thread=threads[
-                    "archived_category_thread"
-                ],
+                thread=threads["archived_category_thread"],
                 author=users["administrator"],
-                body=FILLER_TEXT,
-                created_at=(
-                    now
-                    - timedelta(days=34)
+                body=(
+                    "These older camp photographs and supply "
+                    "notes are kept here as a reference "
+                    "for future organizers."
                 ),
-            )
+                created_at=now - timedelta(days=34),
+            ),
         ]
 
         return posts
@@ -1008,13 +948,8 @@ class Command(BaseCommand):
         posts,
         users,
     ):
-        quoted_post = posts[
-            "prepping_tents"
-        ][2]
-
-        quoting_post = posts[
-            "prepping_tents"
-        ][10]
+        quoted_post = posts["prepping_tents"][2]
+        quoting_post = posts["prepping_tents"][10]
 
         ForumPostQuote.objects.create(
             post=quoting_post,
@@ -1022,9 +957,11 @@ class Command(BaseCommand):
         )
 
         quoting_post.body = (
-            "Quoted from Test User 04:\n"
-            "> Lorem ipsum dolor sit amet.\n\n"
-            f"{FILLER_TEXT}"
+            "In reply to the ridge-pole inspection:\n"
+            "> The ridge poles are dry and sound, but the west "
+            "tent has a loose joint.\n\n"
+            "I can bring a replacement pin, and we can check "
+            "its fit before setup."
         )
 
         quoting_post.edited_at = (
@@ -1032,9 +969,7 @@ class Command(BaseCommand):
             + timedelta(minutes=5)
         )
 
-        quoting_post.edited_by = (
-            users["member"]
-        )
+        quoting_post.edited_by = users["member"]
 
         quoting_post.save(
             update_fields=[
@@ -1046,23 +981,15 @@ class Command(BaseCommand):
 
         ForumPostAttachment.objects.create(
             post=posts["event_planning"][0],
-            label="Development Link",
-            url=(
-                "https://example.com/"
-                "eldvatten-forum-test"
-            ),
+            label="Volunteer Planning Reference",
+            url="https://www.loc.gov/collections/",
             display_order=0,
         )
 
         ForumPostAttachment.objects.create(
-            post=posts[
-                "prepping_tents"
-            ][4],
+            post=posts["prepping_tents"][4],
             label="Tent Reference",
-            url=(
-                "https://example.com/"
-                "tent-reference"
-            ),
+            url="https://www.nps.gov/subjects/livinghistory/",
             display_order=0,
         )
 
@@ -1070,12 +997,12 @@ class Command(BaseCommand):
             post=posts["event_planning"][0],
             reporter=users["member"],
             reason=(
-                "Development report for "
-                "moderation UI testing."
+                "This post appears to include a personal contact "
+                "detail that should not be shared on a public "
+                "discussion board. Please review it before "
+                "the next event."
             ),
-            status=(
-                ForumPostReport.Status.OPEN
-            ),
+            status=ForumPostReport.Status.OPEN,
         )
 
     def create_read_states(
@@ -1094,19 +1021,13 @@ class Command(BaseCommand):
         ForumThreadReadState.objects.create(
             user=users["member"],
             thread=threads["camp_setup"],
-            last_read_at=(
-                now
-                - timedelta(days=6)
-            ),
+            last_read_at=now - timedelta(days=6),
         )
 
         ForumThreadReadState.objects.create(
             user=users["member_two"],
             thread=threads["welcome"],
-            last_read_at=(
-                now
-                - timedelta(days=20)
-            ),
+            last_read_at=now - timedelta(days=20),
         )
 
         ForumThreadReadState.objects.create(
@@ -1136,10 +1057,8 @@ class Command(BaseCommand):
             if (
                 thread.created_by_id is not None
                 and thread.archived_at is None
-                and thread.board.archived_at
-                is None
-                and thread.board.category
-                .archived_at is None
+                and thread.board.archived_at is None
+                and thread.board.category.archived_at is None
             ):
                 ForumThreadSubscription.objects.get_or_create(
                     user=thread.created_by,
@@ -1165,20 +1084,19 @@ class Command(BaseCommand):
     ):
         ForumDraft.objects.create(
             user=users["member"],
-            draft_type=(
-                ForumDraft.DraftType.THREAD
-            ),
+            draft_type=ForumDraft.DraftType.THREAD,
             board=boards["camp_planning"],
-            title="Development Thread Draft",
-            body=FILLER_TEXT,
+            title="Ideas for a Spring Tool-Care Workshop",
+            body=(
+                "Could we arrange a short tool-care workshop "
+                "before the next camp? I can bring oilcloth "
+                "and brush samples."
+            ),
             target_data=[],
             attachment_links=[
                 {
-                    "label": "Draft Link",
-                    "url": (
-                        "https://example.com/"
-                        "draft-thread-link"
-                    ),
+                    "label": "Research Collection",
+                    "url": "https://www.loc.gov/collections/",
                     "display_order": 0,
                 }
             ],
@@ -1187,12 +1105,14 @@ class Command(BaseCommand):
 
         ForumDraft.objects.create(
             user=users["member_two"],
-            draft_type=(
-                ForumDraft.DraftType.POST
-            ),
+            draft_type=ForumDraft.DraftType.POST,
             thread=threads["prepping_tents"],
             title="",
-            body=FILLER_TEXT,
+            body=(
+                "I checked the canvas inventory again and found "
+                "two small repair patches. I can bring them "
+                "to the next workday."
+            ),
             target_data=[],
             attachment_links=[],
             quoted_post_ids=[],
@@ -1219,8 +1139,7 @@ class Command(BaseCommand):
 
             last_post_at = (
                 newest_active_post.created_at
-                if newest_active_post
-                is not None
+                if newest_active_post is not None
                 else None
             )
 

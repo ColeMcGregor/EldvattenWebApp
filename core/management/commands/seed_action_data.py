@@ -37,9 +37,9 @@ SEED_PREFIX = "[DEV ACTION]"
 TEST_GROUP_NAME = "Test Custom Group"
 
 FILLER_TEXT = (
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
-    "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. "
-    "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris. "
+    "Please review the details and confirm your part in this work. "
+    "If you need equipment, transport, or another volunteer, contact the organizer. "
+    "Record your progress here so the planning team can follow up. "
 )
 
 ACTION_PERMISSIONS = (
@@ -581,65 +581,65 @@ class Command(BaseCommand):
         individual = ({"user": "testuser01"},)
 
         self.create_action(
-            "Overdue - Required - Not Started",
+            "Confirm winter feast volunteer availability",
             due=td(days=-4),
             targets=individual,
             required=True,
         )
 
         self.create_action(
-            "Overdue - Optional - Opened",
+            "Share photos from the autumn craft day",
             due=td(days=-1),
             targets=individual,
             states={"testuser01": status.OPENED},
         )
 
         self.create_action(
-            "Due Today - Required",
+            "Submit chapter meeting attendance",
             due=td(hours=3),
             targets=individual,
             required=True,
         )
 
         self.create_action(
-            "Due Tomorrow - Required",
+            "Review hall safety briefing",
             due=td(days=1),
             targets=individual,
             required=True,
         )
 
         self.create_action(
-            "Due in Three Days",
+            "Check loaner tent inventory",
             due=td(days=3),
             targets=individual,
         )
 
         self.create_action(
-            "Due Next Week",
+            "Prepare weaving workshop materials",
             due=td(days=7),
             targets=individual,
         )
 
         self.create_action(
-            "Due in Thirty Days",
+            "Register for spring encampment duties",
             due=td(days=30),
             targets=individual,
             required=True,
         )
 
         self.create_action(
-            "No Deadline - Required",
+            "Read updated member conduct guidance",
             targets=individual,
             required=True,
         )
 
         self.create_action(
-            "No Deadline - Optional",
+            "Suggest topics for the winter lecture series",
             targets=individual,
         )
 
         self.create_action(
-            "Completed - Recent",
+            "Confirm feast hall reservation",
             due=td(days=-2),
             targets=individual,
             states={"testuser01": status.COMPLETED},
@@ -647,7 +647,7 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Completed - Older",
+            "Return borrowed cooking equipment",
             due=td(days=-25),
             targets=individual,
             states={"testuser01": status.COMPLETED},
@@ -655,14 +655,14 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Completed - No Deadline",
+            "Update emergency contact details",
             targets=individual,
             states={"testuser01": status.COMPLETED},
         )
 
         long_title = (
-            "Long Title - "
-            + "Lorem ipsum dolor sit amet. " * 8
+            "Coordinate the spring heritage fair demonstrations, volunteer assignments, "
+            + "equipment collection, accessibility arrangements, and visitor information " * 3
         )[:200 - len(SEED_PREFIX) - 1]
 
         self.create_action(
@@ -672,28 +672,37 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Long Instructions",
+            "Coordinate the spring camp kitchen",
             due=td(days=6),
             targets=individual,
-            instructions=FILLER_TEXT * 12,
+            instructions=(
+                "The spring camp kitchen needs a clear plan for meals, equipment, and shifts.\n\n"
+                "1. Confirm the number of people who need meals and note dietary needs.\n"
+                "2. Check pots, serving tools, wash stations, and fuel supplies.\n"
+                "3. Make a shopping list and identify who will bring each item.\n"
+                "4. Assign volunteers to preparation, serving, and cleanup shifts.\n"
+                "5. Agree on food storage and sanitation procedures.\n"
+                "6. Post the final schedule and ask volunteers to confirm their shifts.\n\n"
+                "Contact the event steward before making any large purchases. " * 4
+            ),
         )
 
         self.create_action(
-            "External URL",
+            "Review public museum collection guide",
             due=td(days=8),
             targets=individual,
-            external_url="https://example.com/action-instructions",
+            external_url="https://www.metmuseum.org/art/collection",
         )
 
         self.create_action(
-            "Linked Tavern - One Thread",
+            "Confirm tent repairs before camp",
             due=td(days=9),
             targets=individual,
             threads=("Prepping Tents",),
         )
 
         self.create_action(
-            "Linked Tavern - Multiple Threads",
+            "Finalize camp arrival and setup plan",
             due=td(days=10),
             targets=individual,
             threads=(
@@ -708,25 +717,25 @@ class Command(BaseCommand):
         status = ActionAssignment.Status
 
         self.create_action(
-            "Individual - Member Two Only",
+            "Collect banner poles from storage",
             due=td(days=2),
             targets=({"user": "testuser02"},),
         )
 
         self.create_action(
-            "Individual - Member Three Only",
+            "Prepare the welcome table signs",
             due=td(days=3),
             targets=({"user": "testuser04"},),
         )
 
         self.create_action(
-            "Individual - Member Four Only",
+            "Inspect the communal fire pit tools",
             due=td(days=4),
             targets=({"user": "testuser05"},),
         )
 
         self.create_action(
-            "Multiple Individual Targets",
+            "Check first-aid kits before the event",
             due=td(days=5),
             required=True,
             targets=(
@@ -737,7 +746,7 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Community Group - Test Custom Group",
+            "Organize heritage craft demonstrations",
             due=td(days=6),
             targets=(
                 {"community_group": TEST_GROUP_NAME},
@@ -745,7 +754,7 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Chapter - Fyr Draca",
+            "Confirm Fyr Draca meeting location",
             due=td(days=7),
             targets=(
                 {"chapter": "Fyr Draca Chapter"},
@@ -753,7 +762,7 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Chapter - Seattle",
+            "Collect Seattle chapter activity reports",
             due=td(days=8),
             targets=(
                 {"chapter": "Seattle Chapter"},
@@ -761,7 +770,7 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Citizenship - Active Citizens",
+            "Review proposed annual activity calendar",
             due=td(days=9),
             targets=(
                 {"citizenship_class": "Active Citizen"},
@@ -769,7 +778,7 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Social Rank - Godi",
+            "Prepare council discussion topics",
             due=td(days=10),
             targets=(
                 {"social_rank": "Godi"},
@@ -777,7 +786,7 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Household - Kraken",
+            "Inspect House Kraken shared equipment",
             due=td(days=11),
             targets=(
                 {"household": "House Kraken"},
@@ -785,7 +794,7 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Governance - Godi Council",
+            "Review outstanding membership petitions",
             due=td(days=12),
             targets=(
                 {"governance_body": "Godi Council"},
@@ -793,7 +802,7 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Order - Air",
+            "Plan the Order of Air skills workshop",
             due=td(days=13),
             targets=(
                 {"order": "Order of Air"},
@@ -801,7 +810,7 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Order Rank - Gesallen",
+            "Mentor new order participants",
             due=td(days=14),
             targets=(
                 {"order_rank": "Gesallen"},
@@ -809,7 +818,7 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Office - Lawspeaker",
+            "Compile proposed wording changes",
             due=td(days=15),
             targets=(
                 {"office": "Lawspeaker"},
@@ -817,7 +826,7 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Household Leadership - Leading Jarl",
+            "Submit household participation updates",
             due=td(days=16),
             targets=(
                 {
@@ -827,7 +836,7 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Intersection - Group and Chapter",
+            "Confirm local craft booth volunteers",
             due=td(days=17),
             targets=(
                 {
@@ -838,7 +847,7 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Intersection - Office and Chapter",
+            "Prepare chapter officer briefing",
             due=td(days=18),
             targets=(
                 {
@@ -849,7 +858,7 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Intersection - Order and Rank",
+            "Organize beginner skills assessment",
             due=td(days=19),
             targets=(
                 {
@@ -860,7 +869,7 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Union - Group or Household",
+            "Coordinate shared pavilion supplies",
             due=td(days=20),
             targets=(
                 {"community_group": TEST_GROUP_NAME},
@@ -869,7 +878,7 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Union - Individual or Group",
+            "Staff the community information table",
             due=td(days=21),
             required=True,
             targets=(
@@ -883,7 +892,7 @@ class Command(BaseCommand):
         status = ActionAssignment.Status
 
         self.create_action(
-            "Previously Removed - Opened",
+            "Help sort the archive photographs",
             due=td(days=3),
             inactive={
                 "testuser01": status.OPENED,
@@ -891,14 +900,14 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Previously Removed - Completed",
+            "Deliver repaired event banners",
             inactive={
                 "testuser01": status.COMPLETED,
             },
         )
 
         self.create_action(
-            "Mixed Status - Community Group",
+            "Prepare handouts for heritage day",
             due=td(days=5),
             required=True,
             targets=(
@@ -911,7 +920,7 @@ class Command(BaseCommand):
         )
 
         self.create_action(
-            "Mixed Status - Individual Targets",
+            "Confirm volunteers for gate duty",
             due=td(days=6),
             targets=(
                 {"user": "testuser01"},
@@ -928,36 +937,36 @@ class Command(BaseCommand):
         td = timedelta
 
         self.create_action(
-            "No Targets - Management Only",
+            "Draft next quarter planning checklist",
             instructions=FILLER_TEXT,
         )
 
         self.create_action(
-            "Pending Account - No Assignment",
+            "Attend new-member orientation",
             targets=({"user": "testuser03"},),
             allow_empty=True,
         )
 
         self.create_action(
-            "Suspended Account - No Assignment",
+            "Review participation eligibility",
             targets=({"user": "testuser06"},),
             allow_empty=True,
         )
 
         self.create_action(
-            "Disabled Account - No Assignment",
+            "Confirm member directory access",
             targets=({"user": "testuser09"},),
             allow_empty=True,
         )
 
         self.create_action(
-            "Same Deadline - First",
+            "Check cooking shelter stakes",
             due=td(days=4),
             targets=({"user": "testuser02"},),
         )
 
         self.create_action(
-            "Same Deadline - Second",
+            "Check water station containers",
             due=td(days=4),
             targets=({"user": "testuser02"},),
         )

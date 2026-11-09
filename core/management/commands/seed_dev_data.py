@@ -39,6 +39,62 @@ SUPERUSER_PASSWORD = "testpassword"
 
 TEST_USER_COUNT = 52
 
+FICTIONAL_MEMBER_NAMES = (
+    "Mara Hartwell",
+    "Elias Reed",
+    "Nora Merrick",
+    "Caleb Stone",
+    "Iris Vale",
+    "Jonah Bennett",
+    "Freya Lind",
+    "Owen Mercer",
+    "Leah Whitcomb",
+    "Theo Hale",
+    "Astrid Nyberg",
+    "Miles Foster",
+    "Clara Bell",
+    "Finn Archer",
+    "Elena Larsen",
+    "Rowan Pike",
+    "Sage Moss",
+    "Dorian Keller",
+    "Hazel Brooks",
+    "Felix Dahl",
+    "Ada Quinn",
+    "Gavin Avery",
+    "Tessa Sutton",
+    "Bryn Holt",
+    "Milo Parker",
+    "Vera Wells",
+    "Arden North",
+    "Lena Ellis",
+    "Silas Carver",
+    "Wren Briar",
+    "Cora Rowe",
+    "Hugo Carter",
+    "Maeve Hayes",
+    "Ezra Ward",
+    "Anika Solberg",
+    "Jasper Keene",
+    "Rhea Frost",
+    "Nolan Hansen",
+    "Petra Pierce",
+    "Emmett Baker",
+    "Lyra Voss",
+    "Tobin Finch",
+    "Isla Morrow",
+    "Orin Dunn",
+    "Mina Sloan",
+    "Kieran Rivers",
+    "Alma Wilder",
+    "Soren Falk",
+    "Edda Dyer",
+    "Luca Grant",
+    "Selene Lowe",
+    "Bastian Ashford",
+)
+
+
 TEST_STARTED_AT = date(
     2026,
     1,
@@ -138,7 +194,7 @@ class Command(BaseCommand):
             username="suTest",
         )
 
-        su_test.display_name = "Superuser Test"
+        su_test.display_name = "EldVatten Site Steward"
         su_test.email = "sutest@example.test"
         su_test.account_status = AccountStatus.MEMBER
         su_test.is_active = True
@@ -181,9 +237,7 @@ class Command(BaseCommand):
                 username=username,
             )
 
-            user.display_name = (
-                f"Test User {user_number:02d}"
-            )
+            user.display_name = FICTIONAL_MEMBER_NAMES[user_number - 1]
 
             user.email = (
                 f"{username}@example.test"
@@ -446,8 +500,8 @@ class Command(BaseCommand):
                 name=TEST_GROUP_NAME,
                 defaults={
                     "description": (
-                        "Development-only group "
-                        "for access-control testing."
+                        "Volunteer team for coordinating craft displays, "
+                        "public demonstrations, and shared equipment."
                     ),
                     "is_assignable": True,
                 },
