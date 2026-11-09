@@ -2066,6 +2066,7 @@ def unsubscribe_from_board(user, board):
     ).delete()
 
 
+
 @transaction.atomic
 def create_post_report(
     *,
@@ -2105,8 +2106,57 @@ def create_post_report(
     report.full_clean()
     report.save()
 
-    return report
+    moderator_candidates = (
+        User.objects
+        .filter(is_active=True)
+        .filter(
+            Q(is_superuser=True)
+            | Q(
+                user_permissions__codename="moderate_forum",
+                user_permissions__content_type__app_label="community",
+            )
+            | Q(
+                groups__permissions__codename="moderate_forum",
+                groups__permissions__content_type__app_label="community",
+            )
+        )
+        .exclude(pk=user.pk)
+        .distinct()
+    )
 
+    moderators = [
+        moderator
+        for moderator in moderator_candidates
+        if user_is_forum_moderator(moderator)
+        and user_can_access_thread(
+            moderator,
+            post.thread,
+        )
+    ]
+
+    if moderators:
+        create_notifications(
+            recipients=moderators,
+            notification_type=(
+                Notification.Type.COMMUNITY
+            ),
+            title="New forum post report",
+            message=(
+                "A forum post has been reported "
+                "and requires moderator review."
+            ),
+            source_type="ForumPostReport",
+            source_id=report.pk,
+            target_url=(
+                reverse(
+                    "community:thread_detail",
+                    args=[post.thread_id],
+                )
+                + f"#post-{post.pk}"
+            ),
+        )
+
+    return report
 
 @transaction.atomic
 def resolve_post_report(

@@ -3874,6 +3874,8 @@ class ForumAuditIntegrationTests(
                     ).exists()
                 )
 
+    
+
     def test_lock_unlock_pin_and_unpin_use_semantic_actions(self):
         board = self.create_board(
             "Audit State Board"
@@ -5403,3 +5405,4 @@ class ForumPhaseTenViewTests(ForumPermissionFixtureMixin, TestCase):
             for section in response.context["category_sections"]
         }
         self.assertIn(category.pk, section_ids)
+

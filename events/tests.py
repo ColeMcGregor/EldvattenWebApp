@@ -988,6 +988,62 @@ class EventTargetResolutionTests(EventTestBase):
         )
 
 
+class EventListRedirectTests(EventTestBase):
+    def test_anonymous_event_list_redirects_to_public_calendar(self):
+        response = self.client.get(
+            reverse("events:event_list"),
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("calendar"),
+            fetch_redirect_response=False,
+        )
+
+    def test_anonymous_query_parameters_do_not_bypass_redirect(self):
+        response = self.client.get(
+            reverse("events:event_list"),
+            {
+                "view": "calendar",
+                "scope": "invited",
+                "year": "2027",
+                "month": "1",
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("calendar"),
+            fetch_redirect_response=False,
+        )
+
+    def test_authenticated_member_keeps_internal_event_list(self):
+        self.client.force_login(self.member_a)
+
+        response = self.client.get(
+            reverse("events:event_list"),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(
+            response,
+            "events/event_list_app.html",
+        )
+
+    def test_authenticated_pending_account_is_not_redirected(self):
+        self.client.force_login(self.pending_user)
+
+        response = self.client.get(
+            reverse("events:event_list"),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(
+            response,
+            "events/event_list_app.html",
+        )
+
+
 class EventVisibilityTests(EventTestBase):
     def test_public_event_visible_to_anonymous_user(
         self,
