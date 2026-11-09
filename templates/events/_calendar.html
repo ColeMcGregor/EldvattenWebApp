@@ -2,14 +2,14 @@
     <header class="event-calendar-header">
         <div class="event-calendar-navigation">
             {% if calendar_previous_month %}
-                <a class="event-button" href="{% url 'events:event_list' %}?view=calendar&amp;scope={{ scope }}&amp;year={{ calendar_previous_month.year }}&amp;month={{ calendar_previous_month.month }}" aria-label="Previous month">Previous</a>
+                <a class="event-button" href="{% if calendar_public %}{% url 'calendar' %}?year={{ calendar_previous_month.year }}&amp;month={{ calendar_previous_month.month }}{% else %}{% url 'events:event_list' %}?view=calendar&amp;scope={{ scope }}&amp;year={{ calendar_previous_month.year }}&amp;month={{ calendar_previous_month.month }}{% endif %}" aria-label="Previous month">Previous</a>
             {% else %}
                 <span class="event-button event-button-disabled" aria-disabled="true">Previous</span>
             {% endif %}
             <h2>{{ calendar_month_name }} {{ calendar_year }}</h2>
-            <a class="event-button" href="{% url 'events:event_list' %}?view=calendar&amp;scope={{ scope }}&amp;year={{ calendar_next_month.year }}&amp;month={{ calendar_next_month.month }}" aria-label="Next month">Next</a>
+            <a class="event-button" href="{% if calendar_public %}{% url 'calendar' %}?year={{ calendar_next_month.year }}&amp;month={{ calendar_next_month.month }}{% else %}{% url 'events:event_list' %}?view=calendar&amp;scope={{ scope }}&amp;year={{ calendar_next_month.year }}&amp;month={{ calendar_next_month.month }}{% endif %}" aria-label="Next month">Next</a>
         </div>
-        <a href="{% url 'events:event_list' %}?view=calendar&amp;scope={{ scope }}">Today</a>
+        <a href="{% if calendar_public %}{% url 'calendar' %}{% else %}{% url 'events:event_list' %}?view=calendar&amp;scope={{ scope }}{% endif %}">Today</a>
     </header>
 
     <div class="event-calendar-scroll" tabindex="0" role="region" aria-label="Monthly event calendar; scroll horizontally on smaller screens">
@@ -34,5 +34,9 @@
             {% endfor %}
         </div>
     </div>
-    <p class="event-muted event-calendar-footnote">Only currently running and future events you may access are shown. Select an event to see details and RSVP.</p>
+    {% if calendar_public %}
+        <p class="event-muted event-calendar-footnote">Only active public events happening now or in the future are shown.</p>
+    {% else %}
+        <p class="event-muted event-calendar-footnote">Only currently running and future events you may access are shown. Select an event to see details and RSVP.</p>
+    {% endif %}
 </section>

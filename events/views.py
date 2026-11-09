@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.forms import inlineformset_factory
 from django.http import HttpResponseForbidden
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import (
     get_object_or_404,
     redirect,
@@ -232,6 +233,8 @@ def record_target_changes(
 
 
 def event_list(request):
+    if not request.user.is_authenticated:
+        return redirect("calendar")
     now = timezone.now()
     scope = request.GET.get("scope", "all")
     if scope not in {"all", "invited"}:
@@ -328,11 +331,8 @@ def event_detail(
         pk=event_id,
     )
 
-    if not can_view_event(
-        request.user,
-        event,
-    ):
-        return HttpResponseForbidden()
+    if not can_view_event(request.user, event):
+        raise PermissionDenied
 
     participation = None
     rsvp_form = None

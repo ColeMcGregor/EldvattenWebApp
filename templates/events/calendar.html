@@ -1,0 +1,42 @@
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Event Calendar | EldVatten{% endblock %}
+
+{% block content %}
+
+<section
+    class="hero"
+    style="background-image: url('{% static 'images/Eldvatten_War_Photo_in_Armor_Pennsic.jpg' %}');"
+>
+    <div class="hero-content">
+        <h1 class="hero-title">Event Calendar</h1>
+
+        <p class="hero-text">
+            Public EldVatten events and gatherings.
+        </p>
+    </div>
+</section>
+
+<section class="page-section">
+    <div class="site-width public-events-calendar">
+
+        {% include "events/_calendar.html" %}
+
+    </div>
+</section>
+
+<section class="page-section page-section-alt">
+    <div class="site-width">
+
+        <h2 class="section-heading">
+            Upcoming Events
+        </h2>
+
+        {% include "events/_public_upcoming.html" %}
+
+    </div>
+</section>
+
+{% endblock %}

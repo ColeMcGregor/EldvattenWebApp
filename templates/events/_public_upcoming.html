@@ -1,0 +1,21 @@
+{% if upcoming_events %}
+    <div class="public-event-list">
+        {% for event in upcoming_events %}
+            <article class="public-event-card">
+                <h3>
+                    <a href="{% url 'events:event_detail' event.id %}">{{ event.title }}</a>
+                </h3>
+                <p>
+                    <time datetime="{{ event.start_at|date:'c' }}">{{ event.start_at|date:"M j, Y, g:i A" }}</time>
+                    –
+                    <time datetime="{{ event.end_at|date:'c' }}">{{ event.end_at|date:"M j, Y, g:i A" }}</time>
+                </p>
+                {% if event.location %}<p>{{ event.location }}</p>{% endif %}
+            </article>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="calendar-empty">
+        <p>No upcoming events at this time. Please check back later.</p>
+    </div>
+{% endif %}

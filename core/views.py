@@ -1,14 +1,23 @@
-import calendar
-from datetime import date
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from django.utils import timezone
 
 from community.views import forum_index
+from events.calendar import event_calendar_weeks, selected_event_month
+from events.queries import active_public_events, upcoming_public_events
 
 
 def home(request):
-    return render(request, "home.html")
+    return render(
+        request,
+        "home.html",
+        {
+            "upcoming_events": upcoming_public_events(
+                limit=4,
+            ),
+        },
+    )
 
 
 def about(request):
@@ -16,69 +25,51 @@ def about(request):
 
 
 def calendar_view(request):
-    today = date.today()
+    now = timezone.now()
+    selected_month = selected_event_month(request.GET, now)
 
-    year = int(
-        request.GET.get(
-            "year",
-            today.year,
+    month_events = list(
+        active_public_events()
+        .filter(
+            start_at__lt=selected_month["range_end"],
+            end_at__gt=max(
+                now,
+                selected_month["range_start"],
+            ),
         )
+        .order_by("start_at", "id")
     )
-
-    month = int(
-        request.GET.get(
-            "month",
-            today.month,
-        )
-    )
-
-    month_calendar = calendar.Calendar(
-        firstweekday=6
-    )
-
-    weeks = (
-        month_calendar
-        .monthdatescalendar(
-            year,
-            month,
-        )
-    )
-
-    if month == 1:
-        previous_year = year - 1
-        previous_month = 12
-
-    else:
-        previous_year = year
-        previous_month = month - 1
-
-    if month == 12:
-        next_year = year + 1
-        next_month = 1
-
-    else:
-        next_year = year
-        next_month = month + 1
 
     context = {
-        "year": year,
-        "month": month,
-        "month_name":
-            calendar.month_name[month],
-        "weeks": weeks,
-        "previous_year":
-            previous_year,
-        "previous_month":
-            previous_month,
-        "next_year":
-            next_year,
-        "next_month":
-            next_month,
+        "calendar_public": True,
+        "calendar_year": selected_month["year"],
+        "calendar_month": selected_month["month"],
+        "calendar_month_name": selected_month["month_name"],
+        "calendar_previous_month": selected_month["previous_month"],
+        "calendar_next_month": selected_month["next_month"],
+        "calendar_weekday_names": (
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+        ),
+        "calendar_weeks": event_calendar_weeks(
+            selected_month,
+            month_events,
+            now,
+        ),
+        "upcoming_events": upcoming_public_events(
+            now=now,
+            limit=10,
+        ),
     }
 
     return render(
         request,
-        "calendar.html",
+        "events/calendar.html",
         context,
     )
 
