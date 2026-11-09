@@ -39,6 +39,8 @@
     height: 44px;
 
     object-fit: contain;
+    border-radius: 6px;
+
 }
 
 

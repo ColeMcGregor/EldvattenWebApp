@@ -117,7 +117,7 @@ a:hover {
     min-height: var(--header-height);
 
     display: grid;
-    grid-template-columns: auto auto 1fr;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
 
     gap: var(--space-medium);
@@ -143,10 +143,15 @@ a:hover {
     border-radius: 6px;
 }
 
+.site-logo-link {
+    justify-self: center;
+}
+
 .site-nav {
     display: flex;
     justify-content: flex-end;
     align-items: center;
+    justify-self: end;
 
     gap: 1.5rem;
 
