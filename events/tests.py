@@ -49,142 +49,144 @@ from .services import (
 
 
 class EventTestBase(TestCase):
-    def setUp(self):
-        self.today = timezone.localdate()
+    @classmethod
+    def setUpTestData(cls):
+        cls.today = timezone.localdate()
 
-        self.organizer = User.objects.create_user(
+        cls.organizer = User.objects.create_user(
             username="event-organizer",
             password="test-password",
             account_status=AccountStatus.MEMBER,
             is_active=True,
         )
 
-        self.member_a = User.objects.create_user(
+        cls.member_a = User.objects.create_user(
             username="member-a",
             password="test-password",
             account_status=AccountStatus.MEMBER,
             is_active=True,
         )
 
-        self.member_b = User.objects.create_user(
+        cls.member_b = User.objects.create_user(
             username="member-b",
             password="test-password",
             account_status=AccountStatus.MEMBER,
             is_active=True,
         )
 
-        self.member_c = User.objects.create_user(
+        cls.member_c = User.objects.create_user(
             username="member-c",
             password="test-password",
             account_status=AccountStatus.MEMBER,
             is_active=True,
         )
 
-        self.pending_user = User.objects.create_user(
+        cls.pending_user = User.objects.create_user(
             username="pending-user",
             password="test-password",
             account_status=AccountStatus.PENDING,
             is_active=True,
         )
 
-        self.inactive_member = User.objects.create_user(
+        cls.inactive_member = User.objects.create_user(
             username="inactive-member",
             password="test-password",
             account_status=AccountStatus.MEMBER,
             is_active=False,
         )
 
-        self.chapter_status = ChapterStatus.objects.create(
+        cls.chapter_status = ChapterStatus.objects.create(
             name="Active",
         )
 
-        self.chapter_a = Chapter.objects.create(
+        cls.chapter_a = Chapter.objects.create(
             name="Chapter A",
-            status=self.chapter_status,
+            status=cls.chapter_status,
         )
 
-        self.chapter_b = Chapter.objects.create(
+        cls.chapter_b = Chapter.objects.create(
             name="Chapter B",
-            status=self.chapter_status,
+            status=cls.chapter_status,
         )
 
-        self.active_citizen = CitizenshipClass.objects.create(
+        cls.active_citizen = CitizenshipClass.objects.create(
             name="Active Citizen",
         )
 
-        self.initiate_citizen = CitizenshipClass.objects.create(
+        cls.initiate_citizen = CitizenshipClass.objects.create(
             name="Initiate Citizen",
         )
 
-        self.karl = SocialRank.objects.create(
+        cls.karl = SocialRank.objects.create(
             name="Karl",
         )
 
-        self.thegn = SocialRank.objects.create(
+        cls.thegn = SocialRank.objects.create(
             name="Thegn",
         )
 
-        self.skald = Office.objects.create(
+        cls.skald = Office.objects.create(
             name="Skald",
         )
 
-        self.hersir = Office.objects.create(
+        cls.hersir = Office.objects.create(
             name="Hersir",
         )
 
-        self.household_a = Household.objects.create(
+        cls.household_a = Household.objects.create(
             name="Household A",
         )
 
-        self.household_b = Household.objects.create(
+        cls.household_b = Household.objects.create(
             name="Household B",
         )
 
-        self.governance_body = GovernanceBody.objects.create(
+        cls.governance_body = GovernanceBody.objects.create(
             name="Test Council",
         )
 
-        self.order = Order.objects.create(
+        cls.order = Order.objects.create(
             name="Test Order",
             uses_ranks=False,
         )
 
-        self.community_group = CommunityGroup.objects.create(
+        cls.community_group = CommunityGroup.objects.create(
             name="Test Community Group",
         )
 
-        self.household_leader = (
+        cls.household_leader = (
             HouseholdLeadershipType.objects.create(
                 name="Household Leader",
             )
         )
 
-        self.assign_citizenship(
-            self.organizer,
-            self.active_citizen,
-            self.chapter_a,
+        cls.assign_citizenship(
+            cls.organizer,
+            cls.active_citizen,
+            cls.chapter_a,
         )
 
-        self.assign_citizenship(
-            self.member_a,
-            self.active_citizen,
-            self.chapter_a,
+        cls.assign_citizenship(
+            cls.member_a,
+            cls.active_citizen,
+            cls.chapter_a,
         )
 
-        self.assign_citizenship(
-            self.member_b,
-            self.initiate_citizen,
-            self.chapter_a,
+        cls.assign_citizenship(
+            cls.member_b,
+            cls.initiate_citizen,
+            cls.chapter_a,
         )
 
-        self.assign_citizenship(
-            self.member_c,
-            self.active_citizen,
-            self.chapter_b,
+        cls.assign_citizenship(
+            cls.member_c,
+            cls.active_citizen,
+            cls.chapter_b,
         )
 
+    @classmethod
     def assign_citizenship(
-        self,
+        cls,
         user,
         citizenship_class,
         chapter,
@@ -193,8 +195,8 @@ class EventTestBase(TestCase):
             user=user,
             citizenship_class=citizenship_class,
             chapter=chapter,
-            started_at=self.today,
-            changed_by=self.organizer,
+            started_at=cls.today,
+            changed_by=cls.organizer,
         )
 
     def assign_social_rank(
@@ -285,8 +287,9 @@ class EventTestBase(TestCase):
             changed_by=self.organizer,
         )
 
+    @classmethod
     def create_event(
-        self,
+        cls,
         *,
         visibility=Event.Visibility.MEMBERS,
         organizer=None,
@@ -303,7 +306,7 @@ class EventTestBase(TestCase):
             start_at=start_at,
             end_at=start_at + timedelta(hours=2),
             location="Test Location",
-            organizer=organizer or self.organizer,
+            organizer=organizer or cls.organizer,
             visibility=visibility,
         )
 
@@ -878,6 +881,16 @@ class EventTargetResolutionTests(EventTestBase):
         self,
     ):
         event = self.create_event()
+
+        self.assign_household(
+            self.member_a,
+            self.household_a,
+        )
+
+        self.assign_household(
+            self.member_b,
+            self.household_b,
+        )
 
         self.assign_household_leadership(
             self.member_a,
@@ -1775,16 +1788,17 @@ class EventInvitationSyncTests(EventTestBase):
 
 
 class EventRSVPTests(EventTestBase):
-    def setUp(self):
-        super().setUp()
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
 
-        self.event = self.create_event(
+        cls.event = cls.create_event(
             visibility=Event.Visibility.MEMBERS,
         )
 
         EventInvitation.objects.create(
-            event=self.event,
-            user=self.member_a,
+            event=cls.event,
+            user=cls.member_a,
             is_active=True,
         )
 
@@ -2005,10 +2019,11 @@ class EventRSVPTests(EventTestBase):
 
 
 class EventAttendanceTests(EventTestBase):
-    def setUp(self):
-        super().setUp()
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
 
-        self.event = self.create_event()
+        cls.event = cls.create_event()
 
     def test_member_without_permission_cannot_record_attendance(
         self,
@@ -2291,7 +2306,7 @@ class EventCreateViewTests(EventTestBase):
     @patch(
         "events.views.record_audit_event"
     )
-    def test_invited_only_create_copies_invitation_target_to_visibility(
+    def test_invited_only_create_restricts_access_to_invitees(
         self,
         mock_view_audit,
         mock_service_audit,
@@ -2376,21 +2391,8 @@ class EventCreateViewTests(EventTestBase):
             )
         )
 
-        visibility_target = (
-            event.targets.get(
-                purpose=(
-                    EventTarget.Purpose.VISIBILITY
-                )
-            )
-        )
-
         self.assertEqual(
             invitation_target.chapter,
-            self.chapter_a,
-        )
-
-        self.assertEqual(
-            visibility_target.chapter,
             self.chapter_a,
         )
 
@@ -2399,9 +2401,39 @@ class EventCreateViewTests(EventTestBase):
             self.active_citizen,
         )
 
-        self.assertEqual(
-            visibility_target.citizenship_class,
-            self.active_citizen,
+        self.assertFalse(
+            event.targets.filter(
+                purpose=EventTarget.Purpose.VISIBILITY,
+            ).exists()
+        )
+
+        self.assertTrue(
+            EventInvitation.objects.filter(
+                event=event,
+                user=self.member_a,
+                is_active=True,
+            ).exists()
+        )
+
+        self.assertTrue(
+            can_view_event(
+                self.member_a,
+                event,
+            )
+        )
+
+        self.assertFalse(
+            can_view_event(
+                self.member_b,
+                event,
+            )
+        )
+
+        self.assertFalse(
+            can_view_event(
+                self.member_c,
+                event,
+            )
         )
 
     @patch(

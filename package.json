@@ -1,0 +1,23 @@
+{
+  "name": "eldvattenwebapp",
+  "version": "1.0.0",
+  "description": "A private community operations web app for the Eldvatten SCA group.",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ColeMcGregor/EldvattenWebApp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ColeMcGregor/EldvattenWebApp/issues"
+  },
+  "homepage": "https://github.com/ColeMcGregor/EldvattenWebApp#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.65.0",
+    "@types/node": "^26.6.6"
+  }
+}
