@@ -942,3 +942,116 @@ class ActionAttentionTests(ActionTestBase):
         self.assertEqual(action_items[0]["target_url"], self.member_detail_url())
         self.assertContains(response, "Needs Attention")
         self.assertContains(response, self.action.title)
+
+
+class ActionUpdateNotificationTests(ActionTestBase):
+    def edit_action(self, *, title=None, targets=None, **changes):
+        if targets is None:
+            targets = [
+                {"id": target.pk, "user": target.user_id}
+                for target in self.action.targets.all()
+            ]
+
+        values = {
+            "instructions": self.action.instructions,
+            "external_url": self.action.external_url,
+            "deadline": (
+                timezone.localtime(self.action.deadline).strftime("%Y-%m-%dT%H:%M")
+                if self.action.deadline else ""
+            ),
+            "linked_threads": [str(self.visible_thread.pk)],
+        }
+        values.update(changes)
+        data = self.form_data(
+            title=title if title is not None else self.action.title,
+            rows=targets,
+            initial=sum(bool(row.get("id")) for row in targets),
+            **values,
+        )
+        if self.action.is_required:
+            data["is_required"] = "on"
+        self.client.force_login(self.manager)
+        return self.client.post(self.url("edit", self.action), data)
+
+    def test_material_changes_generate_one_notification_per_existing_member(self):
+        ActionTarget.objects.create(action=self.action, user=self.member)
+        self.assign(self.action, self.other_member)
+        response = self.edit_action(
+            title="Updated title",
+            instructions="New instructions",
+            external_url="https://example.org/updates",
+            is_required="on",
+        )
+        self.assertRedirects(
+            response, self.manage_detail_url(), fetch_redirect_response=False
+        )
+        notifications = Notification.objects.filter(
+            source_type="Action", source_id=str(self.action.pk),
+            title="Action updated: Updated title",
+        )
+        self.assertEqual(
+            set(notifications.values_list("user_id", flat=True)),
+            {self.member.pk},
+        )
+        notification = notifications.get()
+        self.assertEqual(notification.target_url, self.member_detail_url())
+        self.assertIn("title", notification.message)
+        self.assertIn("instructions", notification.message)
+        self.assertIn("external link", notification.message)
+        self.assertIn("required status", notification.message)
+
+    def test_unchanged_edit_does_not_notify(self):
+        ActionTarget.objects.create(action=self.action, user=self.member)
+        response = self.edit_action()
+        self.assertRedirects(
+            response, self.manage_detail_url(), fetch_redirect_response=False
+        )
+        self.assertFalse(Notification.objects.filter(
+            title__startswith="Action updated:",
+        ).exists())
+
+    def test_deadline_change_notifies_existing_assignee(self):
+        ActionTarget.objects.create(action=self.action, user=self.member)
+        deadline = timezone.now() + timedelta(days=5)
+        response = self.edit_action(
+            deadline=timezone.localtime(deadline).strftime("%Y-%m-%dT%H:%M")
+        )
+        self.assertRedirects(
+            response, self.manage_detail_url(), fetch_redirect_response=False
+        )
+        notification = Notification.objects.get(
+            user=self.member, title__startswith="Action updated:",
+        )
+        self.assertIn("deadline", notification.message)
+
+    def test_new_and_removed_assignees_get_only_assignment_notifications(self):
+        target = ActionTarget.objects.create(
+            action=self.action, user=self.member,
+        )
+        response = self.edit_action(
+            title="Updated assignment",
+            targets=[{"id": target.pk, "user": self.other_member.pk}],
+        )
+        self.assertRedirects(
+            response, self.manage_detail_url(), fetch_redirect_response=False
+        )
+        self.assertEqual(
+            list(Notification.objects.filter(
+                user=self.member, source_type="Action",
+            ).values_list("title", flat=True)),
+            ["Action assignment removed: Updated assignment"],
+        )
+        self.assertEqual(
+            list(Notification.objects.filter(
+                user=self.other_member, source_type="Action",
+            ).values_list("title", flat=True)),
+            ["New action: Updated assignment"],
+        )
+
+    def test_failed_edit_creates_no_update_notification(self):
+        ActionTarget.objects.create(action=self.action, user=self.member)
+        response = self.edit_action(title="")
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Notification.objects.filter(
+            title__startswith="Action updated:",
+        ).exists())

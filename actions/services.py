@@ -444,3 +444,53 @@ def sync_action_assignments(
         activated_assignments,
         deactivated_assignments,
     )
+
+ACTION_CHANGE_LABELS = {
+    "title": "title",
+    "instructions": "instructions",
+    "external_url": "external link",
+    "deadline": "deadline",
+    "is_required": "required status",
+    "linked_thread_ids": "linked Tavern threads",
+}
+
+
+def notify_action_updated(
+    action,
+    *,
+    old_value,
+    new_value,
+    exclude_user_ids=None,
+):
+    changed_fields = [
+        label
+        for field, label in ACTION_CHANGE_LABELS.items()
+        if old_value.get(field) != new_value.get(field)
+    ]
+
+    if not changed_fields:
+        return []
+
+    recipients = User.objects.filter(
+        action_assignments__action=action,
+        action_assignments__is_active=True,
+        is_active=True,
+        account_status=AccountStatus.MEMBER,
+    ).distinct()
+
+    if exclude_user_ids:
+        recipients = recipients.exclude(pk__in=exclude_user_ids)
+
+    return create_notifications(
+        recipients=recipients,
+        notification_type=Notification.Type.ACTION,
+        title=f"Action updated: {action.title}",
+        message=(
+            "Updated action details: "
+            + ", ".join(changed_fields)
+            + "."
+        ),
+        source_type="Action",
+        source_id=action.pk,
+        target_url=reverse("actions:detail", args=[action.pk]),
+    )

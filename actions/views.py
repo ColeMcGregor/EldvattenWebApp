@@ -15,7 +15,7 @@ from community.services import get_accessible_threads, user_can_access_thread
 
 from .forms import ActionForm, ActionTargetForm
 from .models import Action, ActionAssignment, ActionTarget
-from .services import sync_action_assignments
+from .services import notify_action_updated, sync_action_assignments
 
 
 ActionTargetFormSet = inlineformset_factory(
@@ -398,6 +398,18 @@ def action_edit(request, action_id):
                     source=AuditLog.Source.WEB_APP,
                     method=AuditLog.Method.MANUAL,
                 )
+            )
+
+            newly_assigned_user_ids = {
+                assignment.user_id
+                for assignment in activated_assignments
+            }
+
+            notify_action_updated(
+                action,
+                old_value=old_action_value,
+                new_value=new_action_value,
+                exclude_user_ids=newly_assigned_user_ids,
             )
 
             messages.success(
