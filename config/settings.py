@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     "resources",
     "audit",
     "administration",
+    "feedback",
 ]
 
 AUTH_USER_MODEL = "accounts.User"

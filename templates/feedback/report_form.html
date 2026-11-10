@@ -1,0 +1,106 @@
+
+{% extends "base.html" %}
+
+{% block title %}Report a Bug | EldVatten{% endblock %}
+
+{% block content %}
+
+<section class="page-section registration-page">
+
+    <div class="site-width">
+
+        <div class="registration-container">
+
+            <div class="registration-heading">
+
+                <h1 class="section-heading">
+                    Report a Bug
+                </h1>
+
+                <p>
+                    Encountered a problem with the EldVatten website
+                    or community application? Describe it below so
+                    an administrator can investigate.
+                </p>
+
+            </div>
+
+            <form
+                method="post"
+                class="registration-form"
+            >
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="form-errors" role="alert">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="form-field">
+
+                    {{ form.description.label_tag }}
+                    {{ form.description }}
+
+                    {% if form.description.errors %}
+                        <div class="form-errors" role="alert">
+                            {{ form.description.errors }}
+                        </div>
+                    {% endif %}
+
+                </div>
+
+                <div class="form-field">
+
+                    {{ form.expected_behavior.label_tag }}
+                    {{ form.expected_behavior }}
+                    {{ form.expected_behavior.errors }}
+
+                </div>
+
+                <div class="form-field">
+
+                    {{ form.steps_to_reproduce.label_tag }}
+                    {{ form.steps_to_reproduce }}
+                    {{ form.steps_to_reproduce.errors }}
+
+                </div>
+
+                <div class="form-field">
+
+                    {{ form.page_url.label_tag }}
+                    {{ form.page_url }}
+                    {{ form.page_url.errors }}
+
+                </div>
+
+                <div class="form-field">
+
+                    {{ form.contact_email.label_tag }}
+                    {{ form.contact_email }}
+                    {{ form.contact_email.errors }}
+
+                    <p>
+                        Optional. Provide an email address if you
+                        would like an administrator to be able to
+                        contact you about this report.
+                    </p>
+
+                </div>
+
+                <button
+                    type="submit"
+                    class="button button-primary registration-submit"
+                >
+                    Submit Bug Report
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

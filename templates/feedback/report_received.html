@@ -1,0 +1,52 @@
+
+{% extends "base.html" %}
+
+{% block title %}Bug Report Received | EldVatten{% endblock %}
+
+{% block content %}
+
+<section class="page-section registration-page">
+
+    <div class="site-width">
+
+        <div class="registration-container">
+
+            <div class="registration-heading">
+
+                <h1 class="section-heading">
+                    Bug Report Received
+                </h1>
+
+                <p>
+                    Your bug report has been submitted successfully.
+                    Thank you for helping us identify problems with
+                    the EldVatten website and community application.
+                </p>
+
+            </div>
+
+            <div class="button-row">
+
+                <a
+                    href="{% url 'home' %}"
+                    class="button button-primary"
+                >
+                    Return to Home
+                </a>
+
+                <a
+                    href="{% url 'feedback:report_bug' %}"
+                    class="button button-secondary"
+                >
+                    Submit Another Report
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}
