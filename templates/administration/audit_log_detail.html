@@ -1,0 +1,289 @@
+
+{% extends "app/base_desktop.html" %}
+
+{% block title %}
+    Audit Record {{ log.pk }} | Administration | EldVatten
+{% endblock %}
+
+{% block nav_administration %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+
+{% block app_content %}
+
+<div class="administration-page administration-audit-page">
+
+    <nav
+        class="administration-breadcrumb"
+        aria-label="Breadcrumb"
+    >
+        <a href="{% url 'administration:index' %}">
+            Administration
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a href="{% url 'administration:section' 'system' %}">
+            Audit &amp; System
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a href="{% url 'administration:audit_log_list' %}">
+            Audit Logs
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <span aria-current="page">
+            Record {{ log.pk }}
+        </span>
+    </nav>
+
+
+    <header class="administration-header">
+        <h1 class="section-heading">
+            Audit Record {{ log.pk }}
+        </h1>
+
+        <p class="administration-description">
+            Recorded
+            {{ log.recorded_at|date:"F j, Y" }}
+            at
+            {{ log.recorded_at|date:"g:i:s A T" }}
+        </p>
+    </header>
+
+
+    <section
+        class="administration-audit-detail-section"
+        aria-labelledby="audit-record-summary-heading"
+    >
+
+        <h2 id="audit-record-summary-heading">
+            Record Summary
+        </h2>
+
+        <dl class="administration-audit-detail-grid">
+
+            <div>
+                <dt>Actor</dt>
+                <dd>
+                    {% if log.actor_label %}
+                        {{ log.actor_label }}
+                    {% elif log.actor %}
+                        {{ log.actor.username }}
+                    {% else %}
+                        System
+                    {% endif %}
+                </dd>
+            </div>
+
+            <div>
+                <dt>Action</dt>
+                <dd>{{ log.get_action_display }}</dd>
+            </div>
+
+            <div>
+                <dt>Target Type</dt>
+                <dd>{{ log.target_type|default:"—" }}</dd>
+            </div>
+
+            <div>
+                <dt>Target Label</dt>
+                <dd>{{ log.target_label|default:"—" }}</dd>
+            </div>
+
+            <div>
+                <dt>Target ID</dt>
+                <dd>{{ log.target_id|default:"—" }}</dd>
+            </div>
+
+            <div>
+                <dt>Source</dt>
+                <dd>{{ log.get_source_display }}</dd>
+            </div>
+
+            <div>
+                <dt>Method</dt>
+                <dd>{{ log.get_method_display }}</dd>
+            </div>
+
+            <div>
+                <dt>Recorded At</dt>
+                <dd>
+                    {{ log.recorded_at|date:"F j, Y, g:i:s A T" }}
+                </dd>
+            </div>
+
+            <div>
+                <dt>Effective At</dt>
+                <dd>
+                    {% if log.effective_at %}
+                        {{ log.effective_at|date:"F j, Y, g:i:s A T" }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </dd>
+            </div>
+
+            <div>
+                <dt>IP Address</dt>
+                <dd>{{ log.ip_address|default:"—" }}</dd>
+            </div>
+
+            <div>
+                <dt>Request Path</dt>
+                <dd class="administration-audit-breakable">
+                    {{ log.request_path|default:"—" }}
+                </dd>
+            </div>
+
+        </dl>
+
+    </section>
+
+
+    {% if log.notes %}
+
+        <section
+            class="administration-audit-detail-section"
+            aria-labelledby="audit-record-notes-heading"
+        >
+            <h2 id="audit-record-notes-heading">
+                Notes
+            </h2>
+
+            <p class="administration-audit-notes">
+                {{ log.notes|linebreaksbr }}
+            </p>
+        </section>
+
+    {% endif %}
+
+
+    {% if changed_fields %}
+
+        <section
+            class="administration-audit-detail-section"
+            aria-labelledby="audit-record-changes-heading"
+        >
+
+            <h2 id="audit-record-changes-heading">
+                Changed Fields
+            </h2>
+
+            <div class="administration-audit-table-wrapper">
+
+                <table class="administration-audit-table administration-audit-changes-table">
+
+                    <thead>
+                        <tr>
+                            <th scope="col">Field</th>
+                            <th scope="col">Previous Value</th>
+                            <th scope="col">New Value</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for change in changed_fields %}
+
+                            <tr>
+                                <th scope="row">
+                                    {{ change.field }}
+                                </th>
+
+                                <td class="administration-audit-old-value">
+                                    {% if change.old_present %}
+                                        <pre>{{ change.old_value|pprint }}</pre>
+                                    {% else %}
+                                        <span class="administration-audit-secondary">
+                                            Not present
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="administration-audit-new-value">
+                                    {% if change.new_present %}
+                                        <pre>{{ change.new_value|pprint }}</pre>
+                                    {% else %}
+                                        <span class="administration-audit-secondary">
+                                            Not present
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    {% endif %}
+
+
+    <section
+        class="administration-audit-detail-section"
+        aria-labelledby="audit-record-values-heading"
+    >
+
+        <h2 id="audit-record-values-heading">
+            Recorded Values
+        </h2>
+
+        <div class="administration-audit-values-grid">
+
+            <div class="administration-audit-value-panel">
+
+                <h3>Previous State</h3>
+
+                {% if log.old_value is not None %}
+                    <pre>{{ log.old_value|pprint }}</pre>
+                {% else %}
+                    <p class="administration-audit-secondary">
+                        No previous state recorded.
+                    </p>
+                {% endif %}
+
+            </div>
+
+            <div class="administration-audit-value-panel">
+
+                <h3>New State</h3>
+
+                {% if log.new_value is not None %}
+                    <pre>{{ log.new_value|pprint }}</pre>
+                {% else %}
+                    <p class="administration-audit-secondary">
+                        No new state recorded.
+                    </p>
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <footer class="administration-section-footer">
+
+        <a
+            class="administration-back-link"
+            href="{% url 'administration:audit_log_list' %}"
+        >
+            &larr; Back to Audit Logs
+        </a>
+
+    </footer>
+
+</div>
+
+{% endblock %}

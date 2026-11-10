@@ -1,0 +1,359 @@
+
+{% extends "app/base_desktop.html" %}
+
+{% block title %}
+    Audit Logs | Administration | EldVatten
+{% endblock %}
+
+{% block nav_administration %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+
+{% block app_content %}
+
+<div class="administration-page administration-audit-page">
+
+    <nav
+        class="administration-breadcrumb"
+        aria-label="Breadcrumb"
+    >
+        <a href="{% url 'administration:index' %}">
+            Administration
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a href="{% url 'administration:section' 'system' %}">
+            Audit &amp; System
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <span aria-current="page">
+            Audit Logs
+        </span>
+    </nav>
+
+
+    <header class="administration-header">
+        <h1 class="section-heading">
+            Audit Logs
+        </h1>
+
+        <p class="administration-description">
+            Search and inspect recorded administrative activity.
+        </p>
+    </header>
+
+
+    <section
+        class="administration-audit-filters"
+        aria-labelledby="audit-filter-heading"
+    >
+        <h2 id="audit-filter-heading">
+            Filters
+        </h2>
+
+        <form
+            method="get"
+            action="{% url 'administration:audit_log_list' %}"
+            class="administration-audit-filter-form"
+        >
+
+            <div class="administration-audit-filter-grid">
+
+                <div class="administration-audit-filter-field">
+                    <label for="audit-actor">
+                        Actor
+                    </label>
+
+                    <input
+                        id="audit-actor"
+                        type="search"
+                        name="actor"
+                        value="{{ filters.actor }}"
+                        maxlength="150"
+                        placeholder="Username or actor name"
+                    >
+                </div>
+
+                <div class="administration-audit-filter-field">
+                    <label for="audit-action">
+                        Action
+                    </label>
+
+                    <select
+                        id="audit-action"
+                        name="action"
+                    >
+                        <option value="">All actions</option>
+
+                        {% for value, label in action_choices %}
+                            <option
+                                value="{{ value }}"
+                                {% if filters.action == value %}selected{% endif %}
+                            >
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="administration-audit-filter-field">
+                    <label for="audit-target-type">
+                        Target Type
+                    </label>
+
+                    <input
+                        id="audit-target-type"
+                        type="search"
+                        name="target_type"
+                        value="{{ filters.target_type }}"
+                        maxlength="100"
+                        placeholder="e.g. user account"
+                    >
+                </div>
+
+                <div class="administration-audit-filter-field">
+                    <label for="audit-source">
+                        Source
+                    </label>
+
+                    <select
+                        id="audit-source"
+                        name="source"
+                    >
+                        <option value="">All sources</option>
+
+                        {% for value, label in source_choices %}
+                            <option
+                                value="{{ value }}"
+                                {% if filters.source == value %}selected{% endif %}
+                            >
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="administration-audit-filter-field">
+                    <label for="audit-date-from">
+                        From Date
+                    </label>
+
+                    <input
+                        id="audit-date-from"
+                        type="date"
+                        name="date_from"
+                        value="{{ filters.date_from }}"
+                    >
+                </div>
+
+                <div class="administration-audit-filter-field">
+                    <label for="audit-date-to">
+                        To Date
+                    </label>
+
+                    <input
+                        id="audit-date-to"
+                        type="date"
+                        name="date_to"
+                        value="{{ filters.date_to }}"
+                    >
+                </div>
+
+            </div>
+
+            <div class="administration-audit-filter-actions">
+                <button
+                    type="submit"
+                    class="administration-audit-button"
+                >
+                    Apply Filters
+                </button>
+
+                <a
+                    class="administration-audit-clear-link"
+                    href="{% url 'administration:audit_log_list' %}"
+                >
+                    Clear Filters
+                </a>
+            </div>
+
+        </form>
+    </section>
+
+
+    <section
+        class="administration-audit-results"
+        aria-labelledby="audit-results-heading"
+    >
+
+        <div class="administration-audit-results-header">
+            <h2 id="audit-results-heading">
+                Audit Records
+            </h2>
+
+            <span class="administration-audit-results-count">
+                {{ page.paginator.count }} record{{ page.paginator.count|pluralize }}
+            </span>
+        </div>
+
+
+        {% if logs %}
+
+            <div class="administration-audit-table-wrapper">
+
+                <table class="administration-audit-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Recorded</th>
+                            <th scope="col">Actor</th>
+                            <th scope="col">Action</th>
+                            <th scope="col">Target</th>
+                            <th scope="col">Source</th>
+                            <th scope="col">Details</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for log in logs %}
+                            <tr>
+                                <td>
+                                    <time datetime="{{ log.recorded_at|date:'c' }}">
+                                        {{ log.recorded_at|date:"M j, Y" }}
+                                        <span class="administration-audit-time">
+                                            {{ log.recorded_at|date:"g:i A" }}
+                                        </span>
+                                    </time>
+                                </td>
+
+                                <td>
+                                    {% if log.actor_label %}
+                                        {{ log.actor_label }}
+                                    {% elif log.actor %}
+                                        {{ log.actor.username }}
+                                    {% else %}
+                                        System
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <span class="administration-audit-action">
+                                        {{ log.get_action_display }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="administration-audit-target">
+                                        {{ log.target_label|default:log.target_type }}
+                                    </span>
+
+                                    {% if log.target_label and log.target_type %}
+                                        <span class="administration-audit-secondary">
+                                            {{ log.target_type }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {{ log.get_source_display }}
+                                </td>
+
+                                <td>
+                                    <a
+                                        class="administration-audit-detail-link"
+                                        href="{% url 'administration:audit_log_detail' log.pk %}"
+                                        aria-label="View audit record {{ log.pk }}"
+                                    >
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <div class="administration-empty-state">
+                <h3>No matching audit records</h3>
+
+                <p>
+                    No audit records match the current filters.
+                </p>
+            </div>
+
+        {% endif %}
+
+
+        {% if page.paginator.num_pages > 1 %}
+
+            <nav
+                class="administration-audit-pagination"
+                aria-label="Audit log pagination"
+            >
+
+                <div class="administration-audit-page-links">
+
+                    {% if page.has_previous %}
+                        <a
+                            href="?{% if filter_query %}{{ filter_query }}&amp;{% endif %}page={{ page.previous_page_number }}"
+                            rel="prev"
+                        >
+                            Previous
+                        </a>
+                    {% else %}
+                        <span
+                            class="administration-audit-page-disabled"
+                            aria-disabled="true"
+                        >
+                            Previous
+                        </span>
+                    {% endif %}
+
+                    <span class="administration-audit-page-indicator">
+                        Page {{ page.number }} of {{ page.paginator.num_pages }}
+                    </span>
+
+                    {% if page.has_next %}
+                        <a
+                            href="?{% if filter_query %}{{ filter_query }}&amp;{% endif %}page={{ page.next_page_number }}"
+                            rel="next"
+                        >
+                            Next
+                        </a>
+                    {% else %}
+                        <span
+                            class="administration-audit-page-disabled"
+                            aria-disabled="true"
+                        >
+                            Next
+                        </span>
+                    {% endif %}
+
+                </div>
+
+            </nav>
+
+        {% endif %}
+
+    </section>
+
+
+    <footer class="administration-section-footer">
+        <a
+            class="administration-back-link"
+            href="{% url 'administration:section' 'system' %}"
+        >
+            &larr; Back to Audit &amp; System
+        </a>
+    </footer>
+
+</div>
+
+{% endblock %}
+s
