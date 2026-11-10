@@ -97,7 +97,7 @@ Features include:
 - Conversation muting
 - Message notifications
 
-Messages are application-managed and are not end-to-end encrypted.
+Messages are application-managed and are not end-to-end encrypted, by design. Messages are not meant to be private.
 
 ### Voting and Governance
 
