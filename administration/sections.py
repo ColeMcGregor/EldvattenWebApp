@@ -136,16 +136,7 @@ def get_section_links(user, section_slug):
         return has_any_permission(user, permissions)
 
     if section_slug == "accounts":
-        if user.is_staff and allowed(
-            "accounts.view_user",
-        ):
-            links.append({
-                "title": "Django Account Management",
-                "description": "View accounts in Django Admin.",
-                "url": reverse(
-                    "admin:accounts_user_changelist"
-                ),
-            })
+        pass
 
     elif section_slug == "tavern":
         links.append({
@@ -204,10 +195,7 @@ def get_section_links(user, section_slug):
                 "url": reverse("actions:manage_list"),
             })
 
-        if allowed(
-            "actions.add_action",
-            "actions.view_action",
-        ) and (
+        if (
             user.is_superuser
             or (
                 user.has_perm("actions.add_action")
@@ -231,16 +219,15 @@ def get_section_links(user, section_slug):
             })
 
     elif section_slug == "system":
-        if user.is_staff and allowed(
-            "audit.view_auditlog"
-        ):
+        if allowed("audit.view_auditlog"):
             links.append({
-                "title": "Audit History",
+                "title": "Audit Logs",
                 "description": (
-                    "View recorded administrative activity."
+                    "Search, filter, and inspect recorded "
+                    "administrative activity."
                 ),
                 "url": reverse(
-                    "admin:audit_auditlog_changelist"
+                    "administration:audit_log_list"
                 ),
             })
 

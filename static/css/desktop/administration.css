@@ -218,6 +218,454 @@ a.administration-card:focus-visible {
 }
 
 
+/* Audit Log Page */
+
+.administration-audit-page {
+    max-width: 1400px;
+}
+
+.administration-audit-filters,
+.administration-audit-detail-section {
+    min-width: 0;
+
+    margin-bottom: 1.75rem;
+    padding: 1.5rem;
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+
+    background: var(--surface);
+}
+
+.administration-audit-filters h2,
+.administration-audit-detail-section h2,
+.administration-audit-results-header h2 {
+    margin: 0 0 1.25rem;
+
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+
+/* Audit Filters */
+
+.administration-audit-filter-form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 1.25rem;
+}
+
+.administration-audit-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 1rem 1.25rem;
+}
+
+.administration-audit-filter-field {
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+    gap: 0.4rem;
+}
+
+.administration-audit-filter-field label {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.administration-audit-filter-field input,
+.administration-audit-filter-field select {
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+
+    padding: 0.6rem 0.75rem;
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+
+    background: var(--surface);
+    color: inherit;
+
+    font: inherit;
+    font-size: 0.95rem;
+}
+
+.administration-audit-filter-field input:focus-visible,
+.administration-audit-filter-field select:focus-visible {
+    outline: 2px solid var(--eldvatten-red);
+    outline-offset: 2px;
+}
+
+.administration-audit-filter-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 1rem;
+}
+
+.administration-audit-button {
+    min-height: 42px;
+
+    padding: 0.65rem 1.25rem;
+
+    border: 1px solid var(--eldvatten-red);
+    border-radius: var(--radius-small);
+
+    background: var(--eldvatten-red);
+    color: #ffffff;
+
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.administration-audit-button:hover {
+    filter: brightness(0.9);
+}
+
+.administration-audit-button:focus-visible {
+    outline: 3px solid var(--eldvatten-red);
+    outline-offset: 3px;
+}
+
+.administration-audit-clear-link {
+    color: var(--eldvatten-red);
+    font-size: 0.95rem;
+    text-decoration: none;
+}
+
+.administration-audit-clear-link:hover {
+    text-decoration: underline;
+}
+
+
+/* Audit Results */
+
+.administration-audit-results {
+    min-width: 0;
+}
+
+.administration-audit-results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+
+    gap: 0.75rem;
+
+    margin-bottom: 1rem;
+}
+
+.administration-audit-results-header h2 {
+    margin: 0;
+}
+
+.administration-audit-results-count {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+
+/* Audit Tables */
+
+.administration-audit-table-wrapper {
+    width: 100%;
+    max-width: 100%;
+
+    overflow-x: auto;
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+}
+
+.administration-audit-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+.administration-audit-table th,
+.administration-audit-table td {
+    padding: 0.9rem 1rem;
+
+    border-bottom: 1px solid var(--border-color);
+
+    vertical-align: top;
+}
+
+.administration-audit-table thead th {
+    background: var(--surface-muted);
+
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.administration-audit-table tbody tr:last-child th,
+.administration-audit-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.administration-audit-table tbody tr:hover {
+    background: var(--surface-muted);
+}
+
+.administration-audit-table time {
+    display: block;
+    white-space: nowrap;
+}
+
+.administration-audit-time {
+    display: block;
+
+    margin-top: 0.2rem;
+
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.administration-audit-action {
+    display: inline-block;
+
+    padding: 0.25rem 0.55rem;
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+
+    background: var(--surface-muted);
+
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.administration-audit-target {
+    display: block;
+    font-weight: 600;
+}
+
+.administration-audit-secondary {
+    display: block;
+
+    margin-top: 0.25rem;
+
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.administration-audit-detail-link {
+    color: var(--eldvatten-red);
+
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.administration-audit-detail-link:hover {
+    text-decoration: underline;
+}
+
+.administration-audit-detail-link:focus-visible {
+    outline: 2px solid var(--eldvatten-red);
+    outline-offset: 3px;
+}
+
+
+/* Audit Pagination */
+
+.administration-audit-pagination {
+    display: flex;
+    justify-content: flex-end;
+
+    margin-top: 1.25rem;
+}
+
+.administration-audit-page-links {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 1rem;
+}
+
+.administration-audit-page-links a,
+.administration-audit-page-disabled {
+    display: inline-block;
+
+    padding: 0.55rem 0.85rem;
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+
+    text-decoration: none;
+}
+
+.administration-audit-page-links a {
+    color: var(--eldvatten-red);
+}
+
+.administration-audit-page-links a:hover {
+    background: var(--surface-muted);
+}
+
+.administration-audit-page-links a:focus-visible {
+    outline: 2px solid var(--eldvatten-red);
+    outline-offset: 2px;
+}
+
+.administration-audit-page-disabled {
+    color: var(--text-muted);
+    opacity: 0.6;
+}
+
+.administration-audit-page-indicator {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+
+/* Audit Record Details */
+
+.administration-audit-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 1.25rem 2rem;
+
+    margin: 0;
+}
+
+.administration-audit-detail-grid > div {
+    min-width: 0;
+}
+
+.administration-audit-detail-grid dt {
+    margin-bottom: 0.35rem;
+
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.administration-audit-detail-grid dd {
+    margin: 0;
+
+    font-size: 0.95rem;
+    line-height: 1.5;
+
+    overflow-wrap: anywhere;
+}
+
+.administration-audit-breakable {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.administration-audit-notes {
+    margin: 0;
+
+    font-size: 0.95rem;
+    line-height: 1.6;
+
+    overflow-wrap: anywhere;
+}
+
+
+/* Audit Change Comparison */
+
+.administration-audit-changes-table {
+    table-layout: fixed;
+}
+
+.administration-audit-changes-table th:first-child {
+    width: 20%;
+}
+
+.administration-audit-changes-table th:nth-child(2),
+.administration-audit-changes-table th:nth-child(3) {
+    width: 40%;
+}
+
+.administration-audit-old-value {
+    background: rgba(180, 75, 75, 0.06);
+}
+
+.administration-audit-new-value {
+    background: rgba(65, 135, 85, 0.06);
+}
+
+.administration-audit-changes-table pre {
+    margin: 0;
+
+    font-family: monospace;
+    font-size: 0.85rem;
+    line-height: 1.5;
+
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+
+/* Original Recorded Values */
+
+.administration-audit-values-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 1.25rem;
+}
+
+.administration-audit-value-panel {
+    min-width: 0;
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+
+    overflow: hidden;
+}
+
+.administration-audit-value-panel h3 {
+    margin: 0;
+    padding: 0.85rem 1rem;
+
+    border-bottom: 1px solid var(--border-color);
+
+    background: var(--surface-muted);
+
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.administration-audit-value-panel pre {
+    max-height: 450px;
+
+    margin: 0;
+    padding: 1rem;
+
+    overflow: auto;
+
+    font-family: monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.administration-audit-value-panel p {
+    margin: 0;
+    padding: 1rem;
+}
+
+
 /* Responsive Layout */
 
 @media (max-width: 800px) {
@@ -225,8 +673,38 @@ a.administration-card:focus-visible {
         padding: 1.5rem;
     }
 
-    .administration-card-grid {
+    .administration-card-grid,
+    .administration-audit-filter-grid,
+    .administration-audit-detail-grid,
+    .administration-audit-values-grid {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    .administration-audit-filters,
+    .administration-audit-detail-section {
+        padding: 1.25rem;
+    }
+
+    .administration-audit-table {
+        min-width: 720px;
+    }
+
+    .administration-audit-changes-table {
+        min-width: 600px;
+    }
+}
+
+@media (max-width: 480px) {
+    .administration-page {
+        padding: 1rem;
+    }
+
+    .administration-card {
+        padding: 1.25rem;
+    }
+
+    .administration-audit-page-links {
+        gap: 0.5rem;
     }
 }
 
