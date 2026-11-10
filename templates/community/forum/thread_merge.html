@@ -1,0 +1,89 @@
+
+{% extends "app/base_desktop.html" %}
+
+{% block title %}Merge Thread | The Tavern | EldVatten{% endblock %}
+{% block nav_tavern %}active{% endblock %}
+{% block app_shell_class %}tavern-scroll-shell{% endblock %}
+
+{% block app_content %}
+
+<section class="forum-form-page">
+
+    <nav class="forum-breadcrumbs" aria-label="Breadcrumb">
+
+        <a href="{% url 'community:forum_index' %}">
+            The Tavern
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a href="{% url 'community:board_detail' source_thread.board.id %}">
+            {{ source_thread.board.name }}
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a href="{% url 'community:thread_detail' source_thread.id %}">
+            {{ source_thread.title }}
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <span aria-current="page">Merge Thread</span>
+
+    </nav>
+
+
+    <header class="forum-page-header">
+
+        <div class="forum-page-heading">
+
+            <h1 class="section-heading">
+                Merge Thread
+            </h1>
+
+            <p class="forum-page-description">
+                Move the source thread's posts into the destination thread and archive the source thread.
+            </p>
+
+        </div>
+
+    </header>
+
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        <div class="forum-form-field">
+
+            <label for="{{ form.destination_thread.id_for_label }}">
+                Destination Thread
+            </label>
+
+            {{ form.destination_thread }}
+
+            {{ form.destination_thread.errors }}
+
+        </div>
+
+
+        <div class="forum-form-actions">
+
+            <a href="{% url 'community:thread_detail' source_thread.id %}">
+                Cancel
+            </a>
+
+            <button class="forum-primary-button" type="submit">
+                Merge Thread
+            </button>
+
+        </div>
+
+    </form>
+
+</section>
+
+{% endblock %}

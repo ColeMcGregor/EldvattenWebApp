@@ -1,0 +1,119 @@
+
+{% extends "app/base_desktop.html" %}
+
+{% block title %}Split Thread | The Tavern | EldVatten{% endblock %}
+{% block nav_tavern %}active{% endblock %}
+{% block app_shell_class %}tavern-scroll-shell{% endblock %}
+
+{% block app_content %}
+
+<section class="forum-form-page">
+
+    <nav class="forum-breadcrumbs" aria-label="Breadcrumb">
+
+        <a href="{% url 'community:forum_index' %}">
+            The Tavern
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a href="{% url 'community:board_detail' source_thread.board.id %}">
+            {{ source_thread.board.name }}
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a href="{% url 'community:thread_detail' source_thread.id %}">
+            {{ source_thread.title }}
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <span aria-current="page">Split Thread</span>
+
+    </nav>
+
+
+    <header class="forum-page-header">
+
+        <div class="forum-page-heading">
+
+            <h1 class="section-heading">
+                Split Thread
+            </h1>
+
+            <p class="forum-page-description">
+                Select the posts to move into a new thread.
+            </p>
+
+        </div>
+
+    </header>
+
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        <div class="forum-form-field">
+
+            <label for="{{ form.title.id_for_label }}">
+                New Thread Title
+            </label>
+
+            {{ form.title }}
+
+            {{ form.title.errors }}
+
+        </div>
+
+
+        <div class="forum-form-field">
+
+            <label for="{{ form.destination_board.id_for_label }}">
+                Destination Board
+            </label>
+
+            {{ form.destination_board }}
+
+            {{ form.destination_board.errors }}
+
+        </div>
+
+
+        <div class="forum-form-field">
+
+            <label for="{{ form.posts.id_for_label }}">
+                Posts to Move
+            </label>
+
+            {{ form.posts }}
+
+            {{ form.posts.errors }}
+
+            <p class="forum-form-help">
+                Use Ctrl or Command to select multiple posts.
+            </p>
+
+        </div>
+
+
+        <div class="forum-form-actions">
+
+            <a href="{% url 'community:thread_detail' source_thread.id %}">
+                Cancel
+            </a>
+
+            <button class="forum-primary-button" type="submit">
+                Split Thread
+            </button>
+
+        </div>
+
+    </form>
+
+</section>
+
+{% endblock %}
