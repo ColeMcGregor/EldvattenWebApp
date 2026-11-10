@@ -1,193 +1,396 @@
 # EldvattenWebApp
 
-A private community operations web app for the Eldvatten SCA group.
+A self-hosted community management and communication platform for the EldVatten SCA group.
 
-The project supports community communication, event coordination, governance, membership management, organization records, notifications, and administrative workflows in one self-hosted system.
+EldvattenWebApp provides a centralized system for community discussions, messaging, events, governance, membership management, notifications, and administrative operations.
 
-The project is being developed as a volunteer effort and is intended to run on a Linux server owned by the group.
+The application uses a server-rendered architecture and is designed for long-term maintainability, security, and self-hosted deployment.
 
+## Technology Stack
 
-## Technology
+| Component | Technology |
+|---|---|
+| Backend | Python 3.13, Django 5.2 |
+| Database | PostgreSQL 17 |
+| Frontend | Django Templates, HTML, CSS, Vanilla JavaScript |
+| Application Server | Gunicorn |
+| Reverse Proxy | nginx |
+| Containers | Docker, Docker Compose |
+| Hosting | Linux |
+| External Networking | Cloudflare |
+| Browser Testing | Playwright |
 
-The application uses a conventional server-rendered web stack focused on maintainability and long-term handoff:
+## Features
 
-- Django 5.2
-- PostgreSQL 17
-- Django templates
-- HTML
-- CSS
-- Vanilla JavaScript
-- Docker Compose
-- Linux deployment
-- Gunicorn
-- nginx
-- Cloudflare in front of the public server
+### Identity and Access Management
 
+- User registration and authentication
+- Membership approval and account management
+- Role-based access control (RBAC)
+- Backend-enforced permissions
+- Organizational membership and affiliations
+- Administrative account management
 
-## Application Structure
+### Organization Management
 
-### Identity and Access
+Organizational records include:
 
-The application maintains Eldvatten user accounts and organization records.
+- Citizenship classes and social ranks
+- Chapters and households
+- Offices and leadership positions
+- Governance bodies
+- Orders and ranks
+- Community groups
+- Membership and sponsorship records
 
-Access is controlled by backend-enforced permissions and organization membership. Relevant organization data includes:
-
-- citizenship status
-- chapters
-- households
-- offices
-- social ranks
-- governance bodies
-- orders
-- community groups
-- household leadership
-
-Administrative access is separate from normal member access.
-
+Organizational data supports permission checks and targeted content visibility across the application.
 
 ### The Tavern
 
-The Tavern is Eldvatten's internal discussion forum.
+The Tavern is the community's internal discussion forum.
 
-Its structure is:
+Forum hierarchy:
 
+```text
 Category
 └── Board
     └── Thread
         └── Post
+```
 
-The Tavern supports or is being built to support:
+Features include:
 
-categories and boards
-threads and posts
-unread tracking
-thread and board subscriptions
-targeted visibility
-targeted thread-creation permissions
-pinned threads
-locked boards and threads
-archived content
-thread movement
-post movement
-thread merging and splitting
-post editing
-post reporting
-quotes
-link attachments
-drafts
-search
-notifications
-moderation
-audit logging
+- Category, board, thread, and post management
+- Targeted visibility and thread-creation permissions
+- Unread tracking and subscriptions
+- Thread pinning and locking
+- Content archiving and restoration
+- Thread and post movement
+- Thread merging and splitting
+- Post editing, quoting, and reporting
+- Link attachments and drafts
+- Search and moderation
+- Notifications and audit logging
 
-Forum access can be restricted using existing Eldvatten organization data rather than a separate forum-specific permission system.
+### Events and Calendar
 
-Events
+- Event creation and management
+- Event visibility and invitation targeting
+- Member invitations and RSVP tracking
+- Attendance recording
+- Calendar-based event organization
 
-The event system is separate from Tavern discussions.
+### Actions
 
-Events are structured application objects rather than forum posts. Event functionality is intended to support event coordination and related member workflows.
+- Structured task and responsibility management
+- Member and organization-based assignments
+- Assignment tracking and completion status
+- Deadlines and required actions
+- Links to relevant Tavern discussions
 
-Actions
+### Messaging
 
-Actions are structured tasks or responsibilities that require member attention.
+- Direct messaging
+- Group conversations
+- Conversation membership management
+- User blocking
+- Conversation muting
+- Message notifications
 
-They remain separate from Tavern discussions so actionable work does not become buried in forum content.
+Messages are application-managed and are not end-to-end encrypted.
 
-Notifications
+### Voting and Governance
 
-The notification system surfaces changes and items that require user attention.
+- Vote creation and management
+- Eligibility targeting
+- Voting options and ballots
+- Anonymous and identified voting
+- Quorum and approval rules
+- Vote opening, closing, and result tracking
 
-Notifications can link users back to the authoritative object, such as a Forum thread, event, action, or other application record.
+### Resources
 
-Messaging
+- Resource library
+- File uploads and external links
+- Organization-based visibility controls
+- Private file storage and permission-checked access
+- Administrative resource management
 
-The application includes direct and group messaging.
+### Notifications
 
-Messaging is separate from The Tavern and is intended for conversations that do not belong in persistent community discussion.
+- In-app notifications
+- Web push notifications
+- Notifications linked to relevant application records
+- Member attention and activity tracking
 
-Messages must not be treated as private or end-to-end encrypted communication. The user interface will make this clear to users.
+### Administration and Audit Logging
 
-Audit and Administration
+- Administrative interfaces
+- Member and organization management
+- Moderation tools
+- Audit logging for significant application operations
+- Audit history, filtering, and record inspection
+- Administrative access controls
 
-Important administrative and moderation changes are recorded through the audit system.
+### Public Website
 
-Audit records are intended to provide accountability for actions such as:
+The public-facing website provides general information about EldVatten, separate from the authenticated community application.
 
-creation
-editing
-movement
-locking
-archiving
-restoration
-moderation
-other administrative changes
+## Architecture
 
-Administrative activity within the application must not be assumed to be private.
+The application uses a Django modular monolith with separate application modules for major functional areas.
 
-Public Website
+The primary application directories include:
 
-A public-facing Eldvatten website is planned.
+```text
+accounts/
+actions/
+administration/
+audit/
+community/
+core/
+events/
+messaging/
+notifications/
+organization/
+resources/
+voting/
+```
 
-Its content and structure will require additional input from Eldvatten leadership before implementation is finalized.
+Django handles application logic, permissions, routing, database access, and server-rendered templates.
 
-Development Status
+PostgreSQL provides persistent storage for application and organizational data.
 
-The core application architecture, identity system, organization models, permissions, notifications, messaging infrastructure, audit system, and substantial Tavern backend functionality are in place.
+Production traffic follows this general architecture:
 
-Current development work is focused on completing the Tavern forum interface and integrating its existing backend capabilities into the final user experience.
-
-Development will continue across the following major areas:
-
-Identity and access
-Organization, groups, offices, chapters, households, and governance
-Public website
-Tavern forum
-Events
-Actions
-Notifications
-Messaging
-Audit and administrative tooling
-Archive and export tooling
-Accessibility, responsive behavior, testing, deployment, and system hardening
-Deployment
-
-The production system is intended to be self-hosted on Eldvatten-controlled Linux infrastructure.
-
-The planned production request path is approximately:
-
-User
-  ↓
+```text
+Client Browser
+     |
+     v
 Cloudflare
-  ↓
+     |
+     v
 nginx
-  ↓
+     |
+     v
 Gunicorn
-  ↓
+     |
+     v
 Django
-  ↓
+     |
+     v
 PostgreSQL
+```
 
-Application services are managed through Docker Compose.
+Application services are containerized and managed through Docker Compose.
 
-Project Priorities
+## Testing
 
-The project favors:
+The project includes Django automated tests and Playwright browser tests.
 
-maintainability
-clear architecture
-backend-enforced permissions
-conventional and widely understood technology
-minimal unnecessary dependencies
-long-term handoff to future maintainers
-accessibility
-auditable administrative actions
-separation between discussion content and structured business data
-Copyright
+Django tests cover application logic, permissions, data models, and backend functionality.
 
-Copyright © 2026 McGregor Systems LLC
-All rights reserved.
+Playwright tests cover browser-level application workflows, including authentication, administrative operations, and audit verification.
 
-This source code is proprietary and may not be copied,
-modified, distributed, sublicensed, or used outside the
-terms expressly authorized by the copyright holder.
+Run the Django test suite:
+
+```bash
+docker compose exec web python manage.py test
+```
+
+Run Playwright tests from the project directory after installing the Node.js development dependencies and starting the application:
+
+```bash
+npx playwright install
+npx playwright test --project=chromium
+```
+
+Playwright uses test accounts and credentials configured in `.env.playwright`. Run tests that modify application data against a dedicated development or test database.
+
+## Local Development with Docker
+
+The following instructions describe how to run EldvattenWebApp locally using Docker Compose.
+
+### Prerequisites
+
+Install the following software:
+
+- Git
+- Docker Engine with Docker Compose, or Docker Desktop
+- Node.js and npm for Playwright browser testing
+
+Docker handles the Python, Django, and PostgreSQL environments. A separate local Python or PostgreSQL installation is not required.
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/ColeMcGregor/EldvattenWebApp.git
+cd EldvattenWebApp
+```
+
+### 2. Configure Environment Variables
+
+Copy the example environment configuration into a local `.env` file:
+
+```bash
+cp .env.example .env
+```
+
+On Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Configure the environment variables in `.env`:
+
+```dotenv
+DJANGO_SECRET_KEY=replace-with-a-unique-secret-key
+DJANGO_DEBUG=True
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+
+POSTGRES_DB=eldvatten
+POSTGRES_USER=eldvatten
+POSTGRES_PASSWORD=replace-with-a-local-password
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+
+VAPID_PUBLIC_KEY=your-vapid-public-key
+VAPID_PRIVATE_KEY=your-vapid-private-key
+VAPID_SUBJECT=mailto:your-email@example.com
+```
+
+Use a unique Django secret key and database password. Configure valid VAPID credentials when testing web push notifications.
+
+The `.env` file contains local secrets and must not be committed to version control.
+
+### 3. Build and Start the Containers
+
+From the repository root:
+
+```bash
+docker compose up --build -d
+```
+
+Docker Compose builds the Django application image, starts PostgreSQL, and starts the Django development server.
+
+The local Compose configuration exposes the application on port `8000`.
+
+Check container status:
+
+```bash
+docker compose ps
+```
+
+View application logs:
+
+```bash
+docker compose logs -f web
+```
+
+### 4. Initialize the Database
+
+Apply the Django database migrations:
+
+```bash
+docker compose exec web python manage.py migrate
+```
+
+This initializes the database schema and applies the application's migrations.
+
+### 5. Create an Administrator Account
+
+```bash
+docker compose exec web python manage.py createsuperuser
+```
+
+Follow the prompts to create a local superuser.
+
+### 6. Start Using the Application
+
+Open the application in a browser:
+
+http://localhost:8000/
+
+The Django administrative interface is available at:
+
+http://localhost:8000/admin/
+
+Sign in using the superuser credentials created in the previous step.
+
+### 7. Running Development Commands
+
+Run Django management commands inside the `web` container.
+
+For example, to run the automated Django tests:
+
+```bash
+docker compose exec web python manage.py test
+```
+
+To open a Django shell:
+
+```bash
+docker compose exec web python manage.py shell
+```
+
+To generate migrations after model changes:
+
+```bash
+docker compose exec web python manage.py makemigrations
+```
+
+Apply them with:
+
+```bash
+docker compose exec web python manage.py migrate
+```
+
+### 8. Development Workflow
+
+The local Docker Compose configuration mounts the repository into the Django container.
+
+Changes to application files are therefore available inside the container without rebuilding the image for every source-code modification.
+
+Rebuild the image after modifying container configuration or Python dependencies:
+
+```bash
+docker compose up --build -d
+```
+
+Django's development server handles application reloads during normal development.
+
+### 9. Stopping the Application
+
+Stop the running containers:
+
+```bash
+docker compose down
+```
+
+The PostgreSQL database uses a persistent Docker volume, so application data survives normal container shutdowns and restarts.
+
+To completely reset the local container environment, including its database volume:
+
+```bash
+docker compose down -v
+```
+
+**Warning:** The `-v` option removes the project's persistent Docker volumes and deletes the local database data.
+
+### Local Development Notes
+
+- Docker Compose provides the local application and database environment.
+- nginx and Cloudflare are not required for local development.
+- The local Compose configuration uses Django's development server rather than the production Gunicorn configuration.
+- Development environment variables should not be reused for production.
+- Never use real member information in disposable development databases.
+- Browser tests that create, modify, or delete records should run against dedicated test data.
+
+## License and Copyright
+
+Copyright © 2026 McGregor Systems LLC. All rights reserved.
+
+This software is proprietary. Copying, modification, distribution, sublicensing, or use outside the terms authorized by the copyright holder is prohibited.
+
+Access to the repository does not grant a license to use or distribute its contents.
