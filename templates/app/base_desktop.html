@@ -125,6 +125,17 @@
                 {% endif %}
             </nav>
 
+            <div class="app-left-rail-footer">
+
+                <a
+                    class="app-report-bug-link"
+                    href="{% url 'feedback:report_bug' %}?page={{ request.build_absolute_uri|urlencode }}"
+                >
+                    Report a Bug
+                </a>
+
+            </div>
+
         </aside>
 
 

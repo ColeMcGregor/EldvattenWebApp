@@ -83,7 +83,10 @@ ADMINISTRATION_SECTIONS = (
     {
         "slug": "system",
         "title": "Audit & System",
-        "description": "Audit history and system administration",
+        "description": (
+            "Audit history, bug reports, and "
+            "system administration"
+        ),
         "permissions": (
             "audit.view_auditlog",
         ),
@@ -204,7 +207,9 @@ def get_section_links(user, section_slug):
         ):
             links.append({
                 "title": "Create Action",
-                "description": "Create a new action.",
+                "description": (
+                    "Create a new action."
+                ),
                 "url": reverse("actions:create"),
             })
 
@@ -232,6 +237,17 @@ def get_section_links(user, section_slug):
             })
 
         if user.is_staff and user.is_superuser:
+            links.append({
+                "title": "Bug Reports",
+                "description": (
+                    "Review submitted bug reports, "
+                    "investigate issues, and update their status."
+                ),
+                "url": reverse(
+                    "administration:bug_report_list"
+                ),
+            })
+
             links.append({
                 "title": "Django Admin",
                 "description": (

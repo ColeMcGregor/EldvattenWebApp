@@ -24,6 +24,16 @@ urlpatterns = [
         name="audit_log_detail",
     ),
     path(
+        "system/bug-reports/",
+        views.bug_report_list,
+        name="bug_report_list",
+    ),
+    path(
+        "system/bug-reports/<int:report_id>/",
+        views.bug_report_detail,
+        name="bug_report_detail",
+    ),
+    path(
         "<slug:section_slug>/",
         views.administration_section,
         name="section",

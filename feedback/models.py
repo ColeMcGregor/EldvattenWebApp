@@ -1,3 +1,4 @@
+
 from django.conf import settings
 from django.db import models
 
@@ -62,3 +63,45 @@ class BugReport(models.Model):
 
     def __str__(self):
         return f"Bug Report #{self.pk}"
+
+
+class SubmissionThrottle(models.Model):
+    class Period(models.TextChoices):
+        MINUTE = "MINUTE", "Minute"
+        HOUR = "HOUR", "Hour"
+
+    identifier = models.CharField(
+        max_length=64,
+    )
+
+    period = models.CharField(
+        max_length=10,
+        choices=Period.choices,
+    )
+
+    submission_count = models.PositiveIntegerField(
+        default=0,
+    )
+
+    window_started_at = models.DateTimeField()
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "identifier",
+                    "period",
+                ],
+                name="unique_feedback_submission_throttle",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.period} submission quota "
+            f"({self.pk})"
+        )

@@ -11,8 +11,13 @@ from audit.models import AuditLog
 
 from .forms import BugReportForm
 from .models import BugReport
-from .services import create_bug_report
+from .services import create_bug_report, update_bug_report
 from .views import report_bug
+
+from notifications.models import (
+    Notification,
+    NotificationPreference,
+)
 
 
 class BugReportFormTests(TestCase):
@@ -576,3 +581,497 @@ class BugReportAuditIntegrityTests(TestCase):
             AuditLog.objects.count(),
             0,
         )
+
+class BugReportAdministrationTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(
+            username="feedback_admin",
+            email="admin@example.com",
+            password="TestPassword123!",
+        )
+        self.member = User.objects.create_user(
+            username="feedback_regular",
+            password="TestPassword123!",
+            account_status=AccountStatus.MEMBER,
+        )
+        self.staff = User.objects.create_user(
+            username="feedback_staff",
+            password="TestPassword123!",
+            is_staff=True,
+            account_status=AccountStatus.MEMBER,
+        )
+        self.report = BugReport.objects.create(
+            reporter=self.member,
+            description="An existing bug report for management tests.",
+            contact_email="reporter@example.com",
+            page_url="http://localhost:8000/community/",
+        )
+        self.list_url = reverse("administration:bug_report_list")
+        self.detail_url = reverse(
+            "administration:bug_report_detail",
+            args=[self.report.pk],
+        )
+
+    def test_superuser_can_open_list_and_detail(self):
+        self.client.force_login(self.admin)
+        listing = self.client.get(self.list_url)
+        detail = self.client.get(self.detail_url)
+        self.assertEqual(listing.status_code, 200)
+        self.assertEqual(detail.status_code, 200)
+        self.assertTemplateUsed(listing, "administration/bug_reports.html")
+        self.assertTemplateUsed(detail, "administration/bug_report_detail.html")
+        self.assertContains(detail, self.report.description)
+
+    def test_system_section_links_to_bug_reports(self):
+        self.client.force_login(self.admin)
+        response = self.client.get(
+            reverse("administration:section", args=["system"])
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.list_url)
+
+    def test_anonymous_visitors_are_redirected_to_login(self):
+        for url in (self.list_url, self.detail_url):
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 302)
+
+    def test_members_cannot_view_or_change_reports(self):
+        self.client.force_login(self.member)
+        self.assertEqual(self.client.get(self.list_url).status_code, 403)
+        self.assertEqual(self.client.get(self.detail_url).status_code, 403)
+        response = self.client.post(self.detail_url, {
+            "status": BugReport.Status.RESOLVED,
+            "admin_notes": "Not allowed",
+        })
+        self.assertEqual(response.status_code, 403)
+        self.report.refresh_from_db()
+        self.assertEqual(self.report.status, BugReport.Status.NEW)
+        self.assertEqual(AuditLog.objects.count(), 0)
+
+    def test_staff_without_superuser_cannot_manage_reports(self):
+        self.client.force_login(self.staff)
+        self.assertEqual(self.client.get(self.list_url).status_code, 403)
+        self.assertEqual(self.client.get(self.detail_url).status_code, 403)
+        self.assertEqual(self.client.post(self.detail_url, {
+            "status": BugReport.Status.RESOLVED,
+            "admin_notes": "Not allowed",
+        }).status_code, 403)
+
+    def test_status_filter_only_returns_matching_reports(self):
+        BugReport.objects.create(
+            description="A second report in the resolved category.",
+            status=BugReport.Status.RESOLVED,
+        )
+        self.client.force_login(self.admin)
+        response = self.client.get(self.list_url, {"status": "NEW"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["page"].paginator.count, 1)
+        self.assertEqual(response.context["reports"][0], self.report)
+
+    def test_invalid_status_filter_is_ignored(self):
+        self.client.force_login(self.admin)
+        response = self.client.get(self.list_url, {"status": "INVALID"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["selected_status"], "")
+        self.assertEqual(response.context["page"].paginator.count, 1)
+
+    def test_report_list_is_paginated(self):
+        BugReport.objects.bulk_create([
+            BugReport(description=f"Additional test report {i}.")
+            for i in range(25)
+        ])
+        self.client.force_login(self.admin)
+        first = self.client.get(self.list_url)
+        second = self.client.get(self.list_url, {"page": "2"})
+        self.assertEqual(len(first.context["reports"]), 25)
+        self.assertEqual(len(second.context["reports"]), 1)
+        self.assertEqual(first.context["page"].paginator.count, 26)
+
+    def test_administrator_updates_status_and_creates_audit(self):
+        self.client.force_login(self.admin)
+        response = self.client.post(self.detail_url, {
+            "status": BugReport.Status.INVESTIGATING,
+            "admin_notes": "",
+        })
+        self.assertRedirects(response, self.detail_url)
+        self.report.refresh_from_db()
+        self.assertEqual(self.report.status, BugReport.Status.INVESTIGATING)
+        audit = AuditLog.objects.get(
+            target_type="BugReport",
+            target_id=str(self.report.pk),
+            action=AuditLog.Action.UPDATE,
+        )
+        self.assertEqual(audit.actor, self.admin)
+        self.assertEqual(audit.old_value, {"status": "NEW"})
+        self.assertEqual(audit.new_value, {"status": "INVESTIGATING"})
+        self.assertEqual(audit.source, AuditLog.Source.WEB_APP)
+
+    def test_notes_edit_is_audited_without_copying_text(self):
+        self.client.force_login(self.admin)
+        note = "Private internal investigation notes."
+        response = self.client.post(self.detail_url, {
+            "status": BugReport.Status.NEW,
+            "admin_notes": note,
+        })
+        self.assertRedirects(response, self.detail_url)
+        self.report.refresh_from_db()
+        self.assertEqual(self.report.admin_notes, note)
+        audit = AuditLog.objects.get(action=AuditLog.Action.UPDATE)
+        self.assertEqual(audit.notes, "Internal notes updated.")
+        self.assertNotIn(note, str(audit.new_value))
+        self.assertNotIn(note, str(audit.old_value))
+        self.assertNotIn(note, audit.notes)
+
+    def test_unchanged_submission_does_not_create_audit_noise(self):
+        self.client.force_login(self.admin)
+        response = self.client.post(self.detail_url, {
+            "status": BugReport.Status.NEW,
+            "admin_notes": "",
+        })
+        self.assertRedirects(response, self.detail_url)
+        self.assertFalse(AuditLog.objects.exists())
+
+    def test_invalid_status_does_not_save_or_audit(self):
+        self.client.force_login(self.admin)
+        response = self.client.post(self.detail_url, {
+            "status": "NOT_A_STATUS",
+            "admin_notes": "Changed",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["form"].errors)
+        self.report.refresh_from_db()
+        self.assertEqual(self.report.status, BugReport.Status.NEW)
+        self.assertEqual(self.report.admin_notes, "")
+        self.assertFalse(AuditLog.objects.exists())
+
+    def test_audit_failure_rolls_back_administrative_update(self):
+        self.client.force_login(self.admin)
+        with patch(
+            "feedback.services.record_audit_event",
+            side_effect=IntegrityError("Simulated audit failure"),
+        ):
+            with self.assertRaises(IntegrityError):
+                self.client.post(self.detail_url, {
+                    "status": BugReport.Status.RESOLVED,
+                    "admin_notes": "Should be rolled back",
+                })
+        self.report.refresh_from_db()
+        self.assertEqual(self.report.status, BugReport.Status.NEW)
+        self.assertEqual(self.report.admin_notes, "")
+        self.assertFalse(AuditLog.objects.exists())
+
+    def test_service_rejects_non_administrator(self):
+        request = RequestFactory().post(self.detail_url)
+        request.user = self.member
+        from django.core.exceptions import PermissionDenied
+        with self.assertRaises(PermissionDenied):
+            update_bug_report(
+                report=self.report,
+                status=BugReport.Status.RESOLVED,
+                admin_notes="No permission",
+                request=request,
+            )
+        self.report.refresh_from_db()
+        self.assertEqual(self.report.status, BugReport.Status.NEW)
+        self.assertFalse(AuditLog.objects.exists())
+
+
+class BugReportNotificationTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+        self.report_url = reverse(
+            "feedback:report_bug"
+        )
+
+        self.admin_one = User.objects.create_superuser(
+            username="feedback_admin_one",
+            email="admin-one@example.com",
+            password="TestPassword123!",
+        )
+
+        self.admin_two = User.objects.create_superuser(
+            username="feedback_admin_two",
+            email="admin-two@example.com",
+            password="TestPassword123!",
+        )
+
+        self.member = User.objects.create_user(
+            username="feedback_notification_member",
+            email="member@example.com",
+            password="TestPassword123!",
+            account_status=AccountStatus.MEMBER,
+        )
+
+        self.staff = User.objects.create_user(
+            username="feedback_staff",
+            email="staff@example.com",
+            password="TestPassword123!",
+            is_staff=True,
+        )
+
+        self.inactive_admin = User.objects.create_superuser(
+            username="feedback_inactive_admin",
+            email="inactive@example.com",
+            password="TestPassword123!",
+        )
+
+        self.inactive_admin.is_active = False
+        self.inactive_admin.save(
+            update_fields=["is_active"]
+        )
+
+    def tearDown(self):
+        cache.clear()
+
+    def valid_data(self):
+        return {
+            "contact_email": "private@example.com",
+            "description": (
+                "The page fails to display the expected content."
+            ),
+            "expected_behavior": (
+                "The page should display the requested content."
+            ),
+            "steps_to_reproduce": (
+                "Open the page and select the affected item."
+            ),
+            "page_url": "http://localhost:8000/community/",
+        }
+
+    def submit_report(self):
+        return self.client.post(
+            self.report_url,
+            self.valid_data(),
+            REMOTE_ADDR="192.0.2.50",
+        )
+
+    def test_new_report_notifies_active_full_administrators(self):
+        response = self.submit_report()
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+
+        report = BugReport.objects.get()
+
+        notifications = Notification.objects.filter(
+            source_type="BugReport",
+            source_id=str(report.pk),
+        )
+
+        self.assertEqual(
+            notifications.count(),
+            2,
+        )
+
+        self.assertSetEqual(
+            set(
+                notifications.values_list(
+                    "user_id",
+                    flat=True,
+                )
+            ),
+            {
+                self.admin_one.pk,
+                self.admin_two.pk,
+            },
+        )
+
+    def test_notification_links_to_correct_report(self):
+        self.submit_report()
+
+        report = BugReport.objects.get()
+
+        expected_url = reverse(
+            "administration:bug_report_detail",
+            args=[report.pk],
+        )
+
+        notifications = Notification.objects.filter(
+            source_type="BugReport",
+            source_id=str(report.pk),
+        )
+
+        for notification in notifications:
+            self.assertEqual(
+                notification.notification_type,
+                Notification.Type.SYSTEM,
+            )
+
+            self.assertEqual(
+                notification.title,
+                f"New Bug Report #{report.pk}",
+            )
+
+            self.assertEqual(
+                notification.target_url,
+                expected_url,
+            )
+
+            self.assertFalse(
+                notification.is_read,
+            )
+
+    def test_notification_does_not_expose_report_contents(self):
+        self.submit_report()
+
+        report = BugReport.objects.get()
+
+        notifications = Notification.objects.filter(
+            source_type="BugReport",
+            source_id=str(report.pk),
+        )
+
+        for notification in notifications:
+            notification_contents = " ".join([
+                notification.title,
+                notification.message,
+                notification.source_type,
+                notification.source_id,
+                notification.target_url,
+            ])
+
+            self.assertNotIn(
+                report.description,
+                notification_contents,
+            )
+
+            self.assertNotIn(
+                report.contact_email,
+                notification_contents,
+            )
+
+            self.assertNotIn(
+                report.steps_to_reproduce,
+                notification_contents,
+            )
+
+    def test_disabled_push_preference_preserves_in_app_notification(self):
+        NotificationPreference.objects.create(
+            user=self.admin_one,
+            push_enabled=False,
+        )
+
+        self.submit_report()
+
+        notification_one = Notification.objects.get(
+            user=self.admin_one,
+            source_type="BugReport",
+        )
+
+        notification_two = Notification.objects.get(
+            user=self.admin_two,
+            source_type="BugReport",
+        )
+
+        self.assertFalse(
+            notification_one.push_requested,
+        )
+
+        self.assertTrue(
+            notification_two.push_requested,
+        )
+
+    def test_disabled_system_push_preserves_in_app_notification(self):
+        NotificationPreference.objects.create(
+            user=self.admin_one,
+            system_push=False,
+        )
+
+        self.submit_report()
+
+        notification = Notification.objects.get(
+            user=self.admin_one,
+            source_type="BugReport",
+        )
+
+        self.assertFalse(
+            notification.push_requested,
+        )
+
+        self.assertFalse(
+            notification.is_read,
+        )
+
+    def test_notification_failure_rolls_back_report_and_audit(self):
+        with patch(
+            "feedback.services.create_notifications",
+            side_effect=IntegrityError(
+                "Simulated notification failure"
+            ),
+        ):
+            with self.assertRaises(IntegrityError):
+                self.submit_report()
+
+        self.assertEqual(
+            BugReport.objects.count(),
+            0,
+        )
+
+        self.assertEqual(
+            AuditLog.objects.filter(
+                target_type="BugReport",
+            ).count(),
+            0,
+        )
+
+        self.assertEqual(
+            Notification.objects.filter(
+                source_type="BugReport",
+            ).count(),
+            0,
+        )
+
+    def test_invalid_submission_creates_no_notifications(self):
+        data = self.valid_data()
+        data["description"] = "Short"
+
+        response = self.client.post(
+            self.report_url,
+            data,
+            REMOTE_ADDR="192.0.2.51",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertEqual(
+            BugReport.objects.count(),
+            0,
+        )
+
+        self.assertFalse(
+            Notification.objects.filter(
+                source_type="BugReport",
+            ).exists()
+        )
+
+    def test_push_dispatch_runs_after_commit(self):
+        with patch(
+            "notifications.services.send_push_notifications"
+        ) as send_push:
+            with self.captureOnCommitCallbacks(
+                execute=True
+            ):
+                self.submit_report()
+
+            send_push.assert_called_once()
+
+            dispatched = send_push.call_args.args[0]
+
+            self.assertSetEqual(
+                {
+                    notification.user_id
+                    for notification in dispatched
+                },
+                {
+                    self.admin_one.pk,
+                    self.admin_two.pk,
+                },
+            )
+

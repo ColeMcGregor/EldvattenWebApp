@@ -1,0 +1,332 @@
+
+{% extends "app/base_desktop.html" %}
+
+{% block title %}
+    Bug Reports | Administration | EldVatten
+{% endblock %}
+
+{% block nav_administration %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+{% block app_content %}
+
+<div class="administration-page administration-audit-page">
+
+    <nav
+        class="administration-breadcrumb"
+        aria-label="Breadcrumb"
+    >
+        <a href="{% url 'administration:index' %}">
+            Administration
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a href="{% url 'administration:section' 'system' %}">
+            Audit &amp; System
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <span aria-current="page">
+            Bug Reports
+        </span>
+    </nav>
+
+
+    <header class="administration-header">
+
+        <h1 class="section-heading">
+            Bug Reports
+        </h1>
+
+        <p class="administration-description">
+            Review submitted bug reports, investigate issues,
+            and track their resolution.
+        </p>
+
+    </header>
+
+
+    <section
+        class="administration-audit-filters"
+        aria-labelledby="bug-report-filter-heading"
+    >
+
+        <h2 id="bug-report-filter-heading">
+            Filters
+        </h2>
+
+        <form
+            method="get"
+            action="{% url 'administration:bug_report_list' %}"
+            class="administration-audit-filter-form"
+        >
+
+            <div class="administration-audit-filter-grid">
+
+                <div class="administration-audit-filter-field">
+
+                    <label for="bug-report-status">
+                        Status
+                    </label>
+
+                    <select
+                        id="bug-report-status"
+                        name="status"
+                    >
+
+                        <option value="">
+                            All statuses
+                        </option>
+
+                        {% for value, label in status_choices %}
+
+                            <option
+                                value="{{ value }}"
+                                {% if selected_status == value %}selected{% endif %}
+                            >
+                                {{ label }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <div class="administration-audit-filter-actions">
+
+                <button
+                    type="submit"
+                    class="administration-audit-button"
+                >
+                    Apply Filters
+                </button>
+
+                <a
+                    class="administration-audit-clear-link"
+                    href="{% url 'administration:bug_report_list' %}"
+                >
+                    Clear Filters
+                </a>
+
+            </div>
+
+        </form>
+
+    </section>
+
+
+    <section
+        class="administration-audit-results"
+        aria-labelledby="bug-report-results-heading"
+    >
+
+        <div class="administration-audit-results-header">
+
+            <h2 id="bug-report-results-heading">
+                Submitted Reports
+            </h2>
+
+            <span class="administration-audit-results-count">
+                {{ page.paginator.count }}
+                report{{ page.paginator.count|pluralize }}
+            </span>
+
+        </div>
+
+
+        {% if reports %}
+
+            <div class="administration-audit-table-wrapper">
+
+                <table class="administration-audit-table">
+
+                    <thead>
+                        <tr>
+                            <th scope="col">Submitted</th>
+                            <th scope="col">Report</th>
+                            <th scope="col">Reporter</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Details</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for report in reports %}
+
+                            <tr>
+
+                                <td>
+                                    <time datetime="{{ report.created_at|date:'c' }}">
+                                        {{ report.created_at|date:"M j, Y" }}
+
+                                        <span class="administration-audit-time">
+                                            {{ report.created_at|date:"g:i A" }}
+                                        </span>
+                                    </time>
+                                </td>
+
+                                <td>
+
+                                    <span class="administration-audit-target">
+                                        Bug Report #{{ report.pk }}
+                                    </span>
+
+                                    <span class="administration-audit-secondary">
+                                        {{ report.description|truncatechars:100 }}
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    {% if report.reporter %}
+
+                                        {% if report.reporter.display_name %}
+                                            {{ report.reporter.display_name }}
+                                        {% else %}
+                                            {{ report.reporter.username }}
+                                        {% endif %}
+
+                                    {% elif report.contact_email %}
+
+                                        {{ report.contact_email }}
+
+                                    {% else %}
+
+                                        Anonymous
+
+                                    {% endif %}
+
+                                </td>
+
+                                <td>
+
+                                    <span class="administration-audit-action">
+                                        {{ report.get_status_display }}
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    <a
+                                        class="administration-audit-detail-link"
+                                        href="{% url 'administration:bug_report_detail' report.pk %}"
+                                        aria-label="View bug report {{ report.pk }}"
+                                    >
+                                        View
+                                    </a>
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <div class="administration-empty-state">
+
+                <h3>No matching bug reports</h3>
+
+                <p>
+                    No bug reports match the selected status.
+                </p>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+
+    {% if page.paginator.num_pages > 1 %}
+
+        <nav
+            class="administration-audit-pagination"
+            aria-label="Bug report pagination"
+        >
+
+            <div class="administration-audit-page-links">
+
+                {% if page.has_previous %}
+
+                    <a
+                        href="?{% if filter_query %}{{ filter_query }}&amp;{% endif %}page={{ page.previous_page_number }}"
+                        rel="prev"
+                    >
+                        Previous
+                    </a>
+
+                {% else %}
+
+                    <span
+                        class="administration-audit-page-disabled"
+                        aria-disabled="true"
+                    >
+                        Previous
+                    </span>
+
+                {% endif %}
+
+
+                <span class="administration-audit-page-indicator">
+                    Page {{ page.number }}
+                    of {{ page.paginator.num_pages }}
+                </span>
+
+
+                {% if page.has_next %}
+
+                    <a
+                        href="?{% if filter_query %}{{ filter_query }}&amp;{% endif %}page={{ page.next_page_number }}"
+                        rel="next"
+                    >
+                        Next
+                    </a>
+
+                {% else %}
+
+                    <span
+                        class="administration-audit-page-disabled"
+                        aria-disabled="true"
+                    >
+                        Next
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+        </nav>
+
+    {% endif %}
+
+
+    <footer class="administration-section-footer">
+
+        <a
+            class="administration-back-link"
+            href="{% url 'administration:section' 'system' %}"
+        >
+            &larr; Back to Audit &amp; System
+        </a>
+
+    </footer>
+
+</div>
+
+{% endblock %}

@@ -1,7 +1,12 @@
+
 /* Left Rail */
 
 .app-left-rail {
+    display: flex;
+    flex-direction: column;
+
     min-width: 0;
+    min-height: 100vh;
 
     padding: 1.25rem 1.4rem;
 
@@ -12,6 +17,7 @@
 
 .tavern-scroll-shell .app-left-rail {
     height: 100vh;
+    min-height: 0;
 
     overflow: hidden;
 }
@@ -40,7 +46,6 @@
 
     object-fit: contain;
     border-radius: 6px;
-
 }
 
 
@@ -77,3 +82,37 @@
 }
 
 
+/* Left Rail Footer */
+
+.app-left-rail-footer {
+    position: fixed;
+
+    bottom: 20px;
+    left: 28px;
+
+    z-index: 10;
+}
+
+.app-report-bug-link {
+    display: inline-block;
+
+    padding: 0.35rem 0;
+
+    font-size: 0.8rem;
+    color: var(--text-muted, #777);
+
+    text-decoration: none;
+}
+
+.app-report-bug-link:hover {
+    color: var(--eldvatten-red);
+    text-decoration: underline;
+}
+
+.app-report-bug-link:focus-visible {
+    color: var(--eldvatten-red);
+    text-decoration: underline;
+
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+}

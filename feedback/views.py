@@ -1,28 +1,11 @@
 
-from django.core.cache import cache
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
 from .forms import BugReportForm
+from .rate_limiting import SubmissionRateLimitExceeded
 from .services import create_bug_report
-
-
-def _submission_rate_limit(request):
-    # TODO: Replace or configure with a shared production rate-limit backend.
-    identifier = (
-        f"user:{request.user.pk}"
-        if request.user.is_authenticated
-        else f"ip:{request.META.get('REMOTE_ADDR', 'unknown')}"
-    )
-
-    key = f"feedback:submission:{identifier}"
-
-    return cache.add(
-        key,
-        True,
-        timeout=60,
-    )
 
 
 @require_http_methods(["GET", "POST"])
@@ -31,18 +14,30 @@ def report_bug(request):
         form = BugReportForm(request.POST)
 
         if form.is_valid():
-            if not _submission_rate_limit(request):
-                return HttpResponse(
-                    "Please wait before submitting another report.",
+            report = form.save(
+                commit=False
+            )
+
+            try:
+                create_bug_report(
+                    report=report,
+                    request=request,
+                )
+
+            except SubmissionRateLimitExceeded as error:
+                response = HttpResponse(
+                    (
+                        "You have reached the bug report "
+                        "submission limit. Please try again later."
+                    ),
                     status=429,
                 )
 
-            report = form.save(commit=False)
+                response["Retry-After"] = str(
+                    error.retry_after
+                )
 
-            create_bug_report(
-                report=report,
-                request=request,
-            )
+                return response
 
             return redirect(
                 "feedback:report_received",

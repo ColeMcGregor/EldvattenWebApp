@@ -1,14 +1,23 @@
 
 from datetime import date
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import Http404
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import (
+    get_object_or_404,
+    redirect,
+    render,
+)
+from django.views.decorators.http import require_http_methods
 
 from audit.models import AuditLog
+from feedback.forms import BugReportManagementForm
+from feedback.models import BugReport
+from feedback.services import update_bug_report
 
 from .permissions import (
     can_access_administration,
@@ -77,6 +86,16 @@ def require_audit_access(user):
     if not has_any_permission(
         user,
         ("audit.view_auditlog",),
+    ):
+        raise PermissionDenied
+
+
+def require_bug_report_access(user):
+    if not (
+        user.is_authenticated
+        and user.is_active
+        and user.is_staff
+        and user.is_superuser
     ):
         raise PermissionDenied
 
@@ -248,5 +267,112 @@ def audit_log_detail(request, log_id):
         {
             "log": log,
             "changed_fields": changed_fields,
+        },
+    )
+
+
+@login_required
+def bug_report_list(request):
+    require_bug_report_access(request.user)
+
+    status = request.GET.get(
+        "status",
+        "",
+    ).strip()
+
+    valid_statuses = {
+        value
+        for value, label in BugReport.Status.choices
+    }
+
+    if status not in valid_statuses:
+        status = ""
+
+    reports = BugReport.objects.select_related(
+        "reporter",
+    ).all()
+
+    if status:
+        reports = reports.filter(
+            status=status,
+        )
+
+    reports = reports.order_by(
+        "-created_at",
+        "-pk",
+    )
+
+    paginator = Paginator(
+        reports,
+        25,
+    )
+
+    page = paginator.get_page(
+        request.GET.get("page"),
+    )
+
+    query_parameters = request.GET.copy()
+    query_parameters.pop("page", None)
+
+    return render(
+        request,
+        "administration/bug_reports.html",
+        {
+            "page": page,
+            "reports": page.object_list,
+            "status_choices": BugReport.Status.choices,
+            "selected_status": status,
+            "filter_query": query_parameters.urlencode(),
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def bug_report_detail(request, report_id):
+    require_bug_report_access(request.user)
+
+    report = get_object_or_404(
+        BugReport.objects.select_related(
+            "reporter",
+        ),
+        pk=report_id,
+    )
+
+    if request.method == "POST":
+        form = BugReportManagementForm(
+            request.POST,
+            instance=report,
+        )
+
+        if form.is_valid():
+            update_bug_report(
+                report=report,
+                status=form.cleaned_data["status"],
+                admin_notes=form.cleaned_data["admin_notes"],
+                request=request,
+            )
+
+            messages.success(
+                request,
+                "Bug report updated.",
+            )
+
+            return redirect(
+                "administration:bug_report_detail",
+                report_id=report.pk,
+            )
+
+    else:
+        form = BugReportManagementForm(
+            instance=report,
+        )
+
+    return render(
+        request,
+        "administration/bug_report_detail.html",
+        {
+            "report": report,
+            "form": form,
         },
     )

@@ -164,6 +164,10 @@
                     <a href="{% url 'privacy' %}">
                         Privacy
                     </a>
+
+                    <a href="{% url 'feedback:report_bug' %}?page={{ request.build_absolute_uri|urlencode }}">
+                        Report a Bug
+                    </a>
                 </div>
             </section>
 

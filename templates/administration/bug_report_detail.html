@@ -1,0 +1,327 @@
+
+{% extends "app/base_desktop.html" %}
+
+{% block title %}
+    Bug Report #{{ report.pk }} | Administration | EldVatten
+{% endblock %}
+
+{% block nav_administration %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+{% block app_content %}
+
+<div class="administration-page administration-audit-page">
+
+    <nav
+        class="administration-breadcrumb"
+        aria-label="Breadcrumb"
+    >
+
+        <a href="{% url 'administration:index' %}">
+            Administration
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a href="{% url 'administration:section' 'system' %}">
+            Audit &amp; System
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a href="{% url 'administration:bug_report_list' %}">
+            Bug Reports
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <span aria-current="page">
+            Report #{{ report.pk }}
+        </span>
+
+    </nav>
+
+
+    <header class="administration-header">
+
+        <h1 class="section-heading">
+            Bug Report #{{ report.pk }}
+        </h1>
+
+        <p class="administration-description">
+            Review the submitted issue and manage its status.
+        </p>
+
+    </header>
+
+
+    {% if messages %}
+
+        <div
+            class="administration-audit-results"
+            role="status"
+        >
+
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+
+    <section
+        class="administration-audit-results"
+        aria-labelledby="bug-report-summary-heading"
+    >
+
+        <div class="administration-audit-results-header">
+
+            <h2 id="bug-report-summary-heading">
+                Report Summary
+            </h2>
+
+        </div>
+
+
+        <dl class="administration-audit-detail-grid">
+
+            <dt>Report ID</dt>
+            <dd>{{ report.pk }}</dd>
+
+            <dt>Status</dt>
+            <dd>{{ report.get_status_display }}</dd>
+
+            <dt>Submitted</dt>
+            <dd>
+                <time datetime="{{ report.created_at|date:'c' }}">
+                    {{ report.created_at|date:"F j, Y, g:i A T" }}
+                </time>
+            </dd>
+
+            <dt>Last Updated</dt>
+            <dd>
+                <time datetime="{{ report.updated_at|date:'c' }}">
+                    {{ report.updated_at|date:"F j, Y, g:i A T" }}
+                </time>
+            </dd>
+
+            <dt>Reporter</dt>
+            <dd>
+
+                {% if report.reporter %}
+
+                    {% if report.reporter.display_name %}
+                        {{ report.reporter.display_name }}
+                    {% else %}
+                        {{ report.reporter.username }}
+                    {% endif %}
+
+                    ({{ report.reporter.username }})
+
+                {% else %}
+
+                    Anonymous visitor
+
+                {% endif %}
+
+            </dd>
+
+            <dt>Contact Email</dt>
+            <dd>
+                {% if report.contact_email %}
+                    <a href="mailto:{{ report.contact_email }}">
+                        {{ report.contact_email }}
+                    </a>
+                {% else %}
+                    Not provided
+                {% endif %}
+            </dd>
+
+            <dt>Page URL</dt>
+            <dd>
+                {% if report.page_url %}
+                    <a
+                        href="{{ report.page_url }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        {{ report.page_url }}
+                    </a>
+                {% else %}
+                    Not provided
+                {% endif %}
+            </dd>
+
+        </dl>
+
+    </section>
+
+
+    <section
+        class="administration-audit-results"
+        aria-labelledby="bug-report-description-heading"
+    >
+
+        <div class="administration-audit-results-header">
+
+            <h2 id="bug-report-description-heading">
+                Bug Description
+            </h2>
+
+        </div>
+
+        <p style="white-space: pre-wrap; overflow-wrap: anywhere;">{{ report.description }}</p>
+
+    </section>
+
+
+    <section
+        class="administration-audit-results"
+        aria-labelledby="bug-report-expected-heading"
+    >
+
+        <div class="administration-audit-results-header">
+
+            <h2 id="bug-report-expected-heading">
+                Expected Behavior
+            </h2>
+
+        </div>
+
+        {% if report.expected_behavior %}
+
+            <p style="white-space: pre-wrap; overflow-wrap: anywhere;">{{ report.expected_behavior }}</p>
+
+        {% else %}
+
+            <p>Not provided.</p>
+
+        {% endif %}
+
+    </section>
+
+
+    <section
+        class="administration-audit-results"
+        aria-labelledby="bug-report-steps-heading"
+    >
+
+        <div class="administration-audit-results-header">
+
+            <h2 id="bug-report-steps-heading">
+                Steps to Reproduce
+            </h2>
+
+        </div>
+
+        {% if report.steps_to_reproduce %}
+
+            <p style="white-space: pre-wrap; overflow-wrap: anywhere;">{{ report.steps_to_reproduce }}</p>
+
+        {% else %}
+
+            <p>Not provided.</p>
+
+        {% endif %}
+
+    </section>
+
+
+    <section
+        class="administration-audit-filters"
+        aria-labelledby="bug-report-management-heading"
+    >
+
+        <h2 id="bug-report-management-heading">
+            Manage Report
+        </h2>
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+
+                <div class="form-errors" role="alert">
+                    {{ form.non_field_errors }}
+                </div>
+
+            {% endif %}
+
+
+            <div class="administration-audit-filter-grid">
+
+                <div class="administration-audit-filter-field">
+
+                    {{ form.status.label_tag }}
+                    {{ form.status }}
+
+                    {% if form.status.errors %}
+                        <div class="form-errors" role="alert">
+                            {{ form.status.errors }}
+                        </div>
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <div class="form-field">
+
+                {{ form.admin_notes.label_tag }}
+                {{ form.admin_notes }}
+
+                {% if form.admin_notes.errors %}
+                    <div class="form-errors" role="alert">
+                        {{ form.admin_notes.errors }}
+                    </div>
+                {% endif %}
+
+                <p>
+                    Internal notes are visible to administrators only.
+                </p>
+
+            </div>
+
+
+            <div class="administration-audit-filter-actions">
+
+                <button
+                    type="submit"
+                    class="administration-audit-button"
+                >
+                    Save Changes
+                </button>
+
+                <a
+                    class="administration-audit-clear-link"
+                    href="{% url 'administration:bug_report_list' %}"
+                >
+                    Back to Bug Reports
+                </a>
+
+            </div>
+
+        </form>
+
+    </section>
+
+
+    <footer class="administration-section-footer">
+
+        <a
+            class="administration-back-link"
+            href="{% url 'administration:bug_report_list' %}"
+        >
+            &larr; Back to Bug Reports
+        </a>
+
+    </footer>
+
+</div>
+
+{% endblock %}
