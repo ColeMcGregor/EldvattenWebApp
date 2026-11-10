@@ -1,5 +1,6 @@
 
 {% load static %}
+{% load administration_tags %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -111,6 +112,17 @@
                 >
                     Directory
                 </a>
+
+                {% has_administration_access request.user as show_administration %}
+                {% if show_administration %}
+                    <a
+                        class="app-navigation-link
+                        {% block nav_administration %}{% endblock %}"
+                        href="{% url 'administration:index' %}"
+                    >
+                        Administration
+                    </a>
+                {% endif %}
             </nav>
 
         </aside>

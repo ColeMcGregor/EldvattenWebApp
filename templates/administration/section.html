@@ -1,0 +1,126 @@
+
+{% extends "app/base_desktop.html" %}
+
+{% block title %}
+    {{ section.title }} | Administration | EldVatten
+{% endblock %}
+
+{% block nav_administration %}active{% endblock %}
+
+{% block app_shell_class %}app-two-column{% endblock %}
+
+{% block app_right_rail %}{% endblock %}
+
+
+{% block app_content %}
+
+<div class="administration-page">
+
+    <nav
+        class="administration-breadcrumb"
+        aria-label="Breadcrumb"
+    >
+
+        <a href="{% url 'administration:index' %}">
+            Administration
+        </a>
+
+        <span aria-hidden="true">
+            /
+        </span>
+
+        <span aria-current="page">
+            {{ section.title }}
+        </span>
+
+    </nav>
+
+
+    <header class="administration-header">
+
+        <h1 class="section-heading">
+            {{ section.title }}
+        </h1>
+
+        <p class="administration-description">
+            {{ section.description }}
+        </p>
+
+    </header>
+
+
+    <section
+        class="administration-section-content"
+        aria-label="{{ section.title }} management"
+    >
+
+        {% if links %}
+
+            <div class="administration-card-grid">
+
+                {% for link in links %}
+
+                    <a
+                        class="administration-card"
+                        href="{{ link.url }}"
+                    >
+
+                        <div class="administration-card-header">
+
+                            <h2 class="administration-card-title">
+                                {{ link.title }}
+                            </h2>
+
+                            <span
+                                class="administration-card-arrow"
+                                aria-hidden="true"
+                            >
+                                &rarr;
+                            </span>
+
+                        </div>
+
+                        <p class="administration-card-description">
+                            {{ link.description }}
+                        </p>
+
+                    </a>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <div class="administration-empty-state">
+
+                <h2>
+                    No management tools available
+                </h2>
+
+                <p>
+                    No management tools are currently
+                    available in this section.
+                </p>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <footer class="administration-section-footer">
+
+        <a
+            class="administration-back-link"
+            href="{% url 'administration:index' %}"
+        >
+            &larr; Back to Administration
+        </a>
+
+    </footer>
+
+</div>
+
+{% endblock %}

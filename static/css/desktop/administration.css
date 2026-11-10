@@ -1,0 +1,237 @@
+
+/* Administration Page */
+
+.administration-page {
+    width: 100%;
+    max-width: 1200px;
+
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.administration-header {
+    margin-bottom: 2rem;
+}
+
+.administration-header .section-heading {
+    margin-bottom: 0.75rem;
+}
+
+.administration-description {
+    max-width: 720px;
+
+    margin: 0;
+
+    color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+
+/* Administration Dashboard */
+
+.administration-dashboard,
+.administration-section-content {
+    width: 100%;
+}
+
+.administration-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 1.25rem;
+}
+
+
+/* Administration Cards */
+
+.administration-card {
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+    min-height: 155px;
+
+    padding: 1.5rem;
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+
+    background: var(--surface);
+
+    color: inherit;
+    text-decoration: none;
+
+    transition:
+        background-color 150ms ease,
+        border-color 150ms ease,
+        box-shadow 150ms ease;
+}
+
+a.administration-card:hover {
+    background: var(--surface-muted);
+    border-color: var(--eldvatten-red);
+}
+
+a.administration-card:focus-visible {
+    outline: 3px solid var(--eldvatten-red);
+    outline-offset: 3px;
+}
+
+.administration-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 1rem;
+
+    margin-bottom: 0.75rem;
+}
+
+.administration-card-title {
+    margin: 0;
+
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.administration-card-arrow {
+    flex-shrink: 0;
+
+    color: var(--eldvatten-red);
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.administration-card-description {
+    margin: 0;
+
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+
+/* Disabled Cards */
+
+.administration-card-disabled {
+    background: var(--surface-muted);
+    border-color: var(--border-color);
+
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.administration-card-disabled .administration-card-title {
+    color: var(--text-muted);
+}
+
+.administration-card-lock {
+    flex-shrink: 0;
+
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
+.administration-card-restricted {
+    display: block;
+
+    margin-top: auto;
+    padding-top: 1rem;
+
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+
+/* Breadcrumb */
+
+.administration-breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 0.65rem;
+
+    margin-bottom: 1.75rem;
+
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.administration-breadcrumb a {
+    color: var(--eldvatten-red);
+    text-decoration: none;
+}
+
+.administration-breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+
+/* Section Footer */
+
+.administration-section-footer {
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+
+    border-top: 1px solid var(--border-color);
+}
+
+.administration-back-link {
+    color: var(--eldvatten-red);
+    font-size: 0.95rem;
+    text-decoration: none;
+}
+
+.administration-back-link:hover {
+    text-decoration: underline;
+}
+
+
+/* Empty States */
+
+.administration-empty,
+.administration-empty-state {
+    padding: 2rem;
+
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+
+    background: var(--surface-muted);
+
+    color: var(--text-muted);
+}
+
+.administration-empty-state h2 {
+    margin: 0 0 0.75rem;
+
+    color: var(--text-primary);
+    font-size: 1.15rem;
+}
+
+.administration-empty-state p {
+    margin: 0;
+    line-height: 1.6;
+}
+
+
+/* Responsive Layout */
+
+@media (max-width: 800px) {
+    .administration-page {
+        padding: 1.5rem;
+    }
+
+    .administration-card-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .administration-card {
+        transition: none;
+    }
+}

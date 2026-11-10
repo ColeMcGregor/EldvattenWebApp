@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     "notifications",
     "resources",
     "audit",
+    "administration",
 ]
 
 AUTH_USER_MODEL = "accounts.User"

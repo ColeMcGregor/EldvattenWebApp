@@ -1,0 +1,118 @@
+
+{% extends "app/base_desktop.html" %}
+
+{% block title %}
+    Administration | EldVatten
+{% endblock %}
+
+{% block nav_administration %}active{% endblock %}
+
+{% block app_shell_class %}app-two-column{% endblock %}
+
+{% block app_right_rail %}{% endblock %}
+
+
+{% block app_content %}
+
+<div class="administration-page">
+
+    <header class="administration-header">
+
+        <h1 class="section-heading">
+            Administration
+        </h1>
+
+        <p class="administration-description">
+            Manage EldVatten accounts, content, and
+            community operations.
+        </p>
+
+    </header>
+
+
+    <section
+        class="administration-dashboard"
+        aria-label="Administration sections"
+    >
+
+        <div class="administration-card-grid">
+
+            {% for section in sections %}
+
+                {% if section.allowed %}
+
+                    <a
+                        class="administration-card"
+                        href="{% url 'administration:section' section.slug %}"
+                    >
+
+                        <div class="administration-card-header">
+
+                            <h2 class="administration-card-title">
+                                {{ section.title }}
+                            </h2>
+
+                            <span
+                                class="administration-card-arrow"
+                                aria-hidden="true"
+                            >
+                                &rarr;
+                            </span>
+
+                        </div>
+
+                        <p class="administration-card-description">
+                            {{ section.description }}
+                        </p>
+
+                    </a>
+
+                {% else %}
+
+                    <div
+                        class="administration-card administration-card-disabled"
+                        aria-disabled="true"
+                    >
+
+                        <div class="administration-card-header">
+
+                            <h2 class="administration-card-title">
+                                {{ section.title }}
+                            </h2>
+
+                            <span
+                                class="administration-card-lock"
+                                aria-hidden="true"
+                            >
+                                &#128274;
+                            </span>
+
+                        </div>
+
+                        <p class="administration-card-description">
+                            {{ section.description }}
+                        </p>
+
+                        <span class="administration-card-restricted">
+                            Insufficient permissions
+                        </span>
+
+                    </div>
+
+                {% endif %}
+
+            {% empty %}
+
+                <p class="administration-empty">
+                    No administration sections are available.
+                </p>
+
+            {% endfor %}
+
+        </div>
+
+    </section>
+
+</div>
+
+{% endblock %}
