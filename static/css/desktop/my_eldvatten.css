@@ -113,6 +113,38 @@
 
 /* My Posts */
 
+.my-posts-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.my-posts-drafts-link {
+    flex: 0 0 auto;
+
+    padding: 0.45rem 0.75rem;
+
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-small);
+
+    color: var(--text-main);
+    font-size: 0.85rem;
+    text-decoration: none;
+}
+
+.my-posts-drafts-link:hover {
+    border-color: var(--eldvatten-red);
+    color: var(--eldvatten-red);
+}
+
+.my-posts-drafts-link:focus-visible {
+    outline: 2px solid var(--eldvatten-red);
+    outline-offset: 2px;
+}
+
+
 .my-posts-list {
     display: grid;
 }

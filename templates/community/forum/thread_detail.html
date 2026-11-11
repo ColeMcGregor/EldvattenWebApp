@@ -1,3 +1,4 @@
+
 {% extends "app/base_desktop.html" %}
 
 
@@ -123,6 +124,10 @@
                     </form>
 
                 {% endif %}
+
+                <a href="{% url 'community:draft_list' %}">
+                    My Drafts
+                </a>
 
             {% endif %}
 

@@ -1,3 +1,4 @@
+
 <section
     class="forum-index"
     aria-label="The Tavern forums"
@@ -32,13 +33,6 @@
 
 
         <div class="forum-index-actions">
-
-            {% if request.user.account_status == "MEMBER" %}
-                <a href="{% url 'community:draft_list' %}">
-                    Drafts
-                </a>
-            {% endif %}
-
 
             {% if can_view_archived %}
 

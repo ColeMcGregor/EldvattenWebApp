@@ -1,10 +1,23 @@
 
 <section class="my-eldvatten-section">
 
-    <header class="my-eldvatten-section-header">
+    <header class="my-eldvatten-section-header my-posts-section-header">
+
         <h2>
             My Posts
         </h2>
+
+        {% if request.user.account_status == "MEMBER" %}
+
+            <a
+                class="my-posts-drafts-link"
+                href="{% url 'community:draft_list' %}"
+            >
+                My Drafts
+            </a>
+
+        {% endif %}
+
     </header>
 
     {% if my_posts %}
