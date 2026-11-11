@@ -1,7 +1,8 @@
-
 import hashlib
+import hmac
 from datetime import timedelta
 
+from django.conf import settings
 from django.db import connection, transaction
 from django.utils import timezone
 
@@ -45,10 +46,11 @@ def get_submission_identity(request):
 
 
 def get_identity_hash(identifier):
-    return hashlib.sha256(
-        identifier.encode("utf-8")
+    return hmac.new(
+        settings.SECRET_KEY.encode("utf-8"),
+        identifier.encode("utf-8"),
+        hashlib.sha256,
     ).hexdigest()
-
 
 def lock_submission_identity(identifier_hash):
     lock_key = int.from_bytes(

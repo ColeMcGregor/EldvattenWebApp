@@ -1,16 +1,32 @@
 
+from concurrent.futures import ThreadPoolExecutor
+from datetime import timedelta
+from threading import Barrier
 from unittest.mock import patch
+
+from django.contrib.auth.models import AnonymousUser
+from django.db import close_old_connections, connections
 
 from django.core.cache import cache
 from django.db import IntegrityError
-from django.test import RequestFactory, TestCase
+from django.test import (
+    RequestFactory,
+    TestCase,
+    TransactionTestCase,
+    override_settings,
+)
+from django.utils import timezone
 from django.urls import reverse
 
 from accounts.models import AccountStatus, User
 from audit.models import AuditLog
 
 from .forms import BugReportForm
-from .models import BugReport
+from .models import BugReport, SubmissionThrottle
+from .rate_limiting import (
+    SubmissionRateLimitExceeded,
+    get_identity_hash,
+)
 from .services import create_bug_report, update_bug_report
 from .views import report_bug
 
@@ -1075,3 +1091,229 @@ class BugReportNotificationTests(TestCase):
                 },
             )
 
+
+
+class BugReportRateLimitTests(TestCase):
+    def setUp(self):
+        self.report_url = reverse("feedback:report_bug")
+        self.member = User.objects.create_user(
+            username="throttle_member",
+            password="TestPassword123!",
+            account_status=AccountStatus.MEMBER,
+        )
+
+    def valid_data(self):
+        return {
+            "description": "A valid report about an unresponsive menu button.",
+        }
+
+    def submit(self, *, address="192.0.2.80", **headers):
+        return self.client.post(
+            self.report_url,
+            self.valid_data(),
+            REMOTE_ADDR=address,
+            **headers,
+        )
+
+    def shift_window(self, period, *, address="192.0.2.80", minutes=2):
+        identifier = (
+            f"user:{self.member.pk}"
+            if self.client.session.get("_auth_user_id")
+            else f"ip:{address}"
+        )
+        SubmissionThrottle.objects.filter(
+            identifier=get_identity_hash(identifier),
+            period=period,
+        ).update(
+            window_started_at=timezone.now() - timedelta(minutes=minutes),
+        )
+
+    def test_second_submission_is_rejected_with_retry_after(self):
+        self.assertEqual(self.submit().status_code, 302)
+        response = self.submit()
+        self.assertEqual(response.status_code, 429)
+        self.assertGreater(int(response["Retry-After"]), 0)
+        self.assertEqual(BugReport.objects.count(), 1)
+        self.assertEqual(
+            AuditLog.objects.filter(target_type="BugReport").count(), 1
+        )
+
+    def test_minute_quota_expires(self):
+        self.assertEqual(self.submit().status_code, 302)
+        self.shift_window(SubmissionThrottle.Period.MINUTE)
+        self.assertEqual(self.submit().status_code, 302)
+        self.assertEqual(BugReport.objects.count(), 2)
+
+    def test_anonymous_hourly_quota_is_three(self):
+        for _ in range(3):
+            self.assertEqual(self.submit().status_code, 302)
+            self.shift_window(SubmissionThrottle.Period.MINUTE)
+        response = self.submit()
+        self.assertEqual(response.status_code, 429)
+        self.assertGreater(int(response["Retry-After"]), 60)
+        self.assertEqual(BugReport.objects.count(), 3)
+        quota = SubmissionThrottle.objects.get(
+            identifier=get_identity_hash("ip:192.0.2.80"),
+            period=SubmissionThrottle.Period.HOUR,
+        )
+        self.assertEqual(quota.submission_count, 3)
+
+    def test_authenticated_hourly_quota_is_five(self):
+        self.client.force_login(self.member)
+        for _ in range(5):
+            self.assertEqual(self.submit().status_code, 302)
+            self.shift_window(SubmissionThrottle.Period.MINUTE)
+        response = self.submit()
+        self.assertEqual(response.status_code, 429)
+        self.assertGreater(int(response["Retry-After"]), 60)
+        self.assertEqual(BugReport.objects.count(), 5)
+
+    def test_hourly_window_expires(self):
+        for _ in range(3):
+            self.assertEqual(self.submit().status_code, 302)
+            self.shift_window(SubmissionThrottle.Period.MINUTE)
+        self.assertEqual(self.submit().status_code, 429)
+        self.shift_window(SubmissionThrottle.Period.HOUR, minutes=61)
+        self.assertEqual(self.submit().status_code, 302)
+        self.assertEqual(BugReport.objects.count(), 4)
+
+    def test_different_anonymous_addresses_have_independent_quotas(self):
+        self.assertEqual(self.submit(address="192.0.2.81").status_code, 302)
+        self.assertEqual(self.submit(address="192.0.2.82").status_code, 302)
+        self.assertEqual(self.submit(address="192.0.2.81").status_code, 429)
+
+    def test_authenticated_accounts_have_independent_quotas(self):
+        other = User.objects.create_user(
+            username="other_throttle_member",
+            password="TestPassword123!",
+        )
+        self.client.force_login(self.member)
+        self.assertEqual(self.submit().status_code, 302)
+        self.client.force_login(other)
+        self.assertEqual(self.submit().status_code, 302)
+        self.assertEqual(BugReport.objects.count(), 2)
+
+    def test_invalid_form_does_not_consume_quota(self):
+        response = self.client.post(
+            self.report_url,
+            {"description": "Short"},
+            REMOTE_ADDR="192.0.2.80",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(SubmissionThrottle.objects.exists())
+        self.assertEqual(self.submit().status_code, 302)
+
+    def test_failed_audit_rolls_back_quota(self):
+        with patch(
+            "feedback.services.record_audit_event",
+            side_effect=IntegrityError("Simulated audit failure"),
+        ):
+            with self.assertRaises(IntegrityError):
+                self.submit()
+        self.assertFalse(SubmissionThrottle.objects.exists())
+        self.assertEqual(BugReport.objects.count(), 0)
+        self.assertEqual(self.submit().status_code, 302)
+
+    def test_failed_notification_rolls_back_quota(self):
+        with patch(
+            "feedback.services.create_notifications",
+            side_effect=IntegrityError("Simulated notification failure"),
+        ):
+            with self.assertRaises(IntegrityError):
+                self.submit()
+        self.assertFalse(SubmissionThrottle.objects.exists())
+        self.assertEqual(self.submit().status_code, 302)
+
+    @override_settings(AUDIT_TRUSTED_PROXY_CIDRS=())
+    def test_untrusted_forwarded_header_cannot_bypass_quota(self):
+        self.assertEqual(
+            self.submit(HTTP_X_FORWARDED_FOR="198.51.100.1").status_code,
+            302,
+        )
+        self.assertEqual(
+            self.submit(HTTP_X_FORWARDED_FOR="198.51.100.2").status_code,
+            429,
+        )
+
+    @override_settings(AUDIT_TRUSTED_PROXY_CIDRS=("10.0.0.0/8",))
+    def test_trusted_proxy_uses_distinct_forwarded_client_addresses(self):
+        self.assertEqual(
+            self.submit(
+                address="10.0.0.5",
+                HTTP_X_FORWARDED_FOR="198.51.100.1",
+            ).status_code,
+            302,
+        )
+        self.assertEqual(
+            self.submit(
+                address="10.0.0.5",
+                HTTP_X_FORWARDED_FOR="198.51.100.2",
+            ).status_code,
+            302,
+        )
+        self.assertEqual(
+            self.submit(
+                address="10.0.0.5",
+                HTTP_X_FORWARDED_FOR="198.51.100.1",
+            ).status_code,
+            429,
+        )
+
+    def test_missing_client_ip_is_rejected_without_adding_quota(self):
+        response = self.submit(address="")
+        self.assertEqual(response.status_code, 429)
+        self.assertEqual(response["Retry-After"], "60")
+        self.assertFalse(SubmissionThrottle.objects.exists())
+
+    def test_identity_hash_is_keyed_and_deterministic(self):
+        identity = "ip:192.0.2.80"
+        value = get_identity_hash(identity)
+        self.assertEqual(len(value), 64)
+        self.assertEqual(value, get_identity_hash(identity))
+        self.assertNotEqual(value, identity)
+        with override_settings(SECRET_KEY="distinct-test-signing-key"):
+            self.assertNotEqual(value, get_identity_hash(identity))
+
+
+class BugReportRateLimitConcurrencyTests(TransactionTestCase):
+    def test_simultaneous_submissions_cannot_exceed_minute_quota(self):
+        barrier = Barrier(2)
+        factory = RequestFactory()
+
+        def submit_once():
+            close_old_connections()
+            try:
+                request = factory.post(
+                    "/feedback/report/",
+                    REMOTE_ADDR="192.0.2.99",
+                )
+                request.user = AnonymousUser()
+                barrier.wait(timeout=10)
+                try:
+                    create_bug_report(
+                        report=BugReport(
+                            description="Concurrent test submission for quota enforcement."
+                        ),
+                        request=request,
+                    )
+                    return "created"
+                except SubmissionRateLimitExceeded:
+                    return "limited"
+            finally:
+                connections.close_all()
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            results = list(executor.map(lambda _: submit_once(), range(2)))
+
+        self.assertCountEqual(results, ["created", "limited"])
+        self.assertEqual(BugReport.objects.count(), 1)
+        self.assertEqual(
+            AuditLog.objects.filter(target_type="BugReport").count(), 1
+        )
+        self.assertEqual(
+            SubmissionThrottle.objects.get(
+                identifier=get_identity_hash("ip:192.0.2.99"),
+                period=SubmissionThrottle.Period.MINUTE,
+            ).submission_count,
+            1,
+        )
