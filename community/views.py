@@ -489,6 +489,7 @@ def forum_index(request):
         },
     )
 
+
 @login_required
 def forum_search(request):
     if not user_can_read_forum(
@@ -501,7 +502,7 @@ def forum_search(request):
     query = request.GET.get(
         "q",
         "",
-    )
+    ).strip()[:150]
 
     results = search_forum(
         request.user,

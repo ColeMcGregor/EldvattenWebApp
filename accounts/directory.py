@@ -1,3 +1,4 @@
+
 from django.db.models import Q
 
 from messaging.models import UserBlock
@@ -10,6 +11,10 @@ from organization.models import (
 )
 
 from .models import AccountStatus, User
+
+
+DIRECTORY_SEARCH_MAX_LENGTH = 100
+DIRECTORY_SEARCH_MAX_TERMS = 8
 
 
 DIRECTORY_GROUPS = (
@@ -71,6 +76,7 @@ def visible_directory_members(user):
     blocked_by_viewer = UserBlock.objects.filter(
         blocker=user,
     ).values_list("blocked_id", flat=True)
+
     blocking_viewer = UserBlock.objects.filter(
         blocked=user,
     ).values_list("blocker_id", flat=True)
@@ -112,7 +118,12 @@ def allowed_directory_groups(user):
 
 
 def filter_directory_members(members, *, search="", group=""):
-    for word in search.split():
+    search_terms = (
+        search.strip()[:DIRECTORY_SEARCH_MAX_LENGTH]
+        .split()[:DIRECTORY_SEARCH_MAX_TERMS]
+    )
+
+    for word in search_terms:
         members = members.filter(
             Q(display_name__icontains=word)
             | Q(username__icontains=word)

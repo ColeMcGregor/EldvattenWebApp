@@ -2233,8 +2233,9 @@ def resolve_post_report(
     return report
 
 
+
 def search_forum(user, query):
-    query = query.strip()
+    query = query.strip()[:150]
 
     if not query:
         return {
