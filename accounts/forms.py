@@ -1,11 +1,14 @@
+
 from django import forms
 from django.contrib.auth.forms import (
     AuthenticationForm,
     PasswordChangeForm,
     UserCreationForm,
 )
+from django.contrib.auth.models import Group
 
-from .models import User
+from .models import AccountStatus, User
+from .services import get_allowed_account_statuses
 
 
 class RegistrationForm(UserCreationForm):
@@ -120,3 +123,79 @@ class UserPasswordChangeForm(PasswordChangeForm):
                 "autocomplete": "new-password",
             }
         )
+
+
+class AccountStatusForm(forms.ModelForm):
+    class Meta:
+        model = User
+
+        fields = (
+            "account_status",
+        )
+
+        widgets = {
+            "account_status": forms.Select(
+                attrs={
+                    "class": "form-input",
+                }
+            ),
+        }
+
+    def __init__(self, *args, actor=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        allowed_statuses = get_allowed_account_statuses(
+            actor=actor,
+            account=self.instance,
+        )
+
+        self.fields["account_status"].choices = [
+            (status, AccountStatus(status).label)
+            for status in allowed_statuses
+        ]
+
+
+class AccountActivationForm(forms.ModelForm):
+    class Meta:
+        model = User
+
+        fields = (
+            "is_active",
+        )
+
+        widgets = {
+            "is_active": forms.CheckboxInput(),
+        }
+
+
+class AccountGroupForm(forms.Form):
+    groups = forms.ModelMultipleChoiceField(
+        queryset=Group.objects.none(),
+        required=False,
+        widget=forms.SelectMultiple(
+            attrs={
+                "class": "form-input",
+                "size": "8",
+            }
+        ),
+    )
+
+    def __init__(
+        self,
+        *args,
+        instance=None,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+
+        self.fields["groups"].queryset = (
+            Group.objects.order_by("name")
+        )
+
+        if instance is not None:
+            self.initial["groups"] = list(
+                instance.groups.values_list(
+                    "pk",
+                    flat=True,
+                )
+            )

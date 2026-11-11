@@ -1,3 +1,4 @@
+
 from django.urls import path
 
 from . import views
@@ -38,5 +39,14 @@ urlpatterns = [
         "logout/",
         views.user_logout,
         name="logout",
+    ),
+]
+
+
+directory_urlpatterns = [
+    path(
+        "",
+        views.directory_index,
+        name="index",
     ),
 ]

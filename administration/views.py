@@ -2,6 +2,7 @@
 from datetime import date
 
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
@@ -14,6 +15,17 @@ from django.shortcuts import (
 )
 from django.views.decorators.http import require_http_methods
 
+from accounts.forms import (
+    AccountActivationForm,
+    AccountGroupForm,
+    AccountStatusForm,
+)
+from accounts.models import AccountStatus
+from accounts.services import (
+    change_account_status,
+    set_account_active,
+    set_account_groups,
+)
 from audit.models import AuditLog
 from feedback.forms import BugReportManagementForm
 from feedback.models import BugReport
@@ -27,6 +39,9 @@ from .sections import (
     get_administration_sections,
     get_section_links,
 )
+
+
+User = get_user_model()
 
 
 @login_required
@@ -98,6 +113,40 @@ def require_bug_report_access(user):
         and user.is_superuser
     ):
         raise PermissionDenied
+
+
+def require_account_access(user):
+    if not has_any_permission(
+        user,
+        (
+            "accounts.approve_membership",
+            "accounts.change_user",
+        ),
+    ):
+        raise PermissionDenied
+
+
+def can_approve_membership(user):
+    return has_any_permission(
+        user,
+        ("accounts.approve_membership",),
+    )
+
+
+def can_manage_account_status(user):
+    return has_any_permission(
+        user,
+        ("accounts.change_user",),
+    )
+
+
+def can_manage_account_security(user):
+    return (
+        user.is_authenticated
+        and user.is_active
+        and user.is_staff
+        and user.is_superuser
+    )
 
 
 def parse_filter_date(value):
@@ -374,5 +423,287 @@ def bug_report_detail(request, report_id):
         {
             "report": report,
             "form": form,
+        },
+    )
+
+
+@login_required
+def account_list(request):
+    require_account_access(request.user)
+
+    search = request.GET.get(
+        "search",
+        "",
+    ).strip()[:150]
+
+    status = request.GET.get(
+        "status",
+        "",
+    ).strip()
+
+    role = request.GET.get(
+        "role",
+        "",
+    ).strip()
+
+    valid_statuses = {
+        value
+        for value, label in AccountStatus.choices
+    }
+
+    if status not in valid_statuses:
+        status = ""
+
+    if role not in {
+        "",
+        "member",
+        "staff",
+        "superuser",
+    }:
+        role = ""
+
+    accounts = User.objects.all()
+
+    if search:
+        accounts = accounts.filter(
+            Q(username__icontains=search)
+            | Q(display_name__icontains=search)
+            | Q(email__icontains=search)
+        )
+
+    if status:
+        accounts = accounts.filter(
+            account_status=status,
+        )
+
+    if role == "member":
+        accounts = accounts.filter(
+            is_staff=False,
+            is_superuser=False,
+        )
+
+    elif role == "staff":
+        accounts = accounts.filter(
+            is_staff=True,
+            is_superuser=False,
+        )
+
+    elif role == "superuser":
+        accounts = accounts.filter(
+            is_superuser=True,
+        )
+
+    accounts = accounts.order_by(
+        "-date_joined",
+        "-pk",
+    )
+
+    paginator = Paginator(
+        accounts,
+        25,
+    )
+
+    page = paginator.get_page(
+        request.GET.get("page"),
+    )
+
+    query_parameters = request.GET.copy()
+    query_parameters.pop("page", None)
+
+    return render(
+        request,
+        "administration/accounts.html",
+        {
+            "page": page,
+            "accounts": page.object_list,
+            "status_choices": AccountStatus.choices,
+            "filters": {
+                "search": search,
+                "status": status,
+                "role": role,
+            },
+            "filter_query": query_parameters.urlencode(),
+            "pending_count": User.objects.filter(
+                account_status=AccountStatus.PENDING,
+            ).count(),
+            "member_count": User.objects.filter(
+                account_status=AccountStatus.MEMBER,
+            ).count(),
+            "suspended_count": User.objects.filter(
+                account_status=AccountStatus.SUSPENDED,
+            ).count(),
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def account_detail(request, user_id):
+    require_account_access(request.user)
+
+    account = get_object_or_404(
+        User.objects.prefetch_related("groups"),
+        pk=user_id,
+    )
+
+    allow_approval = can_approve_membership(
+        request.user
+    )
+
+    allow_status_management = (
+        can_manage_account_status(request.user)
+    )
+
+    allow_security_management = (
+        can_manage_account_security(request.user)
+    )
+
+    status_form = AccountStatusForm(
+        instance=account,
+        actor=request.user,
+    )
+
+    activation_form = AccountActivationForm(
+        instance=account,
+    )
+
+    group_form = AccountGroupForm(
+        instance=account,
+    )
+
+    if request.method == "POST":
+        action = request.POST.get(
+            "action",
+            "",
+        )
+
+        if action == "status":
+            if not (
+                allow_approval
+                or allow_status_management
+            ):
+                raise PermissionDenied
+
+            status_form = AccountStatusForm(
+                request.POST,
+                instance=account,
+                actor=request.user,
+            )
+
+            if status_form.is_valid():
+                change_account_status(
+                    account=account,
+                    status=status_form.cleaned_data[
+                        "account_status"
+                    ],
+                    request=request,
+                )
+
+                messages.success(
+                    request,
+                    "Membership status updated.",
+                )
+
+                return redirect(
+                    "administration:account_detail",
+                    user_id=account.pk,
+                )
+
+        elif action == "activation":
+            if not allow_security_management:
+                raise PermissionDenied
+
+            activation_form = AccountActivationForm(
+                request.POST,
+                instance=account,
+            )
+
+            if activation_form.is_valid():
+                set_account_active(
+                    account=account,
+                    is_active=activation_form.cleaned_data[
+                        "is_active"
+                    ],
+                    request=request,
+                )
+
+                messages.success(
+                    request,
+                    "Account activation updated.",
+                )
+
+                return redirect(
+                    "administration:account_detail",
+                    user_id=account.pk,
+                )
+
+        elif action == "groups":
+            if not allow_security_management:
+                raise PermissionDenied
+
+            group_form = AccountGroupForm(
+                request.POST,
+                instance=account,
+            )
+
+            if group_form.is_valid():
+                set_account_groups(
+                    account=account,
+                    groups=group_form.cleaned_data[
+                        "groups"
+                    ],
+                    request=request,
+                )
+
+                messages.success(
+                    request,
+                    "Administrative roles updated.",
+                )
+
+                return redirect(
+                    "administration:account_detail",
+                    user_id=account.pk,
+                )
+
+        else:
+            raise PermissionDenied
+
+    account_audit_logs = []
+
+    if has_any_permission(
+        request.user,
+        ("audit.view_auditlog",),
+    ):
+        account_audit_logs = (
+            AuditLog.objects
+            .filter(
+                target_id=str(account.pk),
+                target_type__in=(
+                    "user account",
+                    "application role",
+                ),
+            )
+            .order_by(
+                "-recorded_at",
+                "-pk",
+            )[:10]
+        )
+
+    return render(
+        request,
+        "administration/account_detail.html",
+        {
+            "account": account,
+            "status_form": status_form,
+            "activation_form": activation_form,
+            "group_form": group_form,
+            "allow_approval": allow_approval,
+            "allow_status_management": (
+                allow_status_management
+            ),
+            "allow_security_management": (
+                allow_security_management
+            ),
+            "account_audit_logs": account_audit_logs,
         },
     )

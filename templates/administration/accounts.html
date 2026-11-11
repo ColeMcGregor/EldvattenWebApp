@@ -1,0 +1,450 @@
+
+{% extends "app/base_desktop.html" %}
+
+{% block title %}
+    Accounts & Members | Administration | EldVatten
+{% endblock %}
+
+{% block nav_administration %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+
+{% block app_content %}
+
+<div class="administration-page administration-audit-page">
+
+    <nav
+        class="administration-breadcrumb"
+        aria-label="Breadcrumb"
+    >
+        <a href="{% url 'administration:index' %}">
+            Administration
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a href="{% url 'administration:section' 'accounts' %}">
+            Accounts &amp; Members
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <span aria-current="page">
+            Manage Accounts
+        </span>
+    </nav>
+
+
+    <header class="administration-header">
+
+        <h1 class="section-heading">
+            Accounts &amp; Members
+        </h1>
+
+        <p class="administration-description">
+            Review registrations, manage membership standing,
+            and inspect account access.
+        </p>
+
+    </header>
+
+
+    <section
+        class="administration-audit-results"
+        aria-labelledby="account-overview-heading"
+    >
+
+        <div class="administration-audit-results-header">
+            <h2 id="account-overview-heading">
+                Membership Overview
+            </h2>
+        </div>
+
+        <dl class="administration-audit-detail-grid">
+
+            <dt>Pending Approval</dt>
+            <dd>
+                <a href="?status=PENDING">
+                    {{ pending_count }}
+                </a>
+            </dd>
+
+            <dt>Members</dt>
+            <dd>
+                <a href="?status=MEMBER">
+                    {{ member_count }}
+                </a>
+            </dd>
+
+            <dt>Suspended</dt>
+            <dd>
+                <a href="?status=SUSPENDED">
+                    {{ suspended_count }}
+                </a>
+            </dd>
+
+        </dl>
+
+    </section>
+
+
+    <section
+        class="administration-audit-filters"
+        aria-labelledby="account-filter-heading"
+    >
+
+        <h2 id="account-filter-heading">
+            Find Accounts
+        </h2>
+
+        <form
+            method="get"
+            action="{% url 'administration:account_list' %}"
+            class="administration-audit-filter-form"
+        >
+
+            <div class="administration-audit-filter-grid">
+
+                <div class="administration-audit-filter-field">
+
+                    <label for="account-search">
+                        Search
+                    </label>
+
+                    <input
+                        id="account-search"
+                        type="search"
+                        name="search"
+                        value="{{ filters.search }}"
+                        maxlength="150"
+                        placeholder="Username, name, or email"
+                    >
+
+                </div>
+
+
+                <div class="administration-audit-filter-field">
+
+                    <label for="account-status">
+                        Membership Status
+                    </label>
+
+                    <select
+                        id="account-status"
+                        name="status"
+                    >
+                        <option value="">
+                            All statuses
+                        </option>
+
+                        {% for value, label in status_choices %}
+
+                            <option
+                                value="{{ value }}"
+                                {% if filters.status == value %}selected{% endif %}
+                            >
+                                {{ label }}
+                            </option>
+
+                        {% endfor %}
+                    </select>
+
+                </div>
+
+
+                <div class="administration-audit-filter-field">
+
+                    <label for="account-role">
+                        Account Type
+                    </label>
+
+                    <select
+                        id="account-role"
+                        name="role"
+                    >
+                        <option value="">
+                            All accounts
+                        </option>
+
+                        <option
+                            value="member"
+                            {% if filters.role == "member" %}selected{% endif %}
+                        >
+                            Non-staff Accounts
+                        </option>
+
+                        <option
+                            value="staff"
+                            {% if filters.role == "staff" %}selected{% endif %}
+                        >
+                            Staff Accounts
+                        </option>
+
+                        <option
+                            value="superuser"
+                            {% if filters.role == "superuser" %}selected{% endif %}
+                        >
+                            Superusers
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <div class="administration-audit-filter-actions">
+
+                <button
+                    type="submit"
+                    class="administration-audit-button"
+                >
+                    Apply Filters
+                </button>
+
+                <a
+                    class="administration-audit-clear-link"
+                    href="{% url 'administration:account_list' %}"
+                >
+                    Clear Filters
+                </a>
+
+            </div>
+
+        </form>
+
+    </section>
+
+
+    <section
+        class="administration-audit-results"
+        aria-labelledby="account-results-heading"
+    >
+
+        <div class="administration-audit-results-header">
+
+            <h2 id="account-results-heading">
+                Account Directory
+            </h2>
+
+            <span class="administration-audit-results-count">
+                {{ page.paginator.count }}
+                account{{ page.paginator.count|pluralize }}
+            </span>
+
+        </div>
+
+
+        {% if accounts %}
+
+            <div class="administration-audit-table-wrapper">
+
+                <table class="administration-audit-table">
+
+                    <thead>
+                        <tr>
+                            <th scope="col">
+                                Account
+                            </th>
+
+                            <th scope="col">
+                                Email
+                            </th>
+
+                            <th scope="col">
+                                Membership
+                            </th>
+
+                            <th scope="col">
+                                Access
+                            </th>
+
+                            <th scope="col">
+                                Registered
+                            </th>
+
+                            <th scope="col">
+                                Details
+                            </th>
+                        </tr>
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for account in accounts %}
+
+                            <tr>
+
+                                <td>
+                                    <span class="administration-audit-target">
+
+                                        {% if account.display_name %}
+                                            {{ account.display_name }}
+                                        {% else %}
+                                            {{ account.username }}
+                                        {% endif %}
+
+                                    </span>
+
+                                    <span class="administration-audit-secondary">
+                                        @{{ account.username }}
+                                    </span>
+                                </td>
+
+
+                                <td>
+                                    {% if account.email %}
+                                        {{ account.email }}
+                                    {% else %}
+                                        Not provided
+                                    {% endif %}
+                                </td>
+
+
+                                <td>
+                                    <span class="administration-audit-action">
+                                        {{ account.get_account_status_display }}
+                                    </span>
+                                </td>
+
+
+                                <td>
+
+                                    {% if not account.is_active %}
+                                        Inactive
+                                    {% elif account.is_superuser %}
+                                        Superuser
+                                    {% elif account.is_staff %}
+                                        Staff
+                                    {% else %}
+                                        Standard
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td>
+                                    <time datetime="{{ account.date_joined|date:'c' }}">
+                                        {{ account.date_joined|date:"M j, Y" }}
+                                    </time>
+                                </td>
+
+
+                                <td>
+                                    <a
+                                        class="administration-audit-detail-link"
+                                        href="{% url 'administration:account_detail' account.pk %}"
+                                        aria-label="Manage account for {{ account.username }}"
+                                    >
+                                        View
+                                    </a>
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <div class="administration-empty-state">
+
+                <h3>
+                    No matching accounts
+                </h3>
+
+                <p>
+                    No accounts match the current filters.
+                </p>
+
+            </div>
+
+        {% endif %}
+
+
+        {% if page.paginator.num_pages > 1 %}
+
+            <nav
+                class="administration-audit-pagination"
+                aria-label="Account directory pagination"
+            >
+
+                <div class="administration-audit-page-links">
+
+                    {% if page.has_previous %}
+
+                        <a
+                            href="?{% if filter_query %}{{ filter_query }}&amp;{% endif %}page={{ page.previous_page_number }}"
+                            rel="prev"
+                        >
+                            Previous
+                        </a>
+
+                    {% else %}
+
+                        <span
+                            class="administration-audit-page-disabled"
+                            aria-disabled="true"
+                        >
+                            Previous
+                        </span>
+
+                    {% endif %}
+
+
+                    <span class="administration-audit-page-indicator">
+                        Page {{ page.number }} of {{ page.paginator.num_pages }}
+                    </span>
+
+
+                    {% if page.has_next %}
+
+                        <a
+                            href="?{% if filter_query %}{{ filter_query }}&amp;{% endif %}page={{ page.next_page_number }}"
+                            rel="next"
+                        >
+                            Next
+                        </a>
+
+                    {% else %}
+
+                        <span
+                            class="administration-audit-page-disabled"
+                            aria-disabled="true"
+                        >
+                            Next
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+            </nav>
+
+        {% endif %}
+
+    </section>
+
+
+    <footer class="administration-section-footer">
+
+        <a
+            class="administration-back-link"
+            href="{% url 'administration:section' 'accounts' %}"
+        >
+            &larr; Back to Accounts &amp; Members
+        </a>
+
+    </footer>
+
+</div>
+
+{% endblock %}

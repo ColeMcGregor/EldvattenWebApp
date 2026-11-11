@@ -14,6 +14,16 @@ urlpatterns = [
         name="index",
     ),
     path(
+        "accounts/members/",
+        views.account_list,
+        name="account_list",
+    ),
+    path(
+        "accounts/members/<int:user_id>/",
+        views.account_detail,
+        name="account_detail",
+    ),
+    path(
         "system/logs/",
         views.audit_log_list,
         name="audit_log_list",

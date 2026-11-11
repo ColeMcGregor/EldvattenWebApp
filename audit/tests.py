@@ -142,6 +142,20 @@ class RequestIPTests(SimpleTestCase):
         )
 
     @override_settings(
+        AUDIT_TRUSTED_PROXY_CIDRS=("10.30.0.0/24",),
+    )
+    def test_malformed_address_in_proxy_chain(self):
+        request = self.make_request(
+            "10.30.0.2",
+            "198.51.100.8, invalid, 10.30.0.3",
+        )
+
+        self.assertEqual(
+            get_request_ip(request),
+            "10.30.0.2",
+        )
+
+    @override_settings(
         AUDIT_TRUSTED_PROXY_CIDRS=("10.30.0.2",),
     )
     def test_all_trusted_addresses_use_remote(self):
@@ -162,6 +176,20 @@ class RequestIPTests(SimpleTestCase):
         request = self.make_request(
             "2001:db8::2",
             "2001:db8:1::100",
+        )
+
+        self.assertEqual(
+            get_request_ip(request),
+            "2001:db8:1::100",
+        )
+
+    @override_settings(
+        AUDIT_TRUSTED_PROXY_CIDRS=("2001:db8::2",),
+    )
+    def test_untrusted_ipv6_cannot_spoof_ip(self):
+        request = self.make_request(
+            "2001:db8:1::100",
+            "2001:db8:ffff::999",
         )
 
         self.assertEqual(

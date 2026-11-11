@@ -14,9 +14,7 @@ ADMINISTRATION_SECTIONS = (
         "description": "Account approvals, access, and roles",
         "permissions": (
             "accounts.approve_membership",
-            "accounts.add_user",
             "accounts.change_user",
-            "accounts.delete_user",
         ),
     },
     {
@@ -139,7 +137,20 @@ def get_section_links(user, section_slug):
         return has_any_permission(user, permissions)
 
     if section_slug == "accounts":
-        pass
+        if allowed(
+            "accounts.approve_membership",
+            "accounts.change_user",
+        ):
+            links.append({
+                "title": "Manage Accounts & Members",
+                "description": (
+                    "Review registrations, approve membership, "
+                    "and manage account access and roles."
+                ),
+                "url": reverse(
+                    "administration:account_list"
+                ),
+            })
 
     elif section_slug == "tavern":
         links.append({

@@ -17,6 +17,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.http import FileResponse
 from django.urls import include, path
+from accounts.urls import directory_urlpatterns
 
 
 def service_worker(request):
@@ -53,7 +54,16 @@ urlpatterns = [
     path("votes/", include("voting.urls")),
     path("notifications/", include("notifications.urls")),
     path("resources/", include("resources.urls")),
-    path("directory/", include("accounts.directory_urls")),
+    path(
+    "directory/",
+        include(
+            (
+                directory_urlpatterns,
+                "directory",
+            ),
+            namespace="directory",
+        ),
+    ),
     path("feedback/", include("feedback.urls")),
     path("", include("core.urls")),
 ]

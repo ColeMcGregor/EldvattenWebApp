@@ -1,0 +1,538 @@
+
+{% extends "app/base_desktop.html" %}
+
+{% block title %}
+    {{ account.username }} | Accounts & Members | EldVatten
+{% endblock %}
+
+{% block nav_administration %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+
+{% block app_content %}
+
+<div class="administration-page administration-audit-page">
+
+    <nav
+        class="administration-breadcrumb"
+        aria-label="Breadcrumb"
+    >
+
+        <a href="{% url 'administration:index' %}">
+            Administration
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a href="{% url 'administration:section' 'accounts' %}">
+            Accounts &amp; Members
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a href="{% url 'administration:account_list' %}">
+            Manage Accounts
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <span aria-current="page">
+            {{ account.username }}
+        </span>
+
+    </nav>
+
+
+    <header class="administration-header">
+
+        <h1 class="section-heading">
+
+            {% if account.display_name %}
+                {{ account.display_name }}
+            {% else %}
+                {{ account.username }}
+            {% endif %}
+
+        </h1>
+
+        <p class="administration-description">
+            Review membership details and account access
+            for @{{ account.username }}.
+        </p>
+
+    </header>
+
+
+    {% if messages %}
+
+        <div
+            class="administration-audit-results"
+            role="status"
+        >
+
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+
+    <section
+        class="administration-audit-results"
+        aria-labelledby="account-summary-heading"
+    >
+
+        <div class="administration-audit-results-header">
+
+            <h2 id="account-summary-heading">
+                Account Information
+            </h2>
+
+        </div>
+
+
+        <dl class="administration-audit-detail-grid">
+
+            <dt>Account ID</dt>
+            <dd>{{ account.pk }}</dd>
+
+            <dt>Username</dt>
+            <dd>{{ account.username }}</dd>
+
+            <dt>Display Name</dt>
+            <dd>
+                {{ account.display_name|default:"Not provided" }}
+            </dd>
+
+            <dt>Email</dt>
+            <dd>
+                {% if account.email %}
+                    <a href="mailto:{{ account.email }}">
+                        {{ account.email }}
+                    </a>
+                {% else %}
+                    Not provided
+                {% endif %}
+            </dd>
+
+            <dt>Membership Status</dt>
+            <dd>
+                {{ account.get_account_status_display }}
+            </dd>
+
+            <dt>Authentication</dt>
+            <dd>
+                {% if account.is_active %}
+                    Active
+                {% else %}
+                    Inactive
+                {% endif %}
+            </dd>
+
+            <dt>Staff Access</dt>
+            <dd>
+                {% if account.is_staff %}
+                    Yes
+                {% else %}
+                    No
+                {% endif %}
+            </dd>
+
+            <dt>Superuser</dt>
+            <dd>
+                {% if account.is_superuser %}
+                    Yes
+                {% else %}
+                    No
+                {% endif %}
+            </dd>
+
+            <dt>Registered</dt>
+            <dd>
+                <time datetime="{{ account.date_joined|date:'c' }}">
+                    {{ account.date_joined|date:"F j, Y, g:i A T" }}
+                </time>
+            </dd>
+
+            <dt>Last Login</dt>
+            <dd>
+                {% if account.last_login %}
+                    <time datetime="{{ account.last_login|date:'c' }}">
+                        {{ account.last_login|date:"F j, Y, g:i A T" }}
+                    </time>
+                {% else %}
+                    Never recorded
+                {% endif %}
+            </dd>
+
+            <dt>Assigned Roles</dt>
+            <dd>
+                {% for group in account.groups.all %}
+                    {{ group.name }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                    None
+                {% endfor %}
+            </dd>
+
+        </dl>
+
+    </section>
+
+
+    {% if allow_approval or allow_status_management %}
+
+        <section
+            class="administration-audit-filters"
+            aria-labelledby="account-membership-heading"
+        >
+
+            <h2 id="account-membership-heading">
+                Manage Membership
+            </h2>
+
+            {% if account.is_superuser %}
+
+                <p>
+                    Superuser membership changes must be
+                    performed through Django administration.
+                </p>
+
+            {% elif account.pk == request.user.pk %}
+
+                <p>
+                    You cannot change your own membership
+                    status through this interface.
+                </p>
+
+            {% elif account.is_staff and not allow_security_management %}
+
+                <p>
+                    Staff account membership changes require
+                    a full administrator.
+                </p>
+
+            {% else %}
+
+                <form method="post">
+
+                    {% csrf_token %}
+
+                    <input
+                        type="hidden"
+                        name="action"
+                        value="status"
+                    >
+
+                    {% if status_form.non_field_errors %}
+                        <div class="form-errors" role="alert">
+                            {{ status_form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+
+                    <div class="administration-audit-filter-grid">
+
+                        <div class="administration-audit-filter-field">
+
+                            {{ status_form.account_status.label_tag }}
+                            {{ status_form.account_status }}
+
+                            {% if status_form.account_status.errors %}
+                                <div class="form-errors" role="alert">
+                                    {{ status_form.account_status.errors }}
+                                </div>
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                    <p>
+                        Membership changes are recorded
+                        in the audit log.
+                    </p>
+
+                    <div class="administration-audit-filter-actions">
+
+                        <button
+                            type="submit"
+                            class="administration-audit-button"
+                        >
+                            Update Membership
+                        </button>
+
+                    </div>
+
+                </form>
+
+            {% endif %}
+
+        </section>
+
+    {% endif %}
+
+
+    {% if allow_security_management %}
+
+        <section
+            class="administration-audit-filters"
+            aria-labelledby="account-activation-heading"
+        >
+
+            <h2 id="account-activation-heading">
+                Account Activation
+            </h2>
+
+            {% if account.is_superuser %}
+
+                <p>
+                    Superuser accounts must be managed
+                    through Django administration.
+                </p>
+
+            {% elif account.pk == request.user.pk %}
+
+                <p>
+                    You cannot change your own account
+                    activation through this interface.
+                </p>
+
+            {% else %}
+
+                <form method="post">
+
+                    {% csrf_token %}
+
+                    <input
+                        type="hidden"
+                        name="action"
+                        value="activation"
+                    >
+
+                    {% if activation_form.non_field_errors %}
+                        <div class="form-errors" role="alert">
+                            {{ activation_form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="form-field">
+
+                        <label for="{{ activation_form.is_active.id_for_label }}">
+                            {{ activation_form.is_active }}
+                            Allow this account to authenticate
+                        </label>
+
+                        {% if activation_form.is_active.errors %}
+                            <div class="form-errors" role="alert">
+                                {{ activation_form.is_active.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                    <p>
+                        Disabling authentication prevents
+                        the account from signing in.
+                        This is separate from membership status.
+                    </p>
+
+                    <div class="administration-audit-filter-actions">
+
+                        <button
+                            type="submit"
+                            class="administration-audit-button"
+                        >
+                            Save Activation
+                        </button>
+
+                    </div>
+
+                </form>
+
+            {% endif %}
+
+        </section>
+
+
+        <section
+            class="administration-audit-filters"
+            aria-labelledby="account-roles-heading"
+        >
+
+            <h2 id="account-roles-heading">
+                Administrative Roles
+            </h2>
+
+            {% if account.is_superuser %}
+
+                <p>
+                    Superuser roles must be managed
+                    through Django administration.
+                </p>
+
+            {% elif account.pk == request.user.pk %}
+
+                <p>
+                    You cannot change your own roles
+                    through this interface.
+                </p>
+
+            {% else %}
+
+                <form method="post">
+
+                    {% csrf_token %}
+
+                    <input
+                        type="hidden"
+                        name="action"
+                        value="groups"
+                    >
+
+                    {% if group_form.non_field_errors %}
+                        <div class="form-errors" role="alert">
+                            {{ group_form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="form-field">
+
+                        {{ group_form.groups.label_tag }}
+                        {{ group_form.groups }}
+
+                        {% if group_form.groups.errors %}
+                            <div class="form-errors" role="alert">
+                                {{ group_form.groups.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                    <p>
+                        Assigned roles determine permissions
+                        granted through Django groups.
+                        Hold Ctrl or Command to select
+                        multiple roles.
+                    </p>
+
+                    <p>
+                        Direct user permissions and staff
+                        designation are managed separately.
+                    </p>
+
+                    <div class="administration-audit-filter-actions">
+
+                        <button
+                            type="submit"
+                            class="administration-audit-button"
+                        >
+                            Save Roles
+                        </button>
+
+                    </div>
+
+                </form>
+
+            {% endif %}
+
+        </section>
+
+    {% endif %}
+
+
+    {% if account_audit_logs %}
+
+        <section
+            class="administration-audit-results"
+            aria-labelledby="account-history-heading"
+        >
+
+            <div class="administration-audit-results-header">
+
+                <h2 id="account-history-heading">
+                    Recent Account Activity
+                </h2>
+
+            </div>
+
+            <div class="administration-audit-table-wrapper">
+
+                <table class="administration-audit-table">
+
+                    <thead>
+                        <tr>
+                            <th scope="col">Recorded</th>
+                            <th scope="col">Actor</th>
+                            <th scope="col">Action</th>
+                            <th scope="col">Details</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for log in account_audit_logs %}
+
+                            <tr>
+
+                                <td>
+                                    <time datetime="{{ log.recorded_at|date:'c' }}">
+                                        {{ log.recorded_at|date:"M j, Y" }}
+                                        <span class="administration-audit-time">
+                                            {{ log.recorded_at|date:"g:i A" }}
+                                        </span>
+                                    </time>
+                                </td>
+
+                                <td>
+                                    {{ log.actor_label|default:"System" }}
+                                </td>
+
+                                <td>
+                                    {{ log.get_action_display }}
+                                </td>
+
+                                <td>
+                                    {% if perms.audit.view_auditlog %}
+                                        <a
+                                            class="administration-audit-detail-link"
+                                            href="{% url 'administration:audit_log_detail' log.pk %}"
+                                        >
+                                            View
+                                        </a>
+                                    {% else %}
+                                        Recorded
+                                    {% endif %}
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    {% endif %}
+
+
+    <footer class="administration-section-footer">
+
+        <a
+            class="administration-back-link"
+            href="{% url 'administration:account_list' %}"
+        >
+            &larr; Back to Manage Accounts
+        </a>
+
+    </footer>
+
+</div>
+
+{% endblock %}

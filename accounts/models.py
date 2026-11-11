@@ -1,13 +1,13 @@
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-# These define the models for the accounts
 
-
-# Account status options
+# Account status options.
 class AccountStatus(models.TextChoices):
     PENDING = "PENDING", "Pending"
     MEMBER = "MEMBER", "Member"
+    REJECTED = "REJECTED", "Rejected"
     SUSPENDED = "SUSPENDED", "Suspended"
     DISABLED = "DISABLED", "Disabled"
 
