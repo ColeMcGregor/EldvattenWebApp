@@ -857,12 +857,23 @@ form {
 }
 
 .footer-main {
-    padding: 3.5rem 0;
+    padding: 3.5rem 3.0rem;
 
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-large);
+}
+
+.footer-main > :nth-child(1) {
+    justify-self: start;
+}
+
+.footer-main > :nth-child(2) {
+    justify-self: center;
+}
+
+.footer-main > :nth-child(3) {
+    justify-self: end;
 }
 
 .footer-heading {
