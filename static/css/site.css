@@ -228,7 +228,9 @@ a:hover {
 
     margin: 0 0 2rem;
 
-    font-size: 1.25rem;
+    font-size: 1.6rem;
+
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 1);
 }
 
 
