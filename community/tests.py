@@ -38,6 +38,7 @@ from .models import (
     ForumBoardTarget,
     ForumBoardThreadCreationTarget,
     ForumCategory,
+    ForumDraft,
     ForumPost,
     ForumPostAttachment,
     ForumPostQuote,
@@ -96,6 +97,7 @@ from .services import (
     restore_forum_category,
     restore_forum_post,
     restore_forum_thread,
+    search_forum,
     set_board_locked,
     set_thread_locked,
     set_thread_pinned,
@@ -5405,4 +5407,754 @@ class ForumPhaseTenViewTests(ForumPermissionFixtureMixin, TestCase):
             for section in response.context["category_sections"]
         }
         self.assertIn(category.pk, section_ids)
+
+
+class ForumSearchHardeningTests(
+    ForumPermissionFixtureMixin,
+    TestCase,
+):
+    """
+    Regression coverage for Tavern search input limits,
+    query safety, authorization, and visibility.
+    """
+
+
+    def setUp(self):
+        super().setUp()
+
+        self.search_board = self.create_board(
+            "Search Hardening Board"
+        )
+
+        self.search_thread = self.create_thread(
+            self.search_board,
+            title="Search Hardening Thread",
+        )
+
+        self.search_post = self.create_post(
+            self.search_thread,
+            body="Visible search regression content.",
+        )
+
+
+    def search_results(self, query, user=None):
+        return search_forum(
+            user or self.member,
+            query,
+        )
+
+    def result_ids(self, results):
+        return {
+            "threads": {
+                thread.pk
+                for thread in results["threads"]
+            },
+            "posts": {
+                post.pk
+                for post in results["posts"]
+            },
+        }
+
+    def test_search_finds_matching_thread_title(self):
+        results = self.search_results(
+            "Search Hardening Thread"
+        )
+
+        ids = self.result_ids(results)
+
+        self.assertIn(
+            self.search_thread.pk,
+            ids["threads"],
+        )
+
+    def test_search_finds_matching_post_body(self):
+        results = self.search_results(
+            "Visible search regression"
+        )
+
+        ids = self.result_ids(results)
+
+        self.assertIn(
+            self.search_post.pk,
+            ids["posts"],
+        )
+
+        self.assertIn(
+            self.search_thread.pk,
+            ids["threads"],
+        )
+
+    def test_search_strips_surrounding_whitespace(self):
+        results = self.search_results(
+            "   Search Hardening Thread   "
+        )
+
+        self.assertIn(
+            self.search_thread.pk,
+            self.result_ids(results)["threads"],
+        )
+
+    def test_empty_and_whitespace_only_queries_return_nothing(self):
+        for query in (
+            "",
+            " ",
+            "\n\t ",
+        ):
+            with self.subTest(query=repr(query)):
+                results = self.search_results(query)
+
+                self.assertFalse(
+                    results["threads"].exists()
+                )
+
+                self.assertFalse(
+                    results["posts"].exists()
+                )
+
+    def test_search_truncates_query_to_150_characters(self):
+        title = "A" * 150
+
+        thread = self.create_thread(
+            self.search_board,
+            title=title,
+        )
+
+        results = self.search_results(
+            title + "B" * 50
+        )
+
+        self.assertIn(
+            thread.pk,
+            self.result_ids(results)["threads"],
+        )
+
+    def test_sql_like_input_is_treated_as_literal_text(self):
+        special_title = "SQL ' OR 1=1 -- Sentinel"
+
+        thread = self.create_thread(
+            self.search_board,
+            title=special_title,
+        )
+
+        results = self.search_results(
+            "' OR 1=1 --"
+        )
+
+        ids = self.result_ids(results)
+
+        self.assertIn(
+            thread.pk,
+            ids["threads"],
+        )
+
+        self.assertNotIn(
+            self.search_thread.pk,
+            ids["threads"],
+        )
+
+        self.assertNotIn(
+            self.search_post.pk,
+            ids["posts"],
+        )
+
+    def test_search_handles_unicode(self):
+        thread = self.create_thread(
+            self.search_board,
+            title="Réunion préparatoire",
+        )
+
+        post = self.create_post(
+            thread,
+            body="Discussion about café supplies.",
+        )
+
+        results = self.search_results(
+            "café"
+        )
+
+        ids = self.result_ids(results)
+
+        self.assertIn(
+            post.pk,
+            ids["posts"],
+        )
+
+        self.assertIn(
+            thread.pk,
+            ids["threads"],
+        )
+
+    def test_search_excludes_inaccessible_threads_and_posts(self):
+        hidden_thread = self.create_thread(
+            self.search_board,
+            title="Restricted Search Sentinel",
+        )
+
+        ForumThreadTarget.objects.create(
+            thread=hidden_thread,
+            user=self.other_member,
+        )
+
+        hidden_post = self.create_post(
+            hidden_thread,
+            body="Restricted Search Sentinel",
+        )
+
+        results = self.search_results(
+            "Restricted Search Sentinel"
+        )
+
+        ids = self.result_ids(results)
+
+        self.assertNotIn(
+            hidden_thread.pk,
+            ids["threads"],
+        )
+
+        self.assertNotIn(
+            hidden_post.pk,
+            ids["posts"],
+        )
+
+        allowed_results = self.search_results(
+            "Restricted Search Sentinel",
+            user=self.other_member,
+        )
+
+        allowed_ids = self.result_ids(
+            allowed_results
+        )
+
+        self.assertIn(
+            hidden_thread.pk,
+            allowed_ids["threads"],
+        )
+
+        self.assertIn(
+            hidden_post.pk,
+            allowed_ids["posts"],
+        )
+
+    def test_search_excludes_inaccessible_boards(self):
+        hidden_board = self.create_board(
+            "Restricted Search Board"
+        )
+
+        ForumBoardTarget.objects.create(
+            board=hidden_board,
+            user=self.other_member,
+        )
+
+        hidden_thread = self.create_thread(
+            hidden_board,
+            title="Board Visibility Sentinel",
+        )
+
+        hidden_post = self.create_post(
+            hidden_thread,
+            body="Board Visibility Sentinel",
+        )
+
+        results = self.search_results(
+            "Board Visibility Sentinel"
+        )
+
+        ids = self.result_ids(results)
+
+        self.assertNotIn(
+            hidden_thread.pk,
+            ids["threads"],
+        )
+
+        self.assertNotIn(
+            hidden_post.pk,
+            ids["posts"],
+        )
+
+    def test_search_excludes_archived_threads(self):
+        archived_thread = self.create_thread(
+            self.search_board,
+            title="Archived Thread Sentinel",
+            archived=True,
+        )
+
+        archived_post = self.create_post(
+            archived_thread,
+            body="Archived Thread Sentinel",
+        )
+
+        results = self.search_results(
+            "Archived Thread Sentinel"
+        )
+
+        ids = self.result_ids(results)
+
+        self.assertNotIn(
+            archived_thread.pk,
+            ids["threads"],
+        )
+
+        self.assertNotIn(
+            archived_post.pk,
+            ids["posts"],
+        )
+
+    def test_search_excludes_archived_posts(self):
+        archived_post = self.create_post(
+            self.search_thread,
+            body="Archived Post Sentinel",
+            archived=True,
+        )
+
+        results = self.search_results(
+            "Archived Post Sentinel"
+        )
+
+        ids = self.result_ids(results)
+
+        self.assertNotIn(
+            archived_post.pk,
+            ids["posts"],
+        )
+
+        self.assertNotIn(
+            self.search_thread.pk,
+            ids["threads"],
+        )
+
+    def test_http_search_normalizes_and_limits_query(self):
+        self.client.force_login(self.member)
+
+        query = (
+            "Search Hardening Thread"
+            + " " * 200
+            + "ignored"
+        )
+
+        with patch(
+            "community.views.render",
+            return_value=HttpResponse("Search rendered"),
+        ) as mocked_render:
+
+            response = self.client.get(
+                reverse("community:search"),
+                {"q": query},
+            )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        context = mocked_render.call_args.args[2]
+
+        self.assertEqual(
+            context["query"],
+            query.strip()[:150],
+        )
+
+        self.assertEqual(
+            len(context["query"]),
+            150,
+        )
+
+    def test_http_search_denies_suspended_member(self):
+        self.client.force_login(
+            self.suspended_user
+        )
+
+        response = self.client.get(
+            reverse("community:search"),
+            {"q": "Search Hardening Thread"},
+        )
+
+        self.assertEqual(
+            response.status_code,
+            403,
+        )
+
+    def test_http_search_denies_anonymous_user(self):
+        response = self.client.get(
+            reverse("community:search"),
+            {"q": "Search Hardening Thread"},
+        )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+
+class ForumDraftResumptionTests(
+    ForumPermissionFixtureMixin,
+    TestCase,
+):
+    """Regression tests for restoring, updating, and publishing drafts."""
+
+    def setUp(self):
+        super().setUp()
+        self.board = self.create_board("Draft Resume Board")
+        self.thread = self.create_thread(
+            self.board,
+            title="Draft Resume Thread",
+        )
+        self.opening_post = self.create_post(
+            self.thread,
+            body="Existing quote source",
+        )
+        self.client.force_login(self.member)
+
+    def make_thread_draft(self, **overrides):
+        values = {
+            "user": self.member,
+            "draft_type": ForumDraft.DraftType.THREAD,
+            "board": self.board,
+            "title": "Saved thread title",
+            "body": "Saved thread body",
+            "target_data": [],
+            "attachment_links": [
+                {
+                    "label": "Reference",
+                    "url": "https://example.com/reference",
+                    "display_order": 0,
+                },
+            ],
+            "quoted_post_ids": [self.opening_post.pk],
+        }
+        values.update(overrides)
+        return ForumDraft.objects.create(**values)
+
+    def make_reply_draft(self, **overrides):
+        values = {
+            "user": self.member,
+            "draft_type": ForumDraft.DraftType.POST,
+            "thread": self.thread,
+            "body": "Saved reply body",
+            "attachment_links": [
+                {
+                    "label": "Reply reference",
+                    "url": "https://example.com/reply",
+                    "display_order": 0,
+                },
+            ],
+            "quoted_post_ids": [self.opening_post.pk],
+        }
+        values.update(overrides)
+        return ForumDraft.objects.create(**values)
+
+    def thread_create_url(self, board=None):
+        return reverse(
+            "community:thread_create",
+            args=[(board or self.board).pk],
+        )
+
+    def thread_save_url(self, board=None):
+        return reverse(
+            "community:thread_draft_save",
+            args=[(board or self.board).pk],
+        )
+
+    def reply_url(self, thread=None):
+        return reverse(
+            "community:thread_detail",
+            args=[(thread or self.thread).pk],
+        )
+
+    def reply_create_url(self, thread=None):
+        return reverse(
+            "community:post_create",
+            args=[(thread or self.thread).pk],
+        )
+
+    def reply_save_url(self, thread=None):
+        return reverse(
+            "community:post_draft_save",
+            args=[(thread or self.thread).pk],
+        )
+
+    def thread_payload(self, **changes):
+        data = {
+            "title": "Updated thread title",
+            "body": "Updated thread body",
+            "targets-TOTAL_FORMS": "1",
+            "targets-INITIAL_FORMS": "0",
+            "attachments-TOTAL_FORMS": "1",
+            "attachments-INITIAL_FORMS": "0",
+            "attachments-0-label": "Reference",
+            "attachments-0-url": "https://example.com/reference",
+            "attachments-0-display_order": "0",
+        }
+
+        data.update(changes)
+        return data
+
+    def reply_payload(self, **changes):
+        data = {
+            "body": "Updated reply body",
+            "attachments-TOTAL_FORMS": "1",
+            "attachments-INITIAL_FORMS": "0",
+            "attachments-0-label": "Reply reference",
+            "attachments-0-url": "https://example.com/reply",
+            "attachments-0-display_order": "0",
+        }
+
+        data.update(changes)
+        return data
+
+    def test_resume_thread_restores_content_links_and_quotes(self):
+        draft = self.make_thread_draft()
+        response = self.client.get(
+            self.thread_create_url(),
+            {"draft": draft.pk},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["draft"].pk, draft.pk)
+        self.assertEqual(
+            response.context["form"].initial["title"],
+            draft.title,
+        )
+        self.assertEqual(
+            response.context["form"].initial["body"],
+            draft.body,
+        )
+        self.assertEqual(
+            response.context["draft_quote_ids"],
+            draft.quoted_post_ids,
+        )
+        self.assertEqual(
+            response.context["attachment_formset"].forms[0]
+            .initial["url"],
+            "https://example.com/reference",
+        )
+
+    def test_resume_reply_restores_content_links_and_quotes(self):
+        draft = self.make_reply_draft()
+        response = self.client.get(
+            self.reply_url(),
+            {"draft": draft.pk},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["draft"].pk, draft.pk)
+        self.assertEqual(
+            response.context["post_form"].initial["body"],
+            draft.body,
+        )
+        self.assertEqual(
+            response.context["draft_quote_ids"],
+            draft.quoted_post_ids,
+        )
+        self.assertEqual(
+            response.context["attachment_formset"].forms[0]
+            .initial["url"],
+            "https://example.com/reply",
+        )
+
+    def test_thread_draft_restore_includes_saved_visibility_rows(self):
+        draft = self.make_thread_draft(
+            target_data=[{"chapter_id": self.fyr_draca.pk}],
+        )
+        response = self.client.get(
+            self.thread_create_url(),
+            {"draft": draft.pk},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context["target_formset"].forms[0]
+            .initial["chapter"],
+            self.fyr_draca.pk,
+        )
+
+    def test_resuming_foreign_drafts_returns_404(self):
+        for draft, url in (
+            (self.make_thread_draft(user=self.other_member), self.thread_create_url()),
+            (self.make_reply_draft(user=self.other_member), self.reply_url()),
+        ):
+            with self.subTest(draft_type=draft.draft_type):
+                response = self.client.get(url, {"draft": draft.pk})
+                self.assertEqual(response.status_code, 404)
+
+    def test_resuming_wrong_draft_type_is_rejected(self):
+        thread_draft = self.make_thread_draft()
+        reply_draft = self.make_reply_draft()
+        self.assertEqual(
+            self.client.get(
+                self.reply_url(), {"draft": thread_draft.pk}
+            ).status_code,
+            403,
+        )
+        self.assertEqual(
+            self.client.get(
+                self.thread_create_url(), {"draft": reply_draft.pk}
+            ).status_code,
+            403,
+        )
+
+    def test_resuming_in_wrong_parent_is_rejected(self):
+        other_board = self.create_board("Another Draft Board")
+        other_thread = self.create_thread(other_board)
+        thread_draft = self.make_thread_draft()
+        reply_draft = self.make_reply_draft()
+        self.assertEqual(
+            self.client.get(
+                self.thread_create_url(other_board),
+                {"draft": thread_draft.pk},
+            ).status_code,
+            403,
+        )
+        self.assertEqual(
+            self.client.get(
+                self.reply_url(other_thread),
+                {"draft": reply_draft.pk},
+            ).status_code,
+            403,
+        )
+
+    def test_invalid_draft_identifier_is_rejected(self):
+        response = self.client.get(
+            self.thread_create_url(),
+            {"draft": "not-a-number"},
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_locked_thread_cannot_resume_reply_draft(self):
+        draft = self.make_reply_draft()
+        self.thread.is_locked = True
+        self.thread.save(update_fields=["is_locked"])
+        response = self.client.get(
+            self.reply_url(), {"draft": draft.pk}
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_archived_thread_cannot_resume_reply_draft(self):
+        draft = self.make_reply_draft()
+        self.thread.archived_at = timezone.now()
+        self.thread.archived_by = self.actor
+        self.thread.save(update_fields=["archived_at", "archived_by"])
+        response = self.client.get(
+            self.reply_url(), {"draft": draft.pk}
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_saving_existing_thread_draft_updates_same_record(self):
+        draft = self.make_thread_draft()
+        payload = self.thread_payload(
+            draft_id=str(draft.pk),
+            title="Revised title",
+            body="Revised body",
+        )
+        response = self.client.post(self.thread_save_url(), payload)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(ForumDraft.objects.count(), 1)
+        draft.refresh_from_db()
+        self.assertEqual(draft.title, "Revised title")
+        self.assertEqual(draft.body, "Revised body")
+
+    def test_saving_existing_reply_draft_updates_same_record(self):
+        draft = self.make_reply_draft()
+        payload = self.reply_payload(
+            draft_id=str(draft.pk),
+            body="Revised reply",
+        )
+        response = self.client.post(self.reply_save_url(), payload)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(ForumDraft.objects.count(), 1)
+        draft.refresh_from_db()
+        self.assertEqual(draft.body, "Revised reply")
+
+    def test_creating_thread_from_draft_publishes_edits_and_deletes_draft(self):
+        draft = self.make_thread_draft()
+        payload = self.thread_payload(
+            draft_id=str(draft.pk),
+            title="Published edited title",
+            body="Published edited body",
+        )
+        response = self.client.post(self.thread_create_url(), payload)
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(ForumDraft.objects.filter(pk=draft.pk).exists())
+        thread = ForumThread.objects.get(title="Published edited title")
+        self.assertEqual(
+            thread.posts.order_by("pk").first().body,
+            "Published edited body",
+        )
+
+    def test_creating_reply_from_draft_publishes_edits_and_deletes_draft(self):
+        draft = self.make_reply_draft()
+        payload = self.reply_payload(
+            draft_id=str(draft.pk),
+            body="Published edited reply",
+        )
+        response = self.client.post(self.reply_create_url(), payload)
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(ForumDraft.objects.filter(pk=draft.pk).exists())
+        self.assertTrue(
+            ForumPost.objects.filter(
+                thread=self.thread,
+                body="Published edited reply",
+            ).exists()
+        )
+
+    def test_invalid_thread_submission_keeps_draft(self):
+        draft = self.make_thread_draft()
+        response = self.client.post(
+            self.thread_create_url(),
+            self.thread_payload(draft_id=str(draft.pk), title=""),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(ForumDraft.objects.filter(pk=draft.pk).exists())
+        self.assertIn("title", response.context["form"].errors)
+
+    def test_invalid_reply_submission_keeps_draft(self):
+        draft = self.make_reply_draft()
+        response = self.client.post(
+            self.reply_create_url(),
+            self.reply_payload(draft_id=str(draft.pk), body=""),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(ForumDraft.objects.filter(pk=draft.pk).exists())
+        self.assertIn("body", response.context["post_form"].errors)
+
+    def test_thread_creation_rolls_back_if_audit_fails(self):
+        draft = self.make_thread_draft()
+        before_count = ForumThread.objects.count()
+        with patch(
+            "community.views._audit",
+            side_effect=ValidationError("Audit failed"),
+        ):
+            response = self.client.post(
+                self.thread_create_url(),
+                self.thread_payload(draft_id=str(draft.pk)),
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ForumThread.objects.count(), before_count)
+        self.assertTrue(ForumDraft.objects.filter(pk=draft.pk).exists())
+
+    def test_reply_creation_rolls_back_if_audit_fails(self):
+        draft = self.make_reply_draft()
+        before_count = ForumPost.objects.count()
+        with patch(
+            "community.views._audit",
+            side_effect=ValidationError("Audit failed"),
+        ):
+            response = self.client.post(
+                self.reply_create_url(),
+                self.reply_payload(draft_id=str(draft.pk)),
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ForumPost.objects.count(), before_count)
+        self.assertTrue(ForumDraft.objects.filter(pk=draft.pk).exists())
+
+    def test_foreign_draft_cannot_be_saved_or_published(self):
+        draft = self.make_reply_draft(user=self.other_member)
+        for url in (self.reply_save_url(), self.reply_create_url()):
+            with self.subTest(url=url):
+                response = self.client.post(
+                    url,
+                    self.reply_payload(draft_id=str(draft.pk)),
+                )
+                self.assertEqual(response.status_code, 404)
+        self.assertTrue(ForumDraft.objects.filter(pk=draft.pk).exists())
+
+    def test_obsolete_publish_route_does_not_resolve(self):
+        from django.urls import NoReverseMatch
+        with self.assertRaises(NoReverseMatch):
+            reverse("community:draft_publish", args=[1])
 

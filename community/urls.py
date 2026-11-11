@@ -1,3 +1,4 @@
+
 from django.urls import path
 
 from . import views
@@ -26,11 +27,6 @@ urlpatterns = [
         "drafts/<int:draft_id>/delete/",
         views.draft_delete,
         name="draft_delete",
-    ),
-    path(
-        "drafts/<int:draft_id>/publish/",
-        views.draft_publish,
-        name="draft_publish",
     ),
 
     path(

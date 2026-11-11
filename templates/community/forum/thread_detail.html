@@ -533,6 +533,16 @@
             {% endif %}
 
 
+            {% if draft %}
+
+                <p class="forum-form-help">
+                    You are continuing a saved reply draft.
+                    Saving will update this draft; posting will publish it.
+                </p>
+
+            {% endif %}
+
+
             <form
                 class="forum-reply-form"
                 method="post"
@@ -541,7 +551,30 @@
                 {% csrf_token %}
 
 
-                {% if quoted_post %}
+                {% if draft %}
+
+                    <input
+                        type="hidden"
+                        name="draft_id"
+                        value="{{ draft.pk }}"
+                    >
+
+                {% endif %}
+
+
+                {% if draft_quote_ids %}
+
+                    {% for quote_id in draft_quote_ids %}
+
+                        <input
+                            type="hidden"
+                            name="quoted_post_id"
+                            value="{{ quote_id }}"
+                        >
+
+                    {% endfor %}
+
+                {% elif quoted_post %}
 
                     <input
                         type="hidden"

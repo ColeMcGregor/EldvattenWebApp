@@ -92,9 +92,47 @@
     </header>
 
 
+    {% if draft and not thread %}
+
+        <p class="forum-form-help">
+            You are continuing a saved draft.
+            Changes will update this draft when you select
+            Save Draft. Creating the thread will publish
+            your content.
+        </p>
+
+    {% endif %}
+
+
     <form method="post">
 
         {% csrf_token %}
+
+
+        {% if draft and not thread %}
+
+            <input
+                type="hidden"
+                name="draft_id"
+                value="{{ draft.pk }}"
+            >
+
+        {% endif %}
+
+
+        {% if not thread %}
+
+            {% for quote_id in draft_quote_ids %}
+
+                <input
+                    type="hidden"
+                    name="quoted_post_id"
+                    value="{{ quote_id }}"
+                >
+
+            {% endfor %}
+
+        {% endif %}
 
 
         {{ form.non_field_errors }}
@@ -212,7 +250,7 @@
             {% else %}
 
                 <a
-                    href="{% url 'community:board_detail' board.id %}{% if board.archived_at or board.category.archived_at %}?archived=1{% endif %}"
+                    href="{% if draft %}{% url 'community:draft_list' %}{% else %}{% url 'community:board_detail' board.id %}{% endif %}"
                 >
                     Cancel
                 </a>

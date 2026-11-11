@@ -5,6 +5,7 @@ from django.core.exceptions import (
     ValidationError,
 )
 from django.db import transaction
+from django.http import Http404
 from django.db.models import Count, Q
 from django.shortcuts import (
     get_object_or_404,
@@ -68,7 +69,6 @@ from .services import (
     merge_forum_threads,
     move_forum_posts,
     move_forum_thread,
-    publish_forum_draft,
     resolve_post_report,
     restore_forum_board,
     restore_forum_category,
@@ -1205,229 +1205,241 @@ def board_unsubscribe(
     )
 
 
-@login_required
-def thread_create(
-    request,
-    board_id,
-):
-    board = get_object_or_404(
-        ForumBoard.objects
-        .select_related("category")
-        .prefetch_related(
-            "targets",
-            "thread_creation_targets",
-        ),
-        pk=board_id,
+def _get_owned_draft(request, draft_id, *, draft_type, board=None, thread=None):
+    if not draft_id:
+        return None
+
+    if not str(draft_id).isdecimal() or len(str(draft_id)) > 20:
+        raise Http404
+
+    draft = get_object_or_404(
+        ForumDraft,
+        pk=draft_id,
+        user=request.user,
     )
 
-    if not user_can_create_thread(
-        request.user,
-        board,
-    ):
+    if draft.draft_type != draft_type:
         raise PermissionDenied
 
-    thread_shell = ForumThread(
-        board=board,
-        created_by=request.user,
-    )
+    if board is not None and draft.board_id != board.pk:
+        raise PermissionDenied
 
-    post_shell = ForumPost(
-        author=request.user,
-    )
+    if thread is not None and draft.thread_id != thread.pk:
+        raise PermissionDenied
 
-    form = ForumThreadCreateForm(
-        request.POST or None
-    )
+    return draft
 
-    target_formset = (
-        ForumThreadTargetFormSet(
-            request.POST or None,
-            instance=thread_shell,
-            prefix="targets",
+
+def _draft_formset(formset_class, *, instance, prefix, data=None, initial=None):
+    # Draft rows are not persisted as related model instances.
+    # Add enough blank inline forms to render all saved rows.
+    rows = initial or []
+    if data is None and rows:
+        formset_class = type(
+            "RestoredDraftFormSet",
+            (formset_class,),
+            {"extra": max(1, len(rows))},
         )
+
+    return formset_class(
+        data,
+        instance=instance,
+        prefix=prefix,
+        initial=rows if data is None else None,
     )
 
-    attachment_formset = (
-        ForumPostAttachmentFormSet(
-            request.POST or None,
-            instance=post_shell,
-            prefix="attachments",
-        )
-    )
 
-    if (
-        request.method == "POST"
-        and form.is_valid()
-        and target_formset.is_valid()
-        and attachment_formset.is_valid()
-    ):
-        try:
-            thread = create_forum_thread(
-                user=request.user,
-                board=board,
-                title=form.cleaned_data["title"],
-                body=form.cleaned_data["body"],
-                target_rows=_target_rows(
-                    target_formset
-                ),
-                attachments=_attachment_rows(
-                    attachment_formset
-                ),
-                quoted_post_ids=(
-                    request.POST.getlist(
-                        "quoted_post_id"
-                    )
-                ),
-            )
-        except ValidationError as error:
-            form.add_error(
-                None,
-                _validation_message(error),
-            )
+def _draft_target_initial(draft):
+    return [
+        {
+            field_name: row.get(f"{field_name}_id")
+            for field_name in FORUM_TARGET_FIELDS
+        }
+        for row in draft.target_data
+    ]
 
-        else:
-            _audit(
-                request,
-                thread,
-                action=AuditLog.Action.CREATE,
-            )
 
-            opening_post = (
-                thread.posts
-                .order_by(
-                    "created_at",
-                    "id",
-                )
-                .first()
-            )
-
-            if opening_post is not None:
-                _audit(
-                    request,
-                    opening_post,
-                    action=(
-                        AuditLog.Action.CREATE
-                    ),
-                )
-
-            return redirect(
-                "community:thread_detail",
-                thread_id=thread.pk,
-            )
-
+def _render_thread_draft_form(
+    request,
+    board,
+    *,
+    draft,
+    form,
+    target_formset,
+    attachment_formset,
+):
     return render(
         request,
         "community/forum/thread_form.html",
         {
             "form": form,
-            "target_formset":
-                target_formset,
-            "attachment_formset":
-                attachment_formset,
+            "target_formset": target_formset,
+            "attachment_formset": attachment_formset,
             "board": board,
-            "page_title":
-                "Create Thread",
+            "draft": draft,
+            "draft_quote_ids": draft.quoted_post_ids if draft else [],
+            "page_title": "Create Thread",
         },
     )
 
 
 @login_required
-@require_POST
-def thread_draft_save(
-    request,
-    board_id,
-):
+def thread_create(request, board_id):
     board = get_object_or_404(
         ForumBoard.objects
         .select_related("category")
-        .prefetch_related("targets"),
+        .prefetch_related("targets", "thread_creation_targets"),
         pk=board_id,
     )
 
-    draft_form = ForumDraftContentForm(
-        request.POST
+    if not user_can_create_thread(request.user, board):
+        raise PermissionDenied
+
+    draft_id = (
+        request.POST.get("draft_id")
+        if request.method == "POST"
+        else request.GET.get("draft")
     )
-
-    target_formset = (
-        ForumThreadTargetFormSet(
-            request.POST,
-            instance=ForumThread(
-                board=board,
-                created_by=request.user,
-            ),
-            prefix="targets",
-        )
-    )
-
-    attachment_formset = (
-        ForumPostAttachmentFormSet(
-            request.POST,
-            instance=ForumPost(),
-            prefix="attachments",
-        )
-    )
-
-    if (
-        draft_form.is_valid()
-        and target_formset.is_valid()
-        and attachment_formset.is_valid()
-    ):
-        draft = None
-
-        if request.POST.get("draft_id"):
-            draft = get_object_or_404(
-                ForumDraft,
-                pk=request.POST["draft_id"],
-                user=request.user,
-            )
-
-        save_thread_draft(
-            user=request.user,
-            board=board,
-            title=(
-                draft_form.cleaned_data[
-                    "title"
-                ]
-            ),
-            body=(
-                draft_form.cleaned_data[
-                    "body"
-                ]
-            ),
-            target_data=_target_rows(
-                target_formset,
-                json_safe=True,
-            ),
-            attachment_links=(
-                _attachment_rows(
-                    attachment_formset
-                )
-            ),
-            quoted_post_ids=(
-                request.POST.getlist(
-                    "quoted_post_id"
-                )
-            ),
-            draft=draft,
-        )
-
-        messages.success(
-            request,
-            "Draft saved.",
-        )
-
-        return redirect(
-            "community:draft_list"
-        )
-
-    messages.error(
+    draft = _get_owned_draft(
         request,
-        "The draft could not be saved.",
+        draft_id,
+        draft_type=ForumDraft.DraftType.THREAD,
+        board=board,
     )
 
-    return redirect(
-        "community:thread_create",
-        board_id=board.pk,
+    thread_shell = ForumThread(board=board, created_by=request.user)
+    post_shell = ForumPost(author=request.user)
+    data = request.POST if request.method == "POST" else None
+
+    form = ForumThreadCreateForm(
+        data,
+        initial={"title": draft.title, "body": draft.body} if draft else None,
+    )
+    target_formset = _draft_formset(
+        ForumThreadTargetFormSet,
+        instance=thread_shell,
+        prefix="targets",
+        data=data,
+        initial=_draft_target_initial(draft) if draft else None,
+    )
+    attachment_formset = _draft_formset(
+        ForumPostAttachmentFormSet,
+        instance=post_shell,
+        prefix="attachments",
+        data=data,
+        initial=draft.attachment_links if draft else None,
+    )
+
+    if request.method == "POST":
+        valid_form = form.is_valid()
+        valid_targets = target_formset.is_valid()
+        valid_attachments = attachment_formset.is_valid()
+
+        if valid_form and valid_targets and valid_attachments:
+            try:
+                with transaction.atomic():
+                    thread = create_forum_thread(
+                        user=request.user,
+                        board=board,
+                        title=form.cleaned_data["title"],
+                        body=form.cleaned_data["body"],
+                        target_rows=_target_rows(target_formset),
+                        attachments=_attachment_rows(attachment_formset),
+                        quoted_post_ids=request.POST.getlist("quoted_post_id"),
+                    )
+                    _audit(
+                        request,
+                        thread,
+                        action=AuditLog.Action.CREATE,
+                    )
+                    opening_post = (
+                        thread.posts.order_by("created_at", "id").first()
+                    )
+                    if opening_post is not None:
+                        _audit(
+                            request,
+                            opening_post,
+                            action=AuditLog.Action.CREATE,
+                        )
+                    if draft is not None:
+                        draft.delete()
+            except ValidationError as error:
+                form.add_error(None, _validation_message(error))
+            else:
+                return redirect(
+                    "community:thread_detail",
+                    thread_id=thread.pk,
+                )
+
+    return _render_thread_draft_form(
+        request,
+        board,
+        draft=draft,
+        form=form,
+        target_formset=target_formset,
+        attachment_formset=attachment_formset,
+    )
+
+
+@login_required
+@require_POST
+def thread_draft_save(request, board_id):
+    board = get_object_or_404(
+        ForumBoard.objects.select_related("category").prefetch_related("targets"),
+        pk=board_id,
+    )
+
+    if not user_can_create_thread(request.user, board):
+        raise PermissionDenied
+
+    draft = _get_owned_draft(
+        request,
+        request.POST.get("draft_id"),
+        draft_type=ForumDraft.DraftType.THREAD,
+        board=board,
+    )
+    form = ForumDraftContentForm(request.POST)
+    target_formset = _draft_formset(
+        ForumThreadTargetFormSet,
+        instance=ForumThread(board=board, created_by=request.user),
+        prefix="targets",
+        data=request.POST,
+    )
+    attachment_formset = _draft_formset(
+        ForumPostAttachmentFormSet,
+        instance=ForumPost(author=request.user),
+        prefix="attachments",
+        data=request.POST,
+    )
+
+    valid_form = form.is_valid()
+    valid_targets = target_formset.is_valid()
+    valid_attachments = attachment_formset.is_valid()
+    if valid_form and valid_targets and valid_attachments:
+        try:
+            save_thread_draft(
+                user=request.user,
+                board=board,
+                title=form.cleaned_data["title"],
+                body=form.cleaned_data["body"],
+                target_data=_target_rows(target_formset, json_safe=True),
+                attachment_links=_attachment_rows(attachment_formset),
+                quoted_post_ids=request.POST.getlist("quoted_post_id"),
+                draft=draft,
+            )
+        except ValidationError as error:
+            form.add_error(None, _validation_message(error))
+        else:
+            messages.success(request, "Draft saved.")
+            return redirect("community:draft_list")
+
+    return _render_thread_draft_form(
+        request,
+        board,
+        draft=draft,
+        form=form,
+        target_formset=target_formset,
+        attachment_formset=attachment_formset,
     )
 
 
@@ -1438,6 +1450,8 @@ def _render_thread_detail_page(
     post_form=None,
     attachment_formset=None,
     quote_id=None,
+    draft=None,
+    draft_quote_ids=None,
 ):
     can_view_archived = (
         user_can_view_archived_forum(
@@ -1628,6 +1642,8 @@ def _render_thread_detail_page(
             "attachment_formset":
                 attachment_formset,
             "quoted_post": quoted_post,
+            "draft": draft,
+            "draft_quote_ids": draft_quote_ids or [],
             "latest_active_post":
                 latest_active_post,
             "first_unread_post":
@@ -1669,52 +1685,32 @@ def _render_thread_detail_page(
 
 
 @login_required
-def thread_detail(
-    request,
-    thread_id,
-):
+def thread_detail(request, thread_id):
     thread = get_object_or_404(
         ForumThread.objects
-        .select_related(
-            "board",
-            "board__category",
-            "created_by",
-            "merged_into",
-        )
-        .prefetch_related(
-            "targets",
-            "board__targets",
-        ),
+        .select_related("board", "board__category", "created_by", "merged_into")
+        .prefetch_related("targets", "board__targets"),
         pk=thread_id,
     )
-
-    can_view_archived = (
-        user_can_view_archived_forum(
-            request.user
-        )
-    )
+    can_view_archived = user_can_view_archived_forum(request.user)
 
     if thread.merged_into_id is not None:
+        # A draft tied to a merged source thread cannot be resumed at a
+        # different thread without explicit author action.
+        if request.GET.get("draft"):
+            raise PermissionDenied
         destination_thread = get_object_or_404(
             ForumThread.objects
-            .select_related(
-                "board",
-                "board__category",
-            )
-            .prefetch_related(
-                "targets",
-                "board__targets",
-            ),
+            .select_related("board", "board__category")
+            .prefetch_related("targets", "board__targets"),
             pk=thread.merged_into_id,
         )
-
         if not user_can_access_thread(
             request.user,
             destination_thread,
             include_archived=can_view_archived,
         ):
             raise PermissionDenied
-
         return redirect(
             "community:thread_detail",
             thread_id=destination_thread.pk,
@@ -1727,12 +1723,35 @@ def thread_detail(
     ):
         raise PermissionDenied
 
+    draft = _get_owned_draft(
+        request,
+        request.GET.get("draft"),
+        draft_type=ForumDraft.DraftType.POST,
+        thread=thread,
+    )
+    if draft is not None and not user_can_add_post(request.user, thread):
+        raise PermissionDenied
+
+    post_form = None
+    attachment_formset = None
+    quote_ids = draft.quoted_post_ids if draft is not None else []
+    if draft is not None:
+        post_form = ForumPostForm(initial={"body": draft.body})
+        attachment_formset = _draft_formset(
+            ForumPostAttachmentFormSet,
+            instance=ForumPost(thread=thread, author=request.user),
+            prefix="attachments",
+            initial=draft.attachment_links,
+        )
+
     return _render_thread_detail_page(
         request,
         thread,
-        quote_id=request.GET.get(
-            "quote_post"
-        ),
+        post_form=post_form,
+        attachment_formset=attachment_formset,
+        quote_id=quote_ids[0] if quote_ids else request.GET.get("quote_post"),
+        draft=draft,
+        draft_quote_ids=quote_ids,
     )
 
 
@@ -2541,194 +2560,125 @@ def thread_unfollow(
 
 @login_required
 @require_POST
-def post_create(
-    request,
-    thread_id,
-):
+def post_create(request, thread_id):
     thread = get_object_or_404(
         ForumThread.objects
-        .select_related(
-            "board",
-            "board__category",
-        )
-        .prefetch_related(
-            "targets",
-            "board__targets",
-        ),
+        .select_related("board", "board__category")
+        .prefetch_related("targets", "board__targets"),
         pk=thread_id,
     )
 
-    if not user_can_add_post(
-        request.user,
-        thread,
-    ):
+    if not user_can_add_post(request.user, thread):
         raise PermissionDenied
 
-    post_shell = ForumPost(
+    draft = _get_owned_draft(
+        request,
+        request.POST.get("draft_id"),
+        draft_type=ForumDraft.DraftType.POST,
         thread=thread,
-        author=request.user,
     )
-
-    form = ForumPostForm(
-        request.POST,
+    post_shell = ForumPost(thread=thread, author=request.user)
+    form = ForumPostForm(request.POST, instance=post_shell)
+    attachment_formset = _draft_formset(
+        ForumPostAttachmentFormSet,
         instance=post_shell,
+        prefix="attachments",
+        data=request.POST,
     )
 
-    attachment_formset = (
-        ForumPostAttachmentFormSet(
-            request.POST,
-            instance=post_shell,
-            prefix="attachments",
-        )
-    )
-
-    if (
-        form.is_valid()
-        and attachment_formset.is_valid()
-    ):
+    valid_form = form.is_valid()
+    valid_attachments = attachment_formset.is_valid()
+    if valid_form and valid_attachments:
         try:
-            post = create_forum_post(
-                user=request.user,
-                thread=thread,
-                body=(
-                    form.cleaned_data[
-                        "body"
-                    ]
-                ),
-                attachments=(
-                    _attachment_rows(
-                        attachment_formset
-                    )
-                ),
-                quoted_post_ids=(
-                    request.POST.getlist(
-                        "quoted_post_id"
-                    )
-                ),
-            )
-        except ValidationError as error:
-            form.add_error(
-                None,
-                _validation_message(error),
-            )
-
-        else:
-            _audit(
-                request,
-                post,
-                action=AuditLog.Action.CREATE,
-            )
-
-            return redirect(
-                reverse(
-                    "community:thread_detail",
-                    args=[thread.pk],
+            with transaction.atomic():
+                post = create_forum_post(
+                    user=request.user,
+                    thread=thread,
+                    body=form.cleaned_data["body"],
+                    attachments=_attachment_rows(attachment_formset),
+                    quoted_post_ids=request.POST.getlist("quoted_post_id"),
                 )
+                _audit(
+                    request,
+                    post,
+                    action=AuditLog.Action.CREATE,
+                )
+                if draft is not None:
+                    draft.delete()
+        except ValidationError as error:
+            form.add_error(None, _validation_message(error))
+        else:
+            return redirect(
+                reverse("community:thread_detail", args=[thread.pk])
                 + f"#post-{post.pk}"
             )
 
-    quote_ids = request.POST.getlist(
-        "quoted_post_id"
-    )
-
-    quote_id = (
-        quote_ids[0]
-        if quote_ids
-        else None
-    )
-
+    quote_ids = request.POST.getlist("quoted_post_id")
     return _render_thread_detail_page(
         request,
         thread,
         post_form=form,
-        attachment_formset=(
-            attachment_formset
-        ),
-        quote_id=quote_id,
+        attachment_formset=attachment_formset,
+        quote_id=quote_ids[0] if quote_ids else None,
+        draft=draft,
+        draft_quote_ids=quote_ids,
     )
+
 
 @login_required
 @require_POST
-def post_draft_save(
-    request,
-    thread_id,
-):
+def post_draft_save(request, thread_id):
     thread = get_object_or_404(
         ForumThread.objects
-        .select_related(
-            "board",
-            "board__category",
-        )
-        .prefetch_related(
-            "targets",
-            "board__targets",
-        ),
+        .select_related("board", "board__category")
+        .prefetch_related("targets", "board__targets"),
         pk=thread_id,
     )
 
-    form = ForumDraftContentForm(
-        request.POST
-    )
+    if not user_can_add_post(request.user, thread):
+        raise PermissionDenied
 
-    attachment_formset = (
-        ForumPostAttachmentFormSet(
-            request.POST,
-            instance=ForumPost(),
-            prefix="attachments",
-        )
-    )
-
-    if (
-        form.is_valid()
-        and attachment_formset.is_valid()
-    ):
-        draft = None
-
-        if request.POST.get("draft_id"):
-            draft = get_object_or_404(
-                ForumDraft,
-                pk=request.POST["draft_id"],
-                user=request.user,
-            )
-
-        save_post_draft(
-            user=request.user,
-            thread=thread,
-            body=(
-                form.cleaned_data[
-                    "body"
-                ]
-            ),
-            attachment_links=(
-                _attachment_rows(
-                    attachment_formset
-                )
-            ),
-            quoted_post_ids=(
-                request.POST.getlist(
-                    "quoted_post_id"
-                )
-            ),
-            draft=draft,
-        )
-
-        messages.success(
-            request,
-            "Draft saved.",
-        )
-
-        return redirect(
-            "community:draft_list"
-        )
-
-    messages.error(
+    draft = _get_owned_draft(
         request,
-        "The draft could not be saved.",
+        request.POST.get("draft_id"),
+        draft_type=ForumDraft.DraftType.POST,
+        thread=thread,
+    )
+    form = ForumDraftContentForm(request.POST)
+    attachment_formset = _draft_formset(
+        ForumPostAttachmentFormSet,
+        instance=ForumPost(thread=thread, author=request.user),
+        prefix="attachments",
+        data=request.POST,
     )
 
-    return redirect(
-        "community:thread_detail",
-        thread_id=thread.pk,
+    valid_form = form.is_valid()
+    valid_attachments = attachment_formset.is_valid()
+    if valid_form and valid_attachments:
+        try:
+            save_post_draft(
+                user=request.user,
+                thread=thread,
+                body=form.cleaned_data["body"],
+                attachment_links=_attachment_rows(attachment_formset),
+                quoted_post_ids=request.POST.getlist("quoted_post_id"),
+                draft=draft,
+            )
+        except ValidationError as error:
+            form.add_error(None, _validation_message(error))
+        else:
+            messages.success(request, "Draft saved.")
+            return redirect("community:draft_list")
+
+    quote_ids = request.POST.getlist("quoted_post_id")
+    return _render_thread_detail_page(
+        request,
+        thread,
+        post_form=ForumPostForm(request.POST),
+        attachment_formset=attachment_formset,
+        quote_id=quote_ids[0] if quote_ids else None,
+        draft=draft,
+        draft_quote_ids=quote_ids,
     )
 
 
@@ -3164,95 +3114,4 @@ def draft_delete(
 
     return redirect(
         "community:draft_list"
-    )
-
-
-@login_required
-@require_POST
-def draft_publish(
-    request,
-    draft_id,
-):
-    draft = get_object_or_404(
-        ForumDraft.objects
-        .select_related(
-            "board",
-            "thread",
-            "thread__board",
-            "thread__board__category",
-        ),
-        pk=draft_id,
-        user=request.user,
-    )
-
-    try:
-        result = publish_forum_draft(
-            user=request.user,
-            draft=draft,
-        )
-    except ValidationError as error:
-        messages.error(
-            request,
-            _validation_message(error),
-        )
-
-        return redirect(
-            "community:draft_list"
-        )
-
-    if isinstance(
-        result,
-        ForumThread,
-    ):
-        _audit(
-            request,
-            result,
-            action=AuditLog.Action.CREATE,
-            notes=(
-                "Forum thread published "
-                "from draft."
-            ),
-        )
-
-        opening_post = (
-            result.posts
-            .order_by(
-                "created_at",
-                "id",
-            )
-            .first()
-        )
-
-        if opening_post is not None:
-            _audit(
-                request,
-                opening_post,
-                action=AuditLog.Action.CREATE,
-                notes=(
-                    "Opening post published "
-                    "from draft."
-                ),
-            )
-
-        return redirect(
-            "community:thread_detail",
-            thread_id=result.pk,
-        )
-
-    _audit(
-        request,
-        result,
-        action=AuditLog.Action.CREATE,
-        notes=(
-            "Forum post published "
-            "from draft."
-        ),
-    )
-
-    return redirect(
-        reverse(
-            "community:thread_detail",
-            args=[result.thread_id],
-        )
-        + f"#post-{result.pk}"
     )

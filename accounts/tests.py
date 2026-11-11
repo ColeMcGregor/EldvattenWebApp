@@ -25,6 +25,12 @@ from accounts.services import (
     set_account_groups,
 )
 from audit.models import AuditLog
+from accounts.directory import (
+    DIRECTORY_SEARCH_MAX_LENGTH,
+    DIRECTORY_SEARCH_MAX_TERMS,
+    filter_directory_members,
+    visible_directory_members,
+)
 from community.models import (
     ForumBoard,
     ForumBoardTarget,
@@ -34,6 +40,7 @@ from community.models import (
     ForumThreadTarget,
 )
 from notifications.models import Notification
+from messaging.models import UserBlock
 
 
 User = get_user_model()
@@ -315,6 +322,135 @@ class MyEldvattenPostsTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
+
+
+class DirectorySearchHardeningTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.viewer = User.objects.create_user(
+            username="directory_search_viewer",
+            password="test-password",
+            account_status=AccountStatus.MEMBER,
+        )
+
+        cls.target = User.objects.create_user(
+            username="directory_search_target",
+            password="test-password",
+            display_name="Amber Birch Cedar Delta Ember Fir Grove Hazel",
+            account_status=AccountStatus.MEMBER,
+        )
+
+        cls.hidden = User.objects.create_user(
+            username="directory_search_hidden",
+            password="test-password",
+            display_name="HiddenDirectorySentinel",
+            account_status=AccountStatus.PENDING,
+        )
+
+        cls.blocked = User.objects.create_user(
+            username="directory_search_blocked",
+            password="test-password",
+            display_name="BlockedDirectorySentinel",
+            account_status=AccountStatus.MEMBER,
+        )
+
+    def directory_url(self):
+        return reverse("directory:index")
+
+    def search(self, query):
+        self.client.force_login(self.viewer)
+        return self.client.get(self.directory_url(), {"q": query})
+
+    def test_search_uses_at_most_eight_terms(self):
+        query = (
+            "Amber Birch Cedar Delta Ember Fir Grove Hazel "
+            "NonexistentNinthTerm"
+        )
+        results = filter_directory_members(
+            visible_directory_members(self.viewer),
+            search=query,
+        )
+        self.assertEqual(DIRECTORY_SEARCH_MAX_TERMS, 8)
+        self.assertIn(self.target, results)
+
+    def test_search_enforces_character_limit_in_service(self):
+        query = "Amber" + (" " * 150) + "Nonexistent"
+        results = filter_directory_members(
+            visible_directory_members(self.viewer),
+            search=query,
+        )
+        self.assertEqual(DIRECTORY_SEARCH_MAX_LENGTH, 100)
+        self.assertIn(self.target, results)
+
+    def test_http_search_limits_displayed_query_length(self):
+        query = "Amber" + (" " * 150) + "Nonexistent"
+        response = self.search(query)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["search_query"], query.strip()[:100])
+        self.assertIn(
+            self.target,
+            response.context["directory_members"],
+        )
+
+    def test_sql_metacharacters_are_treated_as_search_text(self):
+        user = User.objects.create_user(
+            username="directory_apostrophe",
+            display_name="O'Reilly SQL --",
+            account_status=AccountStatus.MEMBER,
+        )
+        response = self.search("O'Reilly")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(user, response.context["directory_members"])
+        self.assertNotIn(
+            self.target,
+            response.context["directory_members"],
+        )
+
+    def test_unicode_search(self):
+        user = User.objects.create_user(
+            username="directory_unicode",
+            display_name="Zoë",
+            account_status=AccountStatus.MEMBER,
+        )
+        response = self.search("Zoë")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(user, response.context["directory_members"])
+
+    def test_search_excludes_pending_accounts(self):
+        response = self.search("HiddenDirectorySentinel")
+        self.assertNotIn(
+            self.hidden,
+            response.context["directory_members"],
+        )
+
+    def test_search_excludes_blocked_accounts(self):
+        UserBlock.objects.create(
+            blocker=self.viewer,
+            blocked=self.blocked,
+        )
+        response = self.search("BlockedDirectorySentinel")
+        self.assertNotIn(
+            self.blocked,
+            response.context["directory_members"],
+        )
+
+    def test_search_excludes_users_blocking_the_viewer(self):
+        UserBlock.objects.create(
+            blocker=self.blocked,
+            blocked=self.viewer,
+        )
+        response = self.search("BlockedDirectorySentinel")
+        self.assertNotIn(
+            self.blocked,
+            response.context["directory_members"],
+        )
+
+    def test_nonmember_cannot_access_directory_search(self):
+        response = self.client.get(
+            self.directory_url(),
+            {"q": "Amber"},
+        )
+        self.assertNotEqual(response.status_code, 200)
 
 
 class AccountManagementTestBase(TestCase):
@@ -1181,6 +1317,74 @@ class AccountManagementViewTests(
         self.assertEqual(
             account_ids,
             {self.member.pk},
+        )
+
+    def test_directory_search_treats_sql_metacharacters_as_text(self):
+        self.login_as(self.administrator)
+        response = self.client.get(
+            reverse("administration:account_list"),
+            {"search": "' OR 1=1 --"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context["accounts"]), [])
+
+  
+    def test_directory_search_limits_input_to_150_characters(self):
+        self.login_as(self.administrator)
+
+        username = "a" * 150
+
+        matching_user = User.objects.create_user(
+            username=username,
+            password="test-password",
+            account_status=AccountStatus.MEMBER,
+        )
+
+        query = username + "EXTRA_UNSEARCHED_TEXT"
+
+        response = self.client.get(
+            reverse("administration:account_list"),
+            {
+                "search": query,
+            },
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertEqual(
+            response.context["filters"]["search"],
+            username,
+        )
+
+        account_ids = {
+            account.pk
+            for account in response.context["accounts"]
+        }
+
+        self.assertIn(
+            matching_user.pk,
+            account_ids,
+        )
+
+
+    def test_directory_search_handles_unicode(self):
+        self.member.display_name = "Renée"
+        self.member.save(update_fields=["display_name"])
+        self.login_as(self.administrator)
+
+        response = self.client.get(
+            reverse("administration:account_list"),
+            {"search": "Renée"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [account.pk for account in response.context["accounts"]],
+            [self.member.pk],
         )
 
     def test_directory_filters_pending_accounts(self):
