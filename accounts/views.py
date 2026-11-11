@@ -37,6 +37,7 @@ from .my_eldvatten import (
     get_my_eldvatten_template,
     get_profile_context,
 )
+from .services import register_account
 
 
 def register(request):
@@ -47,7 +48,10 @@ def register(request):
         form = RegistrationForm(request.POST)
 
         if form.is_valid():
-            user = form.save()
+            user = register_account(
+                form=form,
+            )
+
             login(request, user)
 
             return redirect("notification_setup")

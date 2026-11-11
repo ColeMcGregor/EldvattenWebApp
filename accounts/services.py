@@ -2,9 +2,13 @@
 from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.db.models import Q
+from django.urls import reverse
 
 from audit.models import AuditLog
 from audit.services import record_audit_event
+from notifications.models import Notification
+from notifications.services import create_notifications
 
 from .models import (
     AccountStatus,
@@ -33,6 +37,64 @@ ACCOUNT_STATUS_TRANSITIONS = {
         AccountStatus.PENDING,
     },
 }
+
+
+@transaction.atomic
+def register_account(*, form):
+    account = form.save()
+
+    notify_membership_approvers(account=account)
+
+    return account
+
+
+def get_membership_approvers():
+    return (
+        User.objects
+        .filter(is_active=True)
+        .filter(
+            Q(is_superuser=True)
+            | Q(
+                user_permissions__codename=(
+                    "approve_membership"
+                ),
+                user_permissions__content_type__app_label=(
+                    "accounts"
+                ),
+            )
+            | Q(
+                groups__permissions__codename=(
+                    "approve_membership"
+                ),
+                groups__permissions__content_type__app_label=(
+                    "accounts"
+                ),
+            )
+        )
+        .distinct()
+    )
+
+
+def notify_membership_approvers(*, account):
+    recipients = get_membership_approvers()
+
+    return create_notifications(
+        recipients=recipients,
+        notification_type=Notification.Type.SYSTEM,
+        title="New Membership Registration",
+        message=(
+            f"{account.username} has registered "
+            "and is awaiting membership approval."
+        ),
+        source_type="User",
+        source_id=account.pk,
+        target_url=reverse(
+            "administration:account_detail",
+            kwargs={
+                "user_id": account.pk,
+            },
+        ),
+    )
 
 
 def is_full_administrator(user):

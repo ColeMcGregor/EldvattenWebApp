@@ -1,5 +1,6 @@
 
 from datetime import timedelta
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
@@ -10,11 +11,16 @@ from django.utils import timezone
 from django.utils.html import escape
 from django.utils.formats import date_format
 
-from accounts.forms import AccountStatusForm
+from accounts.forms import (
+    AccountStatusForm,
+    RegistrationForm,
+)
 from accounts.models import AccountStatus
 from accounts.services import (
     change_account_status,
     get_allowed_account_statuses,
+    get_membership_approvers,
+    register_account,
     set_account_active,
     set_account_groups,
 )
@@ -27,6 +33,7 @@ from community.models import (
     ForumThread,
     ForumThreadTarget,
 )
+from notifications.models import Notification
 
 
 User = get_user_model()
@@ -1459,4 +1466,373 @@ class AccountManagementViewTests(
             response.context[
                 "account_audit_logs"
             ]
+        )
+
+
+class RegistrationNotificationTests(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.approval_permission = Permission.objects.get(
+            content_type__app_label="accounts",
+            codename="approve_membership",
+        )
+
+        cls.direct_approver = User.objects.create_user(
+            username="registration_direct_approver",
+            password="test-password",
+            account_status=AccountStatus.MEMBER,
+        )
+
+        cls.direct_approver.user_permissions.add(
+            cls.approval_permission,
+        )
+
+        cls.group_approver = User.objects.create_user(
+            username="registration_group_approver",
+            password="test-password",
+            account_status=AccountStatus.MEMBER,
+        )
+
+        cls.approval_group = Group.objects.create(
+            name="Registration Approval Group",
+        )
+
+        cls.approval_group.permissions.add(
+            cls.approval_permission,
+        )
+
+        cls.group_approver.groups.add(
+            cls.approval_group,
+        )
+
+        cls.administrator = User.objects.create_superuser(
+            username="registration_administrator",
+            email="registration_admin@example.com",
+            password="test-password",
+        )
+
+        cls.ordinary_member = User.objects.create_user(
+            username="registration_ordinary_member",
+            password="test-password",
+            account_status=AccountStatus.MEMBER,
+        )
+
+        cls.inactive_approver = User.objects.create_user(
+            username="registration_inactive_approver",
+            password="test-password",
+            account_status=AccountStatus.MEMBER,
+            is_active=False,
+        )
+
+        cls.inactive_approver.user_permissions.add(
+            cls.approval_permission,
+        )
+
+    def registration_data(self, username="new_registration"):
+        return {
+            "username": username,
+            "display_name": "New Applicant",
+            "email": f"{username}@example.com",
+            "password1": "Violet!82Harbor#Falcon",
+            "password2": "Violet!82Harbor#Falcon",
+        }
+
+    def register_using_service(
+        self,
+        username="new_registration",
+    ):
+        form = RegistrationForm(
+            data=self.registration_data(username),
+        )
+
+        self.assertTrue(
+            form.is_valid(),
+            form.errors,
+        )
+
+        return register_account(
+            form=form,
+        )
+
+    def test_direct_approver_is_selected(self):
+        approver_ids = set(
+            get_membership_approvers().values_list(
+                "pk",
+                flat=True,
+            )
+        )
+
+        self.assertIn(
+            self.direct_approver.pk,
+            approver_ids,
+        )
+
+    def test_group_approver_is_selected(self):
+        approver_ids = set(
+            get_membership_approvers().values_list(
+                "pk",
+                flat=True,
+            )
+        )
+
+        self.assertIn(
+            self.group_approver.pk,
+            approver_ids,
+        )
+
+    def test_superuser_is_selected(self):
+        approver_ids = set(
+            get_membership_approvers().values_list(
+                "pk",
+                flat=True,
+            )
+        )
+
+        self.assertIn(
+            self.administrator.pk,
+            approver_ids,
+        )
+
+    def test_ordinary_member_is_not_selected(self):
+        approver_ids = set(
+            get_membership_approvers().values_list(
+                "pk",
+                flat=True,
+            )
+        )
+
+        self.assertNotIn(
+            self.ordinary_member.pk,
+            approver_ids,
+        )
+
+    def test_inactive_approver_is_not_selected(self):
+        approver_ids = set(
+            get_membership_approvers().values_list(
+                "pk",
+                flat=True,
+            )
+        )
+
+        self.assertNotIn(
+            self.inactive_approver.pk,
+            approver_ids,
+        )
+
+    def test_multiple_permissions_do_not_duplicate_approver(self):
+        self.direct_approver.groups.add(
+            self.approval_group,
+        )
+
+        approver_ids = list(
+            get_membership_approvers().values_list(
+                "pk",
+                flat=True,
+            )
+        )
+
+        self.assertEqual(
+            approver_ids.count(
+                self.direct_approver.pk
+            ),
+            1,
+        )
+
+    def test_registration_creates_notifications_for_approvers(self):
+        account = self.register_using_service()
+
+        notifications = Notification.objects.filter(
+            source_type="User",
+            source_id=str(account.pk),
+        )
+
+        recipient_ids = set(
+            notifications.values_list(
+                "user_id",
+                flat=True,
+            )
+        )
+
+        self.assertEqual(
+            recipient_ids,
+            {
+                self.direct_approver.pk,
+                self.group_approver.pk,
+                self.administrator.pk,
+            },
+        )
+
+        self.assertEqual(
+            notifications.count(),
+            3,
+        )
+
+    def test_registration_notification_has_correct_destination(self):
+        account = self.register_using_service()
+
+        notification = Notification.objects.get(
+            user=self.direct_approver,
+            source_type="User",
+            source_id=str(account.pk),
+        )
+
+        self.assertEqual(
+            notification.notification_type,
+            Notification.Type.SYSTEM,
+        )
+
+        self.assertEqual(
+            notification.title,
+            "New Membership Registration",
+        )
+
+        self.assertIn(
+            account.username,
+            notification.message,
+        )
+
+        self.assertEqual(
+            notification.target_url,
+            reverse(
+                "administration:account_detail",
+                kwargs={
+                    "user_id": account.pk,
+                },
+            ),
+        )
+
+    def test_registration_notification_is_not_duplicated(self):
+        self.direct_approver.groups.add(
+            self.approval_group,
+        )
+
+        account = self.register_using_service()
+
+        self.assertEqual(
+            Notification.objects.filter(
+                user=self.direct_approver,
+                source_type="User",
+                source_id=str(account.pk),
+            ).count(),
+            1,
+        )
+
+    def test_registration_creates_pending_account(self):
+        account = self.register_using_service()
+
+        self.assertEqual(
+            account.account_status,
+            AccountStatus.PENDING,
+        )
+
+        self.assertTrue(
+            User.objects.filter(
+                pk=account.pk,
+                account_status=AccountStatus.PENDING,
+            ).exists()
+        )
+
+    
+    def test_registration_endpoint_creates_notifications(self):
+        response = self.client.post(
+            reverse("register"),
+            self.registration_data(
+                "registration_endpoint_user"
+            ),
+        )
+
+        if response.status_code != 302:
+            self.fail(
+                f"Registration returned HTTP "
+                f"{response.status_code}. "
+                f"Form errors: "
+                f"{response.context['form'].errors}"
+            )
+
+        account = User.objects.get(
+            username="registration_endpoint_user",
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("notification_setup"),
+            fetch_redirect_response=False,
+        )
+
+        self.assertEqual(
+            account.account_status,
+            AccountStatus.PENDING,
+        )
+
+        self.assertEqual(
+            Notification.objects.filter(
+                source_type="User",
+                source_id=str(account.pk),
+            ).count(),
+            3,
+        )
+
+    def test_invalid_registration_creates_no_notifications(self):
+        data = self.registration_data(
+            "invalid_registration"
+        )
+
+        data["password2"] = (
+            "DifferentPassword123!"
+        )
+
+        response = self.client.post(
+            reverse("register"),
+            data,
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertFalse(
+            User.objects.filter(
+                username="invalid_registration",
+            ).exists()
+        )
+
+        self.assertEqual(
+            Notification.objects.count(),
+            0,
+        )
+
+    def test_notification_failure_rolls_back_registration(self):
+        form = RegistrationForm(
+            data=self.registration_data(
+                "rollback_registration"
+            ),
+        )
+
+        self.assertTrue(
+            form.is_valid(),
+            form.errors,
+        )
+
+        with patch(
+            "accounts.services.create_notifications",
+            side_effect=RuntimeError(
+                "Notification persistence failed."
+            ),
+        ):
+            with self.assertRaises(RuntimeError):
+                register_account(
+                    form=form,
+                )
+
+        self.assertFalse(
+            User.objects.filter(
+                username="rollback_registration",
+            ).exists()
+        )
+
+        self.assertEqual(
+            Notification.objects.count(),
+            0,
         )
