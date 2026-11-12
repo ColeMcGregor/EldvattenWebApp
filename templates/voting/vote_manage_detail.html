@@ -1,3 +1,4 @@
+
 {% extends "app/base_desktop.html" %}
 {% block title %}Manage {{ vote.title }} | EldVatten{% endblock %}
 {% block nav_voting %}active{% endblock %}
@@ -89,7 +90,7 @@
         <dd>{{ vote.closed_at|default:"-" }}</dd>
 
         <dt>Created By</dt>
-        <dd>{{ vote.created_by }}</dd>
+        <dd>{{ vote.created_by.community_name }}</dd>
     </dl>
 
     {% if perms.voting.change_vote %}
@@ -155,7 +156,7 @@
             <ul>
                 {% for user in eligibility_preview %}
                     <li>
-                        {{ user.display_name|default:user.username }}
+                        {{ user.community_name }}
                     </li>
                 {% endfor %}
             </ul>
@@ -193,7 +194,7 @@
                     {% for eligible_user in eligible_users %}
                         <tr>
                             <td>
-                                {{ eligible_user.user.display_name|default:eligible_user.user.username }}
+                                {{ eligible_user.user.community_name }}
                             </td>
 
                             <td>
@@ -256,7 +257,7 @@
                 {% for response in identified_responses %}
                     <tr>
                         <td>
-                            {{ response.eligibility.user.display_name|default:response.eligibility.user.username }}
+                            {{ response.eligibility.user.community_name }}
                         </td>
 
                         <td>
@@ -285,7 +286,7 @@
             <article>
                 <p>
                     <strong>
-                        {{ comment.author.display_name|default:comment.author.username }}
+                        {{ comment.author.community_name }}
                     </strong>
                 </p>
 

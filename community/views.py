@@ -1584,7 +1584,7 @@ def _render_thread_detail_page(
 
         if quoted_post is not None:
             author_name = (
-                str(quoted_post.author)
+                quoted_post.author.community_name
                 if quoted_post.author
                 is not None
                 else "Former member"

@@ -1,5 +1,16 @@
 
-from django.db.models import Q
+from django.db.models import (
+    CharField,
+    F,
+    Q,
+    Value,
+)
+from django.db.models.functions import (
+    Coalesce,
+    Concat,
+    NullIf,
+    Trim,
+)
 
 from messaging.models import UserBlock
 from organization.models import (
@@ -81,6 +92,23 @@ def visible_directory_members(user):
         blocked=user,
     ).values_list("blocker_id", flat=True)
 
+    personal_name = Trim(
+        Concat(
+            F("first_name"),
+            Value(" "),
+            F("last_name"),
+            output_field=CharField(),
+        )
+    )
+
+    community_name = Coalesce(
+        NullIf(Trim(F("eldvatten_name")), Value("")),
+        NullIf(Trim(F("display_name")), Value("")),
+        NullIf(personal_name, Value("")),
+        F("username"),
+        output_field=CharField(),
+    )
+
     return (
         User.objects
         .filter(
@@ -89,7 +117,14 @@ def visible_directory_members(user):
         )
         .exclude(pk__in=blocked_by_viewer)
         .exclude(pk__in=blocking_viewer)
-        .order_by("display_name", "username", "pk")
+        .annotate(
+            directory_sort_name=community_name,
+        )
+        .order_by(
+            "directory_sort_name",
+            "username",
+            "pk",
+        )
     )
 
 
@@ -125,7 +160,8 @@ def filter_directory_members(members, *, search="", group=""):
 
     for word in search_terms:
         members = members.filter(
-            Q(display_name__icontains=word)
+            Q(eldvatten_name__icontains=word)
+            | Q(display_name__icontains=word)
             | Q(username__icontains=word)
             | Q(first_name__icontains=word)
             | Q(last_name__icontains=word)

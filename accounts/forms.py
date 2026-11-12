@@ -87,6 +87,7 @@ class AccountSettingsForm(forms.ModelForm):
 
         fields = (
             "display_name",
+            "eldvatten_name",
         )
 
         widgets = {
@@ -96,7 +97,16 @@ class AccountSettingsForm(forms.ModelForm):
                     "autocomplete": "name",
                 }
             ),
+            "eldvatten_name": forms.TextInput(
+                attrs={
+                    "class": "form-input",
+                    "autocomplete": "nickname",
+                }
+            ),
         }
+
+    def clean_eldvatten_name(self):
+        return self.cleaned_data["eldvatten_name"].strip()
 
 
 class UserPasswordChangeForm(PasswordChangeForm):

@@ -622,8 +622,7 @@ def get_conversation_display_title(
         participant_user = participant.user
 
         other_users.append(
-            participant_user.display_name
-            or participant_user.get_username()
+            participant_user.community_name
         )
 
     if not other_users:
@@ -739,10 +738,7 @@ def send_conversation_message(
         ]
 
         if notification_recipients:
-            sender_name = (
-                sender.display_name
-                or sender.get_username()
-            )
+            sender_name = sender.community_name
 
             create_notifications(
                 recipients=(

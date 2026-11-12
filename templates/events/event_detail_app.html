@@ -1,3 +1,4 @@
+
 {% extends "app/base_desktop.html" %}
 
 {% block title %}{{ event.title }} | EldVatten Events{% endblock %}
@@ -109,7 +110,7 @@
                         {% for event_participation in event.participations.all %}
                             <div class="event-attendance-row">
                                 <div>
-                                    <strong>{{ event_participation.user.display_name|default:event_participation.user.username }}</strong>
+                                    <strong>{{ event_participation.user.community_name }}</strong>
                                     <p class="event-muted">
                                         RSVP: {{ event_participation.get_rsvp_status_display|default:"No RSVP" }}
                                         · Attendance: {{ event_participation.get_attendance_status_display }}
@@ -117,7 +118,7 @@
                                 </div>
                                 <form method="post" action="{% url 'events:update_attendance' event.id event_participation.user.id %}">
                                     {% csrf_token %}
-                                    <label class="visually-hidden" for="attendance-{{ event_participation.user.id }}">Attendance for {{ event_participation.user.username }}</label>
+                                    <label class="visually-hidden" for="attendance-{{ event_participation.user.id }}">Attendance for {{ event_participation.user.community_name }} ({{ event_participation.user.username }})</label>
                                     <select id="attendance-{{ event_participation.user.id }}" name="attendance_status">
                                         <option value="UNKNOWN" {% if event_participation.attendance_status == "UNKNOWN" %}selected{% endif %}>Unknown</option>
                                         <option value="ATTENDED" {% if event_participation.attendance_status == "ATTENDED" %}selected{% endif %}>Attended</option>
@@ -151,7 +152,7 @@
                     {% endif %}
                     <div>
                         <dt>Organizer</dt>
-                        <dd>{{ event.organizer.display_name|default:event.organizer.username }}</dd>
+                        <dd>{{ event.organizer.community_name }}</dd>
                     </div>
                     <div><dt>Visibility</dt><dd>{{ event.get_visibility_display }}</dd></div>
                 </dl>

@@ -5,6 +5,8 @@ from django.contrib.auth.decorators import (
 )
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import CharField, F, Value
+from django.db.models.functions import Coalesce, Concat, NullIf, Trim
 from django.http import Http404
 from django.shortcuts import (
     get_object_or_404,
@@ -625,9 +627,29 @@ def vote_manage_detail(request, vote_id):
         .select_related(
             "user",
         )
+        .annotate(
+            community_sort_name=Coalesce(
+                NullIf(Trim(F("user__eldvatten_name")), Value("")),
+                NullIf(Trim(F("user__display_name")), Value("")),
+                NullIf(
+                    Trim(
+                        Concat(
+                            F("user__first_name"),
+                            Value(" "),
+                            F("user__last_name"),
+                            output_field=CharField(),
+                        )
+                    ),
+                    Value(""),
+                ),
+                F("user__username"),
+                output_field=CharField(),
+            )
+        )
         .order_by(
-            "user__display_name",
+            "community_sort_name",
             "user__username",
+            "user_id",
         )
     )
 
@@ -654,9 +676,35 @@ def vote_manage_detail(request, vote_id):
                 "eligibility",
                 "eligibility__user",
             )
+            .annotate(
+                community_sort_name=Coalesce(
+                    NullIf(
+                        Trim(F("eligibility__user__eldvatten_name")),
+                        Value(""),
+                    ),
+                    NullIf(
+                        Trim(F("eligibility__user__display_name")),
+                        Value(""),
+                    ),
+                    NullIf(
+                        Trim(
+                            Concat(
+                                F("eligibility__user__first_name"),
+                                Value(" "),
+                                F("eligibility__user__last_name"),
+                                output_field=CharField(),
+                            )
+                        ),
+                        Value(""),
+                    ),
+                    F("eligibility__user__username"),
+                    output_field=CharField(),
+                )
+            )
             .order_by(
-                "eligibility__user__display_name",
+                "community_sort_name",
                 "eligibility__user__username",
+                "eligibility__user_id",
             )
         )
 

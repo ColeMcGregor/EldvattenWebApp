@@ -2267,6 +2267,9 @@ def search_forum(user, query):
             | Q(
                 author__display_name__icontains=query
             )
+            | Q(
+                author__eldvatten_name__icontains=query
+            )
         )
         .select_related(
             "thread",
@@ -2294,6 +2297,9 @@ def search_forum(user, query):
                 created_by__display_name__icontains=query
             )
             | Q(
+                created_by__eldvatten_name__icontains=query
+            )
+            | Q(
                 posts__body__icontains=query,
                 posts__archived_at__isnull=True,
             )
@@ -2303,6 +2309,10 @@ def search_forum(user, query):
             )
             | Q(
                 posts__author__display_name__icontains=query,
+                posts__archived_at__isnull=True,
+            )
+            | Q(
+                posts__author__eldvatten_name__icontains=query,
                 posts__archived_at__isnull=True,
             )
         )

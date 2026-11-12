@@ -1,3 +1,4 @@
+
 {% extends "app/base_desktop.html" %}
 
 {% block title %}{{ action.title }} | EldVatten{% endblock %}
@@ -190,7 +191,7 @@
                     <div>
                         <dt>Created By</dt>
                         <dd>
-                            {{ action.created_by.display_name|default:action.created_by.username }}
+                            {{ action.created_by.community_name }}
                         </dd>
                     </div>
 

@@ -3,7 +3,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.db.models import Case, Count, F, IntegerField, Q, Value, When
+from django.db.models import Case, CharField, Count, F, IntegerField, Q, Value, When
+from django.db.models.functions import Coalesce, Concat, NullIf, Trim
 from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
@@ -451,12 +452,32 @@ def action_manage_detail(request, action_id):
     assignments = (
         action.assignments
         .select_related("user")
-        .annotate(status_order=status_order)
+        .annotate(
+            status_order=status_order,
+            community_sort_name=Coalesce(
+                NullIf(Trim(F("user__eldvatten_name")), Value("")),
+                NullIf(Trim(F("user__display_name")), Value("")),
+                NullIf(
+                    Trim(
+                        Concat(
+                            F("user__first_name"),
+                            Value(" "),
+                            F("user__last_name"),
+                            output_field=CharField(),
+                        )
+                    ),
+                    Value(""),
+                ),
+                F("user__username"),
+                output_field=CharField(),
+            ),
+        )
         .order_by(
             "-is_active",
             "status_order",
-            "user__display_name",
+            "community_sort_name",
             "user__username",
+            "pk",
         )
     )
 

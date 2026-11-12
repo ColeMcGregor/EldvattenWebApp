@@ -1,4 +1,7 @@
+
 from django import forms
+from django.db.models import CharField, F, Value
+from django.db.models.functions import Coalesce, Concat, NullIf, Trim
 from django.forms import inlineformset_factory
 
 from .models import (
@@ -7,6 +10,47 @@ from .models import (
     VoteEligibilityTarget,
     VoteOption,
 )
+
+
+def community_user_label(user):
+    name = user.community_name
+
+    if name == user.username:
+        return f"@{user.username}"
+
+    return f"{name} (@{user.username})"
+
+
+def order_users_by_community_name(queryset):
+    return queryset.annotate(
+        community_sort_name=Coalesce(
+            NullIf(
+                Trim(F("eldvatten_name")),
+                Value(""),
+            ),
+            NullIf(
+                Trim(F("display_name")),
+                Value(""),
+            ),
+            NullIf(
+                Trim(
+                    Concat(
+                        F("first_name"),
+                        Value(" "),
+                        F("last_name"),
+                        output_field=CharField(),
+                    )
+                ),
+                Value(""),
+            ),
+            F("username"),
+            output_field=CharField(),
+        )
+    ).order_by(
+        "community_sort_name",
+        "username",
+        "pk",
+    )
 
 
 class VoteBallotForm(forms.Form):
@@ -110,6 +154,15 @@ class VoteOptionForm(forms.ModelForm):
 
 
 class VoteEligibilityTargetForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        user_field = self.fields["user"]
+        user_field.label_from_instance = community_user_label
+        user_field.queryset = order_users_by_community_name(
+            user_field.queryset
+        )
+
     class Meta:
         model = VoteEligibilityTarget
         fields = [

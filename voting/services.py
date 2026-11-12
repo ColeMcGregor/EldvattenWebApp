@@ -2,6 +2,8 @@ from math import ceil
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import CharField, F, Value
+from django.db.models.functions import Coalesce, Concat, NullIf, Trim
 from django.urls import reverse
 from django.utils import timezone
 
@@ -217,9 +219,34 @@ def preview_vote_eligibility(vote):
 
     return User.objects.filter(
         id__in=user_ids,
+    ).annotate(
+        community_sort_name=Coalesce(
+            NullIf(
+                Trim(F("eldvatten_name")),
+                Value(""),
+            ),
+            NullIf(
+                Trim(F("display_name")),
+                Value(""),
+            ),
+            NullIf(
+                Trim(
+                    Concat(
+                        F("first_name"),
+                        Value(" "),
+                        F("last_name"),
+                        output_field=CharField(),
+                    )
+                ),
+                Value(""),
+            ),
+            F("username"),
+            output_field=CharField(),
+        )
     ).order_by(
-        "display_name",
+        "community_sort_name",
         "username",
+        "pk",
     )
 
 

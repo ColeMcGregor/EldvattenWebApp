@@ -1,3 +1,4 @@
+
 <section class="my-eldvatten-section">
 
     <header class="my-eldvatten-section-header">
@@ -13,6 +14,22 @@
     <div class="my-eldvatten-section-body">
 
         <dl class="my-profile-details">
+
+            <div>
+                <dt>
+                    {% if profile_user.eldvatten_name %}
+                        EldVatten Name
+                    {% else %}
+                        Community Name
+                    {% endif %}
+                </dt>
+
+                <dd>
+                    <strong>
+                        {{ profile_user.community_name }}
+                    </strong>
+                </dd>
+            </div>
 
             <div>
                 <dt>

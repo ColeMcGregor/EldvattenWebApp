@@ -1,3 +1,4 @@
+
 <aside
     class="messages-sidebar"
     aria-label="Conversations"
@@ -79,11 +80,7 @@
                         {% if sidebar_conversation.latest_visible_message.sender_id == request.user.id %}
                             You:
                         {% else %}
-                            {% if sidebar_conversation.latest_visible_message.sender.display_name %}
-                                {{ sidebar_conversation.latest_visible_message.sender.display_name }}:
-                            {% else %}
-                                {{ sidebar_conversation.latest_visible_message.sender.username }}:
-                            {% endif %}
+                            {{ sidebar_conversation.latest_visible_message.sender.community_name }}:
                         {% endif %}
 
                         {{ sidebar_conversation.latest_visible_message.body|truncatechars:55 }}

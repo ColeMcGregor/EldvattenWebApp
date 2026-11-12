@@ -467,7 +467,10 @@ def account_list(request):
     if search:
         accounts = accounts.filter(
             Q(username__icontains=search)
+            | Q(eldvatten_name__icontains=search)
             | Q(display_name__icontains=search)
+            | Q(first_name__icontains=search)
+            | Q(last_name__icontains=search)
             | Q(email__icontains=search)
         )
 

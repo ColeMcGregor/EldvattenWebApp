@@ -302,11 +302,7 @@
                     <div class="forum-thread-starter">
 
                         {% if thread.created_by %}
-                            {% if thread.created_by.display_name %}
-                                {{ thread.created_by.display_name }}
-                            {% else %}
-                                {{ thread.created_by.username }}
-                            {% endif %}
+                            {{ thread.created_by.community_name }}
                         {% else %}
                             Former member
                         {% endif %}
@@ -338,11 +334,7 @@
                             <span>
                                 by
                                 {% if thread.latest_visible_post.author %}
-                                    {% if thread.latest_visible_post.author.display_name %}
-                                        {{ thread.latest_visible_post.author.display_name }}
-                                    {% else %}
-                                        {{ thread.latest_visible_post.author.username }}
-                                    {% endif %}
+                                    {{ thread.latest_visible_post.author.community_name }}
                                 {% else %}
                                     Former member
                                 {% endif %}

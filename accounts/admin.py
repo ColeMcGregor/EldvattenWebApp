@@ -1,3 +1,4 @@
+
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
@@ -14,6 +15,7 @@ class CustomUserAdmin(UserAdmin):
             {
                 "fields": (
                     "display_name",
+                    "eldvatten_name",
                     "account_status",
                 )
             },
@@ -26,6 +28,7 @@ class CustomUserAdmin(UserAdmin):
             {
                 "fields": (
                     "display_name",
+                    "eldvatten_name",
                     "account_status",
                 )
             },
@@ -36,9 +39,19 @@ class CustomUserAdmin(UserAdmin):
         "username",
         "email",
         "display_name",
+        "eldvatten_name",
         "account_status",
         "is_staff",
         "is_active",
+    )
+
+    search_fields = (
+        "username",
+        "email",
+        "display_name",
+        "eldvatten_name",
+        "first_name",
+        "last_name",
     )
 
     def get_audit_values(self, user):
@@ -46,6 +59,7 @@ class CustomUserAdmin(UserAdmin):
             "username": user.username,
             "email": user.email,
             "display_name": user.display_name,
+            "eldvatten_name": user.eldvatten_name,
             "account_status": user.get_account_status_display(),
             "is_staff": user.is_staff,
             "is_active": user.is_active,

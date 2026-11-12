@@ -1,6 +1,8 @@
+
 from django import forms
 from django.core.exceptions import ValidationError
-from django.db.models import Q
+from django.db.models import CharField, F, Q, Value
+from django.db.models.functions import Coalesce, Concat, NullIf, Trim
 from django.forms import (
     BaseInlineFormSet,
     inlineformset_factory,
@@ -30,6 +32,18 @@ CONVERSATION_TARGET_FIELDS = (
 )
 
 
+class CommunityParticipantChoiceField(
+    forms.ModelMultipleChoiceField
+):
+    def label_from_instance(self, obj):
+        name = obj.community_name
+
+        if name == obj.username:
+            return f"@{obj.username}"
+
+        return f"{name} (@{obj.username})"
+
+
 class ConversationForm(forms.Form):
     conversation_type = forms.ChoiceField(
         choices=Conversation.ConversationType.choices,
@@ -52,7 +66,7 @@ class ConversationForm(forms.Form):
         ),
     )
 
-    participants = forms.ModelMultipleChoiceField(
+    participants = CommunityParticipantChoiceField(
         queryset=User.objects.none(),
         required=False,
         label="People",
@@ -117,11 +131,38 @@ class ConversationForm(forms.Form):
                 pk__in=excluded_ids,
             )
 
+        users = users.annotate(
+            participant_sort_name=Coalesce(
+                NullIf(
+                    Trim(F("eldvatten_name")),
+                    Value(""),
+                ),
+                NullIf(
+                    Trim(F("display_name")),
+                    Value(""),
+                ),
+                NullIf(
+                    Trim(
+                        Concat(
+                            F("first_name"),
+                            Value(" "),
+                            F("last_name"),
+                            output_field=CharField(),
+                        )
+                    ),
+                    Value(""),
+                ),
+                F("username"),
+                output_field=CharField(),
+            )
+        )
+
         self.fields[
             "participants"
         ].queryset = users.order_by(
-            "display_name",
+            "participant_sort_name",
             "username",
+            "pk",
         )
 
     def clean(self):

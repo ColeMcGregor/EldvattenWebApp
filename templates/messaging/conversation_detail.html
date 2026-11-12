@@ -1,3 +1,4 @@
+
 {% extends "app/base_desktop.html" %}
 {% load static %}
 
@@ -77,11 +78,7 @@
 
                                         <button type="submit">
                                             Unblock
-                                            {% if participant.user.display_name %}
-                                                {{ participant.user.display_name }}
-                                            {% else %}
-                                                {{ participant.user.username }}
-                                            {% endif %}
+                                            {{ participant.user.community_name }}
                                         </button>
                                     </form>
                                 {% else %}
@@ -93,11 +90,7 @@
 
                                         <button type="submit">
                                             Block
-                                            {% if participant.user.display_name %}
-                                                {{ participant.user.display_name }}
-                                            {% else %}
-                                                {{ participant.user.username }}
-                                            {% endif %}
+                                            {{ participant.user.community_name }}
                                         </button>
                                     </form>
                                 {% endif %}
@@ -149,11 +142,7 @@
                 >
                     {% if conversation_message.sender_id != request.user.id %}
                         <strong class="messages-message-sender">
-                            {% if conversation_message.sender.display_name %}
-                                {{ conversation_message.sender.display_name }}
-                            {% else %}
-                                {{ conversation_message.sender.username }}
-                            {% endif %}
+                            {{ conversation_message.sender.community_name }}
                         </strong>
                     {% endif %}
 

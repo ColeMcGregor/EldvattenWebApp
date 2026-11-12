@@ -12,10 +12,13 @@ class AccountStatus(models.TextChoices):
     DISABLED = "DISABLED", "Disabled"
 
 
-# Changes to the Django supplied AbstractUser.
-# Adds display name and account status.
 class User(AbstractUser):
     display_name = models.CharField(
+        max_length=150,
+        blank=True,
+    )
+
+    eldvatten_name = models.CharField(
         max_length=150,
         blank=True,
     )
@@ -29,6 +32,15 @@ class User(AbstractUser):
     push_prompt_seen = models.BooleanField(
         default=False,
     )
+
+    @property
+    def community_name(self):
+        return (
+            self.eldvatten_name.strip()
+            or self.display_name.strip()
+            or self.get_full_name().strip()
+            or self.username
+        )
 
     class Meta:
         permissions = [

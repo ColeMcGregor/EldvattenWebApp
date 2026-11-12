@@ -3,6 +3,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.db.models import CharField, F, Value
+from django.db.models.functions import Coalesce, Concat, NullIf, Trim
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
@@ -205,8 +207,32 @@ def manage_resource_detail(
     audience = list(
         User.objects.filter(
             pk__in=eligible_ids,
+        ).annotate(
+            community_sort_name=Coalesce(
+                NullIf(
+                    Trim(F("eldvatten_name")),
+                    Value(""),
+                ),
+                NullIf(
+                    Trim(F("display_name")),
+                    Value(""),
+                ),
+                NullIf(
+                    Trim(
+                        Concat(
+                            F("first_name"),
+                            Value(" "),
+                            F("last_name"),
+                            output_field=CharField(),
+                        )
+                    ),
+                    Value(""),
+                ),
+                F("username"),
+                output_field=CharField(),
+            )
         ).order_by(
-            "display_name",
+            "community_sort_name",
             "username",
             "pk",
         )

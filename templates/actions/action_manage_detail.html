@@ -1,3 +1,4 @@
+
 {% extends "app/base_desktop.html" %}
 
 {% block title %}Manage {{ action.title }} | EldVatten{% endblock %}
@@ -122,7 +123,7 @@
                                 {% if target.user %}
                                     <span>
                                         User:
-                                        {{ target.user.display_name|default:target.user.username }}
+                                        {{ target.user.community_name }}
                                     </span>
                                 {% endif %}
 
@@ -224,7 +225,7 @@
                                 {% for assignment in assignments %}
                                     <tr>
                                         <th scope="row">
-                                            {{ assignment.user.display_name|default:assignment.user.username }}
+                                            {{ assignment.user.community_name }}
                                         </th>
 
                                         <td>
@@ -316,7 +317,7 @@
                     <div>
                         <dt>Created By</dt>
                         <dd>
-                            {{ action.created_by.display_name|default:action.created_by.username }}
+                            {{ action.created_by.community_name }}
                         </dd>
                     </div>
 

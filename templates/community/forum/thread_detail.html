@@ -1,15 +1,11 @@
 
 {% extends "app/base_desktop.html" %}
 
-
 {% block title %}{{ thread.title }} | The Tavern | EldVatten{% endblock %}
-
 
 {% block nav_tavern %}active{% endblock %}
 
-
 {% block app_shell_class %}tavern-scroll-shell{% endblock %}
-
 
 {% block app_content %}
 
@@ -300,13 +296,7 @@
                     <strong class="forum-post-author-name">
 
                         {% if post.author %}
-
-                            {% if post.author.display_name %}
-                                {{ post.author.display_name }}
-                            {% else %}
-                                {{ post.author.username }}
-                            {% endif %}
-
+                            {{ post.author.community_name }}
                         {% else %}
                             Former member
                         {% endif %}
@@ -512,13 +502,7 @@
                         Quoting
 
                         {% if quoted_post.author %}
-
-                            {% if quoted_post.author.display_name %}
-                                {{ quoted_post.author.display_name }}
-                            {% else %}
-                                {{ quoted_post.author.username }}
-                            {% endif %}
-
+                            {{ quoted_post.author.community_name }}
                         {% else %}
                             Former member
                         {% endif %}

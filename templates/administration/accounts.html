@@ -118,7 +118,7 @@
                         name="search"
                         value="{{ filters.search }}"
                         maxlength="150"
-                        placeholder="Username, name, or email"
+                        placeholder="EldVatten name, personal name, username, or email"
                     >
 
                 </div>
@@ -280,14 +280,16 @@
 
                                 <td>
                                     <span class="administration-audit-target">
-
-                                        {% if account.display_name %}
-                                            {{ account.display_name }}
-                                        {% else %}
-                                            {{ account.username }}
-                                        {% endif %}
-
+                                        {{ account.community_name }}
                                     </span>
+
+                                    {% if account.eldvatten_name and account.display_name %}
+                                        {% if account.eldvatten_name != account.display_name %}
+                                            <span class="administration-audit-secondary">
+                                                {{ account.display_name }}
+                                            </span>
+                                        {% endif %}
+                                    {% endif %}
 
                                     <span class="administration-audit-secondary">
                                         @{{ account.username }}
@@ -337,7 +339,7 @@
                                     <a
                                         class="administration-audit-detail-link"
                                         href="{% url 'administration:account_detail' account.pk %}"
-                                        aria-label="Manage account for {{ account.username }}"
+                                        aria-label="Manage account for {{ account.community_name }}"
                                     >
                                         View
                                     </a>

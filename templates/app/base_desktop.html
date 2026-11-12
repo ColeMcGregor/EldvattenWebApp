@@ -141,6 +141,18 @@
 
         <main class="app-main-content">
 
+            {% if request.user.is_authenticated %}
+                <div class="app-account-identity">
+                    <a
+                        class="app-account-identity-link"
+                        href="{% url 'my_eldvatten' %}"
+                        aria-label="My EldVatten profile: {{ request.user.community_name }}"
+                    >
+                        {{ request.user.community_name }}
+                    </a>
+                </div>
+            {% endif %}
+
             {% block app_content %}
             {% endblock %}
 

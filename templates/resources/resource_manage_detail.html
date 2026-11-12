@@ -95,7 +95,7 @@
 
                 <dt>Created By</dt>
                 <dd>
-                    {{ resource.created_by.display_name|default:resource.created_by.username }}
+                    {{ resource.created_by.community_name }}
                 </dd>
 
                 <dt>Created</dt>
@@ -186,7 +186,7 @@
                                 {% if target.user %}
                                     <li>
                                         Member:
-                                        {{ target.user.display_name|default:target.user.username }}
+                                        {{ target.user.community_name }}
                                     </li>
                                 {% endif %}
 
@@ -316,7 +316,7 @@
                         <div class="resources-audience-member">
 
                             <span class="resources-audience-name">
-                                {{ member.display_name|default:member.username }}
+                                {{ member.community_name }}
                             </span>
 
                             <span class="resources-audience-username">

@@ -2,7 +2,7 @@
 {% extends "app/base_desktop.html" %}
 
 {% block title %}
-    {{ account.username }} | Accounts & Members | EldVatten
+    {{ account.community_name }} | Accounts & Members | EldVatten
 {% endblock %}
 
 {% block nav_administration %}active{% endblock %}
@@ -47,13 +47,7 @@
     <header class="administration-header">
 
         <h1 class="section-heading">
-
-            {% if account.display_name %}
-                {{ account.display_name }}
-            {% else %}
-                {{ account.username }}
-            {% endif %}
-
+            {{ account.community_name }}
         </h1>
 
         <p class="administration-description">
@@ -101,6 +95,11 @@
 
             <dt>Username</dt>
             <dd>{{ account.username }}</dd>
+
+            <dt>EldVatten Name</dt>
+            <dd>
+                {{ account.eldvatten_name|default:"Not provided" }}
+            </dd>
 
             <dt>Display Name</dt>
             <dd>

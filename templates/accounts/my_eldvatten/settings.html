@@ -1,3 +1,4 @@
+
 {% load static %}
 
 <section class="my-eldvatten-section">
@@ -55,6 +56,28 @@
                         </label>
 
                         {{ account_settings_form.display_name }}
+
+                        {{ account_settings_form.display_name.errors }}
+
+                    </div>
+
+                    <div class="settings-field">
+
+                        <label
+                            for="{{ account_settings_form.eldvatten_name.id_for_label }}"
+                        >
+                            EldVatten Name
+                        </label>
+
+                        {{ account_settings_form.eldvatten_name }}
+
+                        {{ account_settings_form.eldvatten_name.errors }}
+
+                        <p>
+                            This is the name other members will see
+                            when interacting with you in EldVatten.
+                            Leave it blank to use your display name.
+                        </p>
 
                     </div>
 

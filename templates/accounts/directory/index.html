@@ -1,3 +1,4 @@
+
 {% extends "app/base_desktop.html" %}
 {% load static %}
 
@@ -38,7 +39,7 @@
                 name="q"
                 value="{{ search_query }}"
                 maxlength="100"
-                placeholder="Search by name or username"
+                placeholder="Search by EldVatten name, personal name, or username"
             >
             {% if selected_category != 'all' %}
                 <label for="directory-group">Group</label>
@@ -71,7 +72,7 @@
                     data-member-id="{{ member.pk }}"
                     {% if selected_member.pk == member.pk %}aria-current="true"{% endif %}
                 >
-                    <span>{{ member.display_name|default:member.username }}</span>
+                    <span>{{ member.community_name }}</span>
                     <small>{{ member.username }}</small>
                 </a>
             {% empty %}
