@@ -3705,7 +3705,7 @@ class ForumAuditIntegrationTests(
 
         self.assertEqual(
             audit_log.actor_label,
-            self.category_manager.display_name,
+            self.category_manager.community_name,
         )
 
         self.assertEqual(
@@ -6158,3 +6158,134 @@ class ForumDraftResumptionTests(
         with self.assertRaises(NoReverseMatch):
             reverse("community:draft_publish", args=[1])
 
+
+class ForumCommunityNameIntegrationTests(
+    ForumPermissionFixtureMixin,
+    TestCase,
+):
+    def setUp(self):
+        self.board = self.create_board("Community Name Board")
+        self.thread = self.create_thread(
+            self.board,
+            title="Community Name Thread",
+            creator=self.other_member,
+        )
+        self.post = self.create_post(
+            self.thread,
+            author=self.other_member,
+            body="Community naming test content.",
+        )
+        self.client.force_login(self.member)
+
+    def set_author_names(
+        self,
+        *,
+        eldvatten_name="Thread Weaver",
+        display_name="Ordinary Display",
+    ):
+        self.other_member.eldvatten_name = eldvatten_name
+        self.other_member.display_name = display_name
+        self.other_member.save(
+            update_fields=["eldvatten_name", "display_name"],
+        )
+
+    def thread_url(self):
+        return reverse(
+            "community:thread_detail", args=[self.thread.pk],
+        )
+
+    def test_forum_index_latest_post_uses_eldvatten_name(self):
+        self.set_author_names()
+        response = self.client.get(reverse("community:forum_index"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Thread Weaver")
+        self.assertNotContains(response, "Ordinary Display")
+
+    def test_board_starter_and_latest_post_use_eldvatten_name(self):
+        self.set_author_names()
+        response = self.client.get(
+            reverse("community:board_detail", args=[self.board.pk]),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Thread Weaver", count=2)
+        self.assertNotContains(response, "Ordinary Display")
+
+    def test_thread_post_author_uses_eldvatten_name(self):
+        self.set_author_names()
+        response = self.client.get(self.thread_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Thread Weaver")
+        self.assertNotContains(response, "Ordinary Display")
+
+    def test_thread_post_author_falls_back_to_display_name(self):
+        self.set_author_names(eldvatten_name="   ")
+        response = self.client.get(self.thread_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Ordinary Display")
+
+    def test_thread_post_author_falls_back_to_username(self):
+        self.set_author_names(
+            eldvatten_name="", display_name="",
+        )
+        self.other_member.first_name = ""
+        self.other_member.last_name = ""
+        self.other_member.save(
+            update_fields=["first_name", "last_name"],
+        )
+        response = self.client.get(self.thread_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.other_member.username)
+
+    def test_quote_prefill_uses_eldvatten_name(self):
+        self.set_author_names()
+        response = self.client.get(
+            self.thread_url(), {"quote_post": str(self.post.pk)},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.context["quoted_post"])
+        self.assertTrue(
+            response.context["post_form"].initial["body"].startswith(
+                "Quoted from Thread Weaver:\n"
+            )
+        )
+        self.assertNotIn(
+            "Ordinary Display",
+            response.context["post_form"].initial["body"],
+        )
+
+    def test_search_matches_eldvatten_name_of_post_author(self):
+        self.set_author_names(eldvatten_name="UniqueThreadWeaver")
+        results = search_forum(self.member, "UniqueThreadWeaver")
+        self.assertIn(self.post, results["posts"])
+        self.assertIn(self.thread, results["threads"])
+
+    def test_search_by_eldvatten_name_preserves_thread_visibility(self):
+        self.set_author_names(eldvatten_name="PrivateThreadWeaver")
+        ForumThreadTarget.objects.create(
+            thread=self.thread,
+            user=self.other_member,
+        )
+        results = search_forum(self.member, "PrivateThreadWeaver")
+        self.assertNotIn(self.post, results["posts"])
+        self.assertNotIn(self.thread, results["threads"])
+
+    def test_deleted_post_author_displays_former_member(self):
+        self.post.author = None
+        self.post.save(update_fields=["author"])
+        response = self.client.get(self.thread_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Former member")
+
+    def test_eldvatten_name_is_html_escaped_in_post(self):
+        self.set_author_names(
+            eldvatten_name="<script>communityNameTest()</script>",
+        )
+        response = self.client.get(self.thread_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "&lt;script&gt;communityNameTest()&lt;/script&gt;",
+        )
+        self.assertNotContains(
+            response, "<script>communityNameTest()</script>",
+        )
