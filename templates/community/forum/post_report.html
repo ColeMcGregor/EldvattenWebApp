@@ -1,0 +1,93 @@
+
+{% extends "app/base_desktop.html" %}
+
+{% block title %}Report Post | The Tavern | EldVatten{% endblock %}
+
+{% block nav_tavern %}active{% endblock %}
+
+{% block app_shell_class %}tavern-scroll-shell{% endblock %}
+
+
+{% block app_content %}
+
+<section class="forum-form-page">
+
+    <nav class="forum-breadcrumbs" aria-label="Breadcrumb">
+
+        <a href="{% url 'community:forum_index' %}">
+            The Tavern
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a href="{% url 'community:board_detail' post.thread.board.id %}">
+            {{ post.thread.board.name }}
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a href="{% url 'community:thread_detail' post.thread.id %}">
+            {{ post.thread.title }}
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <span aria-current="page">Report Post</span>
+
+    </nav>
+
+
+    <header class="forum-page-header">
+
+        <div class="forum-page-heading">
+
+            <h1 class="section-heading">
+                Report Post
+            </h1>
+
+            <p class="forum-page-description">
+                Explain why this post needs moderator review.
+            </p>
+
+        </div>
+
+    </header>
+
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+
+        <div class="forum-form-field">
+
+            <label for="{{ form.reason.id_for_label }}">
+                Reason
+            </label>
+
+            {{ form.reason }}
+
+            {{ form.reason.errors }}
+
+        </div>
+
+
+        <div class="forum-form-actions">
+
+            <a href="{% url 'community:thread_detail' post.thread.id %}#post-{{ post.id }}">
+                Cancel
+            </a>
+
+            <button class="forum-primary-button" type="submit">
+                Submit Report
+            </button>
+
+        </div>
+
+    </form>
+
+</section>
+
+{% endblock %}

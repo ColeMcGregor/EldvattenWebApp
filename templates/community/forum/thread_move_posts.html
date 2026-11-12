@@ -1,0 +1,111 @@
+
+{% extends "app/base_desktop.html" %}
+
+{% block title %}Move Posts | The Tavern | EldVatten{% endblock %}
+
+{% block nav_tavern %}active{% endblock %}
+
+{% block app_shell_class %}tavern-scroll-shell{% endblock %}
+
+
+{% block app_content %}
+
+<section class="forum-form-page">
+
+    <nav class="forum-breadcrumbs" aria-label="Breadcrumb">
+
+        <a href="{% url 'community:forum_index' %}">
+            The Tavern
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a href="{% url 'community:board_detail' source_thread.board.id %}">
+            {{ source_thread.board.name }}
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a href="{% url 'community:thread_detail' source_thread.id %}">
+            {{ source_thread.title }}
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <span aria-current="page">Move Posts</span>
+
+    </nav>
+
+
+    <header class="forum-page-header">
+
+        <div class="forum-page-heading">
+
+            <h1 class="section-heading">
+                Move Posts
+            </h1>
+
+            <p class="forum-page-description">
+                Select the posts to move and choose
+                their destination thread.
+            </p>
+
+        </div>
+
+    </header>
+
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+
+        <div class="forum-form-field">
+
+            <label for="{{ form.destination_thread.id_for_label }}">
+                Destination Thread
+            </label>
+
+            {{ form.destination_thread }}
+
+            {{ form.destination_thread.errors }}
+
+        </div>
+
+
+        <div class="forum-form-field">
+
+            <label for="{{ form.posts.id_for_label }}">
+                Posts to Move
+            </label>
+
+            {{ form.posts }}
+
+            {{ form.posts.errors }}
+
+            <p class="forum-form-help">
+                Use Ctrl or Command to select multiple posts.
+            </p>
+
+        </div>
+
+
+        <div class="forum-form-actions">
+
+            <a href="{% url 'community:thread_detail' source_thread.id %}">
+                Cancel
+            </a>
+
+            <button class="forum-primary-button" type="submit">
+                Move Posts
+            </button>
+
+        </div>
+
+    </form>
+
+</section>
+
+{% endblock %}
