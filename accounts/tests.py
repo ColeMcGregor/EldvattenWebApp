@@ -12,6 +12,7 @@ from django.utils.html import escape
 from django.utils.formats import date_format
 
 from accounts.forms import (
+    AccountSettingsForm,
     AccountStatusForm,
     RegistrationForm,
 )
@@ -2040,3 +2041,315 @@ class RegistrationNotificationTests(TestCase):
             Notification.objects.count(),
             0,
         )
+
+
+class CommunityNameTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.member = User.objects.create_user(
+            username="community_member",
+            password="test-password",
+            first_name="Personal",
+            last_name="Identity",
+            display_name="Display Identity",
+            eldvatten_name="EldVatten Identity",
+            account_status=AccountStatus.MEMBER,
+        )
+
+    def test_eldvatten_name_takes_precedence(self):
+        self.assertEqual(
+            self.member.community_name,
+            "EldVatten Identity",
+        )
+
+    def test_eldvatten_name_is_trimmed_for_display(self):
+        self.member.eldvatten_name = "  EldVatten Identity  "
+        self.assertEqual(
+            self.member.community_name,
+            "EldVatten Identity",
+        )
+
+    def test_display_name_fallback(self):
+        self.member.eldvatten_name = "   "
+        self.assertEqual(
+            self.member.community_name,
+            "Display Identity",
+        )
+
+    def test_personal_name_fallback(self):
+        self.member.eldvatten_name = ""
+        self.member.display_name = "   "
+        self.assertEqual(
+            self.member.community_name,
+            "Personal Identity",
+        )
+
+    def test_username_fallback(self):
+        self.member.eldvatten_name = ""
+        self.member.display_name = ""
+        self.member.first_name = ""
+        self.member.last_name = ""
+        self.assertEqual(
+            self.member.community_name,
+            "community_member",
+        )
+
+    def test_name_changes_do_not_change_account_identity(self):
+        pk = self.member.pk
+        username = self.member.username
+        self.member.eldvatten_name = "Another EldVatten Identity"
+        self.member.save(update_fields=["eldvatten_name"])
+        self.member.refresh_from_db()
+        self.assertEqual(self.member.pk, pk)
+        self.assertEqual(self.member.username, username)
+        self.assertEqual(
+            self.member.community_name,
+            "Another EldVatten Identity",
+        )
+
+
+class CommunityNameAccountSettingsTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.member = User.objects.create_user(
+            username="settings_community_member",
+            password="test-password",
+            first_name="Personal",
+            last_name="Identity",
+            display_name="Display Identity",
+            account_status=AccountStatus.MEMBER,
+        )
+
+    def test_settings_form_exposes_both_names_but_not_username(self):
+        form = AccountSettingsForm(instance=self.member)
+        self.assertEqual(
+            tuple(form.fields),
+            ("display_name", "eldvatten_name"),
+        )
+
+    def test_settings_form_trims_eldvatten_name(self):
+        form = AccountSettingsForm(
+            data={
+                "display_name": "Display Identity",
+                "eldvatten_name": "  Community Identity  ",
+            },
+            instance=self.member,
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        self.member.refresh_from_db()
+        self.assertEqual(
+            self.member.eldvatten_name,
+            "Community Identity",
+        )
+
+    def test_blank_eldvatten_name_is_allowed(self):
+        form = AccountSettingsForm(
+            data={
+                "display_name": "Display Identity",
+                "eldvatten_name": "   ",
+            },
+            instance=self.member,
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        self.member.refresh_from_db()
+        self.assertEqual(self.member.eldvatten_name, "")
+        self.assertEqual(
+            self.member.community_name,
+            "Display Identity",
+        )
+
+    def test_account_settings_update_changes_only_editable_names(self):
+        self.client.force_login(self.member)
+        response = self.client.post(
+            reverse("my_eldvatten_account_update"),
+            {
+                "display_name": "Updated Display",
+                "eldvatten_name": "Updated Community",
+                "username": "attempted_username_change",
+                "first_name": "Attempted",
+            },
+        )
+        self.assertRedirects(
+            response,
+            reverse("my_eldvatten") + "?section=settings",
+            fetch_redirect_response=False,
+        )
+        self.member.refresh_from_db()
+        self.assertEqual(self.member.display_name, "Updated Display")
+        self.assertEqual(self.member.eldvatten_name, "Updated Community")
+        self.assertEqual(self.member.first_name, "Personal")
+        self.assertEqual(self.member.last_name, "Identity")
+        self.assertEqual(self.member.username, "settings_community_member")
+
+    def test_settings_update_requires_authentication(self):
+        response = self.client.post(
+            reverse("my_eldvatten_account_update"),
+            {
+                "display_name": "Unauthorized",
+                "eldvatten_name": "Unauthorized",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.member.refresh_from_db()
+        self.assertEqual(self.member.eldvatten_name, "")
+
+    def test_settings_update_rejects_get(self):
+        self.client.force_login(self.member)
+        response = self.client.get(
+            reverse("my_eldvatten_account_update")
+        )
+        self.assertEqual(response.status_code, 405)
+
+    def test_profile_shows_community_and_personal_display_names(self):
+        self.member.eldvatten_name = "Community Identity"
+        self.member.save(update_fields=["eldvatten_name"])
+        self.client.force_login(self.member)
+        response = self.client.get(
+            reverse("my_eldvatten") + "?section=profile"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Community Identity")
+        self.assertContains(response, "Display Identity")
+
+    def test_community_name_is_escaped_in_profile(self):
+        self.member.eldvatten_name = "<script>alert(1)</script>"
+        self.member.save(update_fields=["eldvatten_name"])
+        self.client.force_login(self.member)
+        response = self.client.get(
+            reverse("my_eldvatten") + "?section=profile"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, escape(self.member.eldvatten_name))
+        self.assertNotContains(response, self.member.eldvatten_name)
+
+
+class CommunityNameDirectoryTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.viewer = User.objects.create_user(
+            username="community_directory_viewer",
+            password="test-password",
+            account_status=AccountStatus.MEMBER,
+        )
+        cls.community_member = User.objects.create_user(
+            username="community_directory_member",
+            password="test-password",
+            display_name="Zebra Display",
+            eldvatten_name="Amber Community",
+            account_status=AccountStatus.MEMBER,
+        )
+        cls.display_member = User.objects.create_user(
+            username="community_directory_display",
+            password="test-password",
+            display_name="Birch Display",
+            account_status=AccountStatus.MEMBER,
+        )
+        cls.full_name_member = User.objects.create_user(
+            username="community_directory_full",
+            password="test-password",
+            first_name="Cedar",
+            last_name="Personal",
+            account_status=AccountStatus.MEMBER,
+        )
+        cls.hidden_member = User.objects.create_user(
+            username="community_directory_hidden",
+            password="test-password",
+            eldvatten_name="Hidden Community Sentinel",
+            account_status=AccountStatus.PENDING,
+        )
+
+    def test_directory_search_matches_eldvatten_name(self):
+        self.client.force_login(self.viewer)
+        response = self.client.get(
+            reverse("directory:index"),
+            {"q": "Amber Community"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            self.community_member,
+            response.context["directory_members"],
+        )
+        self.assertNotIn(
+            self.display_member,
+            response.context["directory_members"],
+        )
+
+    def test_directory_search_still_matches_ordinary_name(self):
+        self.client.force_login(self.viewer)
+        response = self.client.get(
+            reverse("directory:index"),
+            {"q": "Zebra Display"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            self.community_member,
+            response.context["directory_members"],
+        )
+
+    def test_directory_order_uses_community_fallback(self):
+        user_ids = list(
+            visible_directory_members(self.viewer).values_list(
+                "pk", flat=True
+            )
+        )
+        ordered_ids = [
+            self.community_member.pk,
+            self.display_member.pk,
+            self.full_name_member.pk,
+            self.viewer.pk,
+        ]
+        self.assertEqual(user_ids, ordered_ids)
+
+    def test_directory_renders_community_name_and_username(self):
+        self.client.force_login(self.viewer)
+        response = self.client.get(reverse("directory:index"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Amber Community")
+        self.assertContains(response, self.community_member.username)
+
+    def test_pending_account_is_hidden_even_if_name_matches(self):
+        self.client.force_login(self.viewer)
+        response = self.client.get(
+            reverse("directory:index"),
+            {"q": "Hidden Community Sentinel"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn(
+            self.hidden_member,
+            response.context["directory_members"],
+        )
+
+    def test_blocked_community_name_is_not_searchable(self):
+        UserBlock.objects.create(
+            blocker=self.viewer,
+            blocked=self.community_member,
+        )
+        self.client.force_login(self.viewer)
+        response = self.client.get(
+            reverse("directory:index"),
+            {"q": "Amber Community"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn(
+            self.community_member,
+            response.context["directory_members"],
+        )
+
+
+class CommunityNameRegistrationTests(TestCase):
+    def test_registration_does_not_require_eldvatten_name(self):
+        data = {
+            "username": "optional_community_registration",
+            "display_name": "New Applicant",
+            "email": "optional_community@example.com",
+            "password1": "Violet!82Harbor#Falcon",
+            "password2": "Violet!82Harbor#Falcon",
+        }
+        form = RegistrationForm(data=data)
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertNotIn("eldvatten_name", form.fields)
+        account = form.save()
+        self.assertEqual(account.eldvatten_name, "")
+        self.assertEqual(account.community_name, "New Applicant")

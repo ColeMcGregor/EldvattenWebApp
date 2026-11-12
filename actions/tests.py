@@ -28,9 +28,14 @@ from organization.models import (
     HouseholdMembership,
 )
 
-from .forms import ActionForm
+from .forms import ActionForm, ActionTargetForm
 from .models import Action, ActionAssignment, ActionTarget
-from .services import resolve_action_target, resolve_action_targets, sync_action_assignments
+from .services import (
+    assignment_audit_values,
+    resolve_action_target,
+    resolve_action_targets,
+    sync_action_assignments,
+)
 from .views import ActionTargetFormSet
 
 
@@ -1055,3 +1060,130 @@ class ActionUpdateNotificationTests(ActionTestBase):
         self.assertFalse(Notification.objects.filter(
             title__startswith="Action updated:",
         ).exists())
+
+
+class ActionCommunityNameTests(ActionTestBase):
+    def test_target_selector_prefers_eldvatten_name_and_retains_username(self):
+        self.member.display_name = "Ordinary Display"
+        self.member.eldvatten_name = "Wolf of the North"
+        self.member.save(update_fields=["display_name", "eldvatten_name"])
+
+        field = ActionTargetForm().fields["user"]
+        self.assertEqual(
+            field.label_from_instance(self.member),
+            "Wolf of the North (@action_member)",
+        )
+
+    def test_target_selector_uses_fallbacks_and_disambiguates_accounts(self):
+        field = ActionTargetForm().fields["user"]
+        self.member.display_name = "Friendly Member"
+        self.member.eldvatten_name = "  "
+        self.assertEqual(
+            field.label_from_instance(self.member),
+            "Friendly Member (@action_member)",
+        )
+
+        self.member.display_name = " "
+        self.member.first_name = "Taylor"
+        self.member.last_name = "River"
+        self.assertEqual(
+            field.label_from_instance(self.member),
+            "Taylor River (@action_member)",
+        )
+
+        self.member.first_name = ""
+        self.member.last_name = ""
+        self.assertEqual(
+            field.label_from_instance(self.member),
+            "@action_member",
+        )
+
+    def test_target_selector_orders_by_community_name(self):
+        self.member.eldvatten_name = "Zed Weaver"
+        self.member.save(update_fields=["eldvatten_name"])
+        self.other_member.eldvatten_name = "Amber Weaver"
+        self.other_member.save(update_fields=["eldvatten_name"])
+
+        field = ActionTargetForm().fields["user"]
+        selected_ids = [
+            user.pk
+            for user in field.queryset
+            if user.pk in {self.member.pk, self.other_member.pk}
+        ]
+        self.assertEqual(
+            selected_ids,
+            [self.other_member.pk, self.member.pk],
+        )
+
+    def test_target_selector_falls_back_to_display_name_for_sorting(self):
+        self.member.eldvatten_name = " "
+        self.member.display_name = "Zed Display"
+        self.member.save(update_fields=["eldvatten_name", "display_name"])
+        self.other_member.eldvatten_name = "Amber Weaver"
+        self.other_member.save(update_fields=["eldvatten_name"])
+
+        field = ActionTargetForm().fields["user"]
+        selected_ids = [
+            user.pk
+            for user in field.queryset
+            if user.pk in {self.member.pk, self.other_member.pk}
+        ]
+        self.assertEqual(
+            selected_ids,
+            [self.other_member.pk, self.member.pk],
+        )
+
+    def test_manage_list_displays_creators_eldvatten_name(self):
+        self.manager.display_name = "Manager Display"
+        self.manager.eldvatten_name = "Master of Tasks"
+        self.manager.save(update_fields=["display_name", "eldvatten_name"])
+        self.client.force_login(self.viewer)
+
+        response = self.client.get(self.url("manage_list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Master of Tasks")
+
+    def test_manage_detail_displays_assignee_eldvatten_name(self):
+        self.member.display_name = "Member Display"
+        self.member.eldvatten_name = "The Northern Weaver"
+        self.member.save(update_fields=["display_name", "eldvatten_name"])
+        self.client.force_login(self.viewer)
+
+        response = self.client.get(self.manage_detail_url())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "The Northern Weaver")
+
+    def test_assignment_audit_values_use_community_name_with_stable_id(self):
+        self.member.display_name = "Member Display"
+        self.member.eldvatten_name = "The Northern Weaver"
+        self.member.save(update_fields=["display_name", "eldvatten_name"])
+
+        snapshot = assignment_audit_values(self.assignment)
+
+        self.assertEqual(snapshot["user"], "The Northern Weaver")
+        self.assertEqual(snapshot["user_id"], self.member.pk)
+
+    def test_synchronization_records_community_name_in_audit(self):
+        self.other_member.display_name = "Member Display"
+        self.other_member.eldvatten_name = "Amber Weaver"
+        self.other_member.save(update_fields=["display_name", "eldvatten_name"])
+        ActionTarget.objects.create(
+            action=self.action,
+            user=self.other_member,
+        )
+
+        sync_action_assignments(self.action, actor=self.manager)
+
+        assignment = ActionAssignment.objects.get(
+            action=self.action,
+            user=self.other_member,
+        )
+        log = AuditLog.objects.get(
+            target_type="ActionAssignment",
+            target_id=str(assignment.pk),
+            action=AuditLog.Action.ASSIGN,
+        )
+        self.assertEqual(log.new_value["user"], "Amber Weaver")
+        self.assertEqual(log.new_value["user_id"], self.other_member.pk)

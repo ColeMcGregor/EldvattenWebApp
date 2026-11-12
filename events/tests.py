@@ -29,6 +29,11 @@ from organization.models import (
     UserSocialRank,
 )
 
+from .forms import (
+    AttendanceManagementForm,
+    EventTargetForm,
+)
+
 from .models import (
     Event,
     EventInvitation,
@@ -2754,3 +2759,143 @@ class EventInvitationVisibilitySeparationTests(
                 event,
             )
         )
+
+class EventCommunityNameTests(EventTestBase):
+    def test_target_selector_prefers_eldvatten_name_and_identifies_user(self):
+        self.member_a.display_name = "Ordinary Display"
+        self.member_a.eldvatten_name = "Skald of Ash"
+        self.member_a.save(update_fields=["display_name", "eldvatten_name"])
+
+        form = EventTargetForm()
+        field = form.fields["user"]
+
+        self.assertEqual(
+            field.label_from_instance(self.member_a),
+            "Skald of Ash (@member-a)",
+        )
+
+    def test_target_selector_uses_name_fallbacks(self):
+        user = self.member_a
+        field = EventTargetForm().fields["user"]
+
+        user.eldvatten_name = "   "
+        user.display_name = "Familiar Name"
+        self.assertEqual(
+            field.label_from_instance(user),
+            "Familiar Name (@member-a)",
+        )
+
+        user.display_name = " "
+        user.first_name = "Personal"
+        user.last_name = "Name"
+        self.assertEqual(
+            field.label_from_instance(user),
+            "Personal Name (@member-a)",
+        )
+
+        user.first_name = ""
+        user.last_name = ""
+        self.assertEqual(
+            field.label_from_instance(user),
+            "@member-a",
+        )
+
+    def test_target_selector_orders_by_community_name(self):
+        for user, name in (
+            (self.member_a, "Zebra"),
+            (self.member_b, "Amber"),
+            (self.member_c, "Mariner"),
+        ):
+            user.eldvatten_name = name
+            user.save(update_fields=["eldvatten_name"])
+
+        queryset = EventTargetForm().fields["user"].queryset.filter(
+            pk__in=[self.member_a.pk, self.member_b.pk, self.member_c.pk],
+        )
+        self.assertEqual(
+            list(queryset.values_list("pk", flat=True)),
+            [self.member_b.pk, self.member_c.pk, self.member_a.pk],
+        )
+
+    def test_attendance_selector_orders_by_community_name(self):
+        for user, name in (
+            (self.member_a, "Zebra"),
+            (self.member_b, "Amber"),
+            (self.member_c, "Mariner"),
+        ):
+            user.eldvatten_name = name
+            user.save(update_fields=["eldvatten_name"])
+
+        field = AttendanceManagementForm().fields["user"]
+        self.assertEqual(
+            list(
+                field.queryset.filter(
+                    pk__in=[self.member_a.pk, self.member_b.pk, self.member_c.pk],
+                ).values_list("pk", flat=True)
+            ),
+            [self.member_b.pk, self.member_c.pk, self.member_a.pk],
+        )
+        self.assertEqual(
+            field.label_from_instance(self.member_b),
+            "Amber (@member-b)",
+        )
+
+    def test_attendance_selector_excludes_ineligible_accounts(self):
+        field = AttendanceManagementForm().fields["user"]
+        ids = set(field.queryset.values_list("pk", flat=True))
+
+        self.assertIn(self.member_a.pk, ids)
+        self.assertNotIn(self.pending_user.pk, ids)
+        self.assertNotIn(self.inactive_member.pk, ids)
+
+    def test_event_detail_shows_eldvatten_organizer_name(self):
+        self.organizer.display_name = "Personal Display"
+        self.organizer.eldvatten_name = "Keeper of the Harbor"
+        self.organizer.save(update_fields=["display_name", "eldvatten_name"])
+        event = self.create_event(visibility=Event.Visibility.MEMBERS)
+
+        self.client.force_login(self.member_a)
+        response = self.client.get(
+            reverse("events:event_detail", args=[event.pk]),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Keeper of the Harbor")
+        self.assertNotContains(response, "Personal Display")
+
+    def test_attendance_record_shows_eldvatten_name_and_username(self):
+        self.member_b.display_name = "Personal Display"
+        self.member_b.eldvatten_name = "Fjord Walker"
+        self.member_b.save(update_fields=["display_name", "eldvatten_name"])
+        event = self.create_event(visibility=Event.Visibility.MEMBERS)
+        EventParticipation.objects.create(event=event, user=self.member_b)
+        self.grant_permission(self.member_a, "record_attendance")
+        self.client.force_login(self.member_a)
+
+        response = self.client.get(
+            reverse("events:event_detail", args=[event.pk]),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Fjord Walker")
+        self.assertContains(
+            response, "Attendance for Fjord Walker (member-b)",
+        )
+        self.assertNotContains(response, "Personal Display")
+
+    def test_eldvatten_name_does_not_change_invitation_identity(self):
+        event = self.create_event()
+        self.create_target(
+            event,
+            EventTarget.Purpose.INVITATION,
+            user=self.member_a,
+        )
+        original_id = self.member_a.pk
+        self.member_a.eldvatten_name = "New Community Name"
+        self.member_a.save(update_fields=["eldvatten_name"])
+
+        self.assertEqual(
+            resolve_event_invitation_targets(event),
+            {original_id},
+        )
+        self.assertEqual(self.member_a.pk, original_id)

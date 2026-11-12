@@ -17,6 +17,7 @@ from accounts.models import AccountStatus, User
 from audit.models import AuditLog
 from organization.models import CommunityGroup, GroupMembership
 
+from .forms import ResourceTargetForm
 from .models import Resource, ResourceTarget
 from .services import (
     can_view_resource,
@@ -667,3 +668,116 @@ class OrphanResourceFileCommandTests(ResourceTestBase):
             "Deleted: resources/orphan.txt",
             output.getvalue(),
         )
+
+class ResourceCommunityNameTests(ResourceTestBase):
+    def set_name(self, user, **values):
+        for field, value in values.items():
+            setattr(user, field, value)
+        user.save(update_fields=list(values))
+
+    def test_target_selector_prefers_eldvatten_name_and_shows_username(self):
+        self.set_name(
+            self.member,
+            display_name="Personal Label",
+            eldvatten_name="Shield Bearer",
+        )
+        form = ResourceTargetForm()
+        self.assertEqual(
+            form.fields["user"].label_from_instance(self.member),
+            "Shield Bearer (@resources_member)",
+        )
+
+    def test_target_selector_follows_name_fallbacks(self):
+        form = ResourceTargetForm()
+        cases = (
+            ({"eldvatten_name": "  ", "display_name": "Personal Label"},
+             "Personal Label (@resources_member)"),
+            ({"eldvatten_name": "", "display_name": "",
+              "first_name": "First", "last_name": "Last"},
+             "First Last (@resources_member)"),
+            ({"eldvatten_name": "", "display_name": "",
+              "first_name": "", "last_name": ""},
+             "@resources_member"),
+        )
+        for fields, expected in cases:
+            with self.subTest(expected=expected):
+                self.set_name(self.member, **fields)
+                self.assertEqual(
+                    form.fields["user"].label_from_instance(self.member),
+                    expected,
+                )
+
+    def test_target_selector_sorts_by_community_name(self):
+        self.set_name(self.member, eldvatten_name="Zora")
+        self.set_name(self.other, eldvatten_name="Alva")
+        self.set_name(self.manager, eldvatten_name="Mira")
+        form = ResourceTargetForm()
+        users = list(form.fields["user"].queryset)
+        self.assertEqual(
+            [user.pk for user in users],
+            [self.other.pk, self.manager.pk, self.member.pk],
+        )
+
+    def test_target_selector_excludes_pending_and_inactive_accounts(self):
+        form = ResourceTargetForm()
+        selected_ids = set(
+            form.fields["user"].queryset.values_list("pk", flat=True)
+        )
+        self.assertEqual(
+            selected_ids,
+            {self.manager.pk, self.member.pk, self.other.pk},
+        )
+        self.assertNotIn(self.pending.pk, selected_ids)
+        self.assertNotIn(self.inactive_user.pk, selected_ids)
+
+    def test_management_detail_displays_creator_and_target_community_names(self):
+        self.set_name(self.manager, eldvatten_name="Resource Keeper")
+        self.set_name(self.member, eldvatten_name="Stone Weaver")
+        self.client.force_login(self.manager)
+        response = self.client.get(self.url("manage_detail", self.custom))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Resource Keeper")
+        self.assertContains(response, "Stone Weaver")
+        self.assertContains(response, "@resources_member")
+
+    def test_audience_is_ordered_by_community_name(self):
+        self.set_name(self.member, eldvatten_name="Zora")
+        self.set_name(self.other, eldvatten_name="Alva")
+        self.client.force_login(self.manager)
+        response = self.client.get(self.url("manage_detail", self.link))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [user.pk for user in response.context["audience"]],
+            [self.other.pk, self.manager.pk, self.member.pk],
+        )
+
+    def test_renaming_member_does_not_change_resource_access(self):
+        before = (
+            can_view_resource(self.member, self.custom),
+            can_view_resource(self.other, self.custom),
+        )
+        self.set_name(
+            self.member,
+            eldvatten_name="Renamed Citizen",
+            display_name="Changed Display",
+        )
+        self.assertEqual(
+            (
+                can_view_resource(self.member, self.custom),
+                can_view_resource(self.other, self.custom),
+            ),
+            before,
+        )
+        self.assertEqual(self.custom.targets.get().user_id, self.member.pk)
+
+    def test_management_detail_escapes_html_in_community_name(self):
+        self.set_name(
+            self.member,
+            eldvatten_name="<script>alert('x')</script>",
+        )
+        self.client.force_login(self.manager)
+        response = self.client.get(self.url("manage_detail", self.custom))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "<script>alert('x')</script>")
+        self.assertContains(response, "&lt;script&gt;", html=False)
+

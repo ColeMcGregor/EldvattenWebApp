@@ -299,6 +299,28 @@ class BugReportSubmissionTests(TestCase):
             self.member,
         )
 
+    def test_authenticated_report_audit_uses_community_name_snapshot(self):
+        self.member.display_name = "Personal Display"
+        self.member.eldvatten_name = "Shield Bearer"
+        self.member.save(update_fields=["display_name", "eldvatten_name"])
+        self.client.force_login(self.member)
+
+        response = self.client.post(self.report_url, self.valid_data())
+        self.assertRedirects(response, self.received_url)
+
+        report = BugReport.objects.get()
+        audit = AuditLog.objects.get(
+            target_type="BugReport",
+            target_id=str(report.pk),
+        )
+        self.assertEqual(audit.actor_id, self.member.pk)
+        self.assertEqual(audit.actor_label, "Shield Bearer")
+
+        self.member.eldvatten_name = "New Name"
+        self.member.save(update_fields=["eldvatten_name"])
+        audit.refresh_from_db()
+        self.assertEqual(audit.actor_label, "Shield Bearer")
+
     def test_submission_cannot_set_reporter_or_admin_fields(self):
         data = self.valid_data()
         data.update({
@@ -637,6 +659,60 @@ class BugReportAdministrationTests(TestCase):
         self.assertTemplateUsed(listing, "administration/bug_reports.html")
         self.assertTemplateUsed(detail, "administration/bug_report_detail.html")
         self.assertContains(detail, self.report.description)
+
+    def test_report_list_uses_eldvatten_name(self):
+        self.member.display_name = "Private Display Sentinel"
+        self.member.eldvatten_name = "Runestone Sentinel"
+        self.member.save(update_fields=["display_name", "eldvatten_name"])
+        self.client.force_login(self.admin)
+
+        response = self.client.get(self.list_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Runestone Sentinel")
+        self.assertNotContains(response, "Private Display Sentinel")
+
+    def test_report_detail_uses_eldvatten_name_and_username(self):
+        self.member.display_name = "Private Display Sentinel"
+        self.member.eldvatten_name = "Runestone Sentinel"
+        self.member.save(update_fields=["display_name", "eldvatten_name"])
+        self.client.force_login(self.admin)
+
+        response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Runestone Sentinel")
+        self.assertContains(response, "@feedback_regular")
+        self.assertNotContains(response, "Private Display Sentinel")
+
+    def test_reporter_display_falls_back_when_eldvatten_name_is_blank(self):
+        self.member.display_name = "Fallback Display Sentinel"
+        self.member.eldvatten_name = "   "
+        self.member.save(update_fields=["display_name", "eldvatten_name"])
+        self.client.force_login(self.admin)
+
+        for url in (self.list_url, self.detail_url):
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, "Fallback Display Sentinel")
+
+    def test_anonymous_report_does_not_claim_community_identity(self):
+        anonymous_report = BugReport.objects.create(
+            description="An anonymous report for identity display tests.",
+            contact_email="anonymous-sentinel@example.com",
+        )
+        self.client.force_login(self.admin)
+
+        list_response = self.client.get(self.list_url)
+        detail_response = self.client.get(
+            reverse("administration:bug_report_detail", args=[anonymous_report.pk])
+        )
+
+        self.assertEqual(list_response.status_code, 200)
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertContains(list_response, "anonymous-sentinel@example.com")
+        self.assertNotContains(detail_response, "@feedback_regular")
 
     def test_system_section_links_to_bug_reports(self):
         self.client.force_login(self.admin)

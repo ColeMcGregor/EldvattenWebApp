@@ -1,4 +1,5 @@
 
+from django.contrib.auth import get_user_model
 from django.test import (
     RequestFactory,
     SimpleTestCase,
@@ -11,6 +12,9 @@ from .services import (
     get_request_ip,
     record_audit_event,
 )
+
+
+User = get_user_model()
 
 
 class RequestIPTests(SimpleTestCase):
@@ -228,4 +232,125 @@ class AuditIPPersistenceTests(TestCase):
         self.assertEqual(
             audit_log.request_path,
             "/resources/",
+        )
+
+
+class AuditActorNameTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.actor = User.objects.create_user(
+            username="audit_actor",
+            password="test-password",
+            first_name="Personal",
+            last_name="Name",
+            display_name="Display Name",
+            eldvatten_name="EldVatten Name",
+        )
+
+    def create_audit_log(self, actor=None):
+        return record_audit_event(
+            action=AuditLog.Action.CREATE,
+            target_type="Resource",
+            target_id="42",
+            source=AuditLog.Source.WEB_APP,
+            method=AuditLog.Method.MANUAL,
+            actor=actor,
+        )
+
+    def test_eldvatten_name_takes_precedence(self):
+        audit_log = self.create_audit_log(
+            actor=self.actor,
+        )
+
+        self.assertEqual(
+            audit_log.actor_label,
+            "EldVatten Name",
+        )
+
+    def test_display_name_fallback(self):
+        self.actor.eldvatten_name = ""
+
+        audit_log = self.create_audit_log(
+            actor=self.actor,
+        )
+
+        self.assertEqual(
+            audit_log.actor_label,
+            "Display Name",
+        )
+
+    def test_personal_name_fallback(self):
+        self.actor.eldvatten_name = "   "
+        self.actor.display_name = ""
+
+        audit_log = self.create_audit_log(
+            actor=self.actor,
+        )
+
+        self.assertEqual(
+            audit_log.actor_label,
+            "Personal Name",
+        )
+
+    def test_username_fallback(self):
+        self.actor.eldvatten_name = ""
+        self.actor.display_name = ""
+        self.actor.first_name = ""
+        self.actor.last_name = ""
+
+        audit_log = self.create_audit_log(
+            actor=self.actor,
+        )
+
+        self.assertEqual(
+            audit_log.actor_label,
+            "audit_actor",
+        )
+
+    def test_actor_identity_is_preserved(self):
+        audit_log = self.create_audit_log(
+            actor=self.actor,
+        )
+
+        audit_log.refresh_from_db()
+
+        self.assertEqual(
+            audit_log.actor_id,
+            self.actor.pk,
+        )
+
+        self.assertEqual(
+            audit_log.actor_label,
+            "EldVatten Name",
+        )
+
+    def test_actor_label_is_historical_snapshot(self):
+        audit_log = self.create_audit_log(
+            actor=self.actor,
+        )
+
+        self.actor.eldvatten_name = "Renamed Member"
+        self.actor.save(
+            update_fields=["eldvatten_name"],
+        )
+
+        audit_log.refresh_from_db()
+
+        self.assertEqual(
+            audit_log.actor_id,
+            self.actor.pk,
+        )
+
+        self.assertEqual(
+            audit_log.actor_label,
+            "EldVatten Name",
+        )
+
+        new_audit_log = self.create_audit_log(
+            actor=self.actor,
+        )
+
+        self.assertEqual(
+            new_audit_log.actor_label,
+            "Renamed Member",
         )

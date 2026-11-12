@@ -482,3 +482,35 @@ class PublicEventTests(TestCase):
             event,
             matching_days[0].events,
         )
+
+
+    def test_public_event_visibility_is_independent_of_organizer_name(self):
+        event = self.create_event("Name Independent Gathering")
+        self.organizer.display_name = "Personal Display"
+        self.organizer.eldvatten_name = "Community Organizer"
+        self.organizer.save(update_fields=["display_name", "eldvatten_name"])
+
+        self.assertEqual(
+            list(active_public_events().filter(pk=event.pk)),
+            [event],
+        )
+
+        for url in (reverse("home"), reverse("calendar")):
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, event.title)
+
+    def test_public_event_listings_do_not_expose_organizer_names(self):
+        self.organizer.display_name = "Private Personal Name Sentinel"
+        self.organizer.eldvatten_name = "Community Name Sentinel"
+        self.organizer.save(update_fields=["display_name", "eldvatten_name"])
+        self.create_event("Public Listing Without Organizer")
+
+        for url in (reverse("home"), reverse("calendar")):
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, "Public Listing Without Organizer")
+                self.assertNotContains(response, "Private Personal Name Sentinel")
+                self.assertNotContains(response, "Community Name Sentinel")

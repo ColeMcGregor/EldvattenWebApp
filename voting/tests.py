@@ -23,6 +23,8 @@ from organization.models import (
     HouseholdMembership,
 )
 
+from .forms import VoteEligibilityTargetForm
+
 from .models import (
     Vote,
     VoteComment,
@@ -1560,3 +1562,139 @@ class VotingPostgresConcurrencyTests(TransactionTestCase):
                 user=member,
             ).has_responded
         )
+
+class VotingCommunityNameTests(VotingTestBase):
+    def set_name(self, user, *, eldvatten_name="", display_name="",
+                 first_name="", last_name=""):
+        user.eldvatten_name = eldvatten_name
+        user.display_name = display_name
+        user.first_name = first_name
+        user.last_name = last_name
+        user.save(update_fields=[
+            "eldvatten_name", "display_name", "first_name", "last_name",
+        ])
+
+    def test_eligibility_target_selector_uses_eldvatten_name_and_username(self):
+        self.set_name(
+            self.member, eldvatten_name="Astrid", display_name="Personal Name",
+        )
+        form = VoteEligibilityTargetForm()
+        label = form.fields["user"].label_from_instance(self.member)
+        self.assertEqual(label, "Astrid (@vote_member)")
+        self.assertNotIn("Personal Name", label)
+
+    def test_selector_follows_fallback_hierarchy(self):
+        field = VoteEligibilityTargetForm().fields["user"]
+        cases = (
+            ({"eldvatten_name": "  " , "display_name": "Display Name"},
+             "Display Name (@vote_member)"),
+            ({"display_name": "", "first_name": "First", "last_name": "Last"},
+             "First Last (@vote_member)"),
+            ({"first_name": "", "last_name": ""}, "@vote_member"),
+        )
+        for changes, expected in cases:
+            with self.subTest(expected=expected):
+                self.set_name(self.member, **changes)
+                self.assertEqual(field.label_from_instance(self.member), expected)
+
+    def test_eligibility_selector_orders_by_community_names(self):
+        self.set_name(self.member, eldvatten_name="Zelda")
+        self.set_name(self.other_member, eldvatten_name="Astrid")
+        self.set_name(self.third_member, eldvatten_name="Maren")
+        field = VoteEligibilityTargetForm().fields["user"]
+        selected = list(field.queryset.filter(
+            pk__in=[self.member.pk, self.other_member.pk, self.third_member.pk]
+        ).values_list("pk", flat=True))
+        self.assertEqual(selected, [
+            self.other_member.pk, self.third_member.pk, self.member.pk,
+        ])
+
+    def test_draft_management_previews_eldvatten_name(self):
+        self.set_name(self.member, eldvatten_name="Astrid")
+        self.client.force_login(self.manager)
+        response = self.client.get(self.url("vote_manage_detail", self.vote))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Astrid")
+        self.assertEqual(
+            {user.pk for user in response.context["eligibility_preview"]},
+            {self.member.pk},
+        )
+
+    def test_open_vote_displays_frozen_voters_using_community_names(self):
+        self.add_target(self.other_member)
+        self.set_name(self.member, eldvatten_name="Zelda")
+        self.set_name(self.other_member, eldvatten_name="Astrid")
+        self.open_ballot()
+        self.client.force_login(self.manager)
+        response = self.client.get(self.url("vote_manage_detail", self.vote))
+        self.assertEqual(response.status_code, 200)
+        eligible = list(response.context["eligible_users"])
+        self.assertEqual([entry.user_id for entry in eligible], [
+            self.other_member.pk, self.member.pk,
+        ])
+        self.assertContains(response, "Astrid")
+        self.assertContains(response, "Zelda")
+
+    def test_identified_ballot_uses_community_name_but_keeps_user_id(self):
+        self.set_name(self.member, eldvatten_name="Astrid")
+        self.open_ballot()
+        submit_vote_response(self.vote, self.member, self.yes)
+        self.client.force_login(self.manager)
+        response = self.client.get(self.url("vote_manage_detail", self.vote))
+        self.assertEqual(response.status_code, 200)
+        identified = list(response.context["identified_responses"])
+        self.assertEqual(len(identified), 1)
+        self.assertEqual(identified[0].eligibility.user_id, self.member.pk)
+        self.assertEqual(identified[0].option_id, self.yes.pk)
+        self.assertContains(response, "Astrid")
+
+    def test_anonymous_ballot_does_not_expose_identified_responses(self):
+        self.set_name(self.member, eldvatten_name="Astrid")
+        vote = self.make_vote(
+            "Anonymous Name Test", users=[self.member], anonymous=True,
+        )
+        open_vote(vote)
+        submit_vote_response(vote, self.member, vote.options.first())
+        self.client.force_login(self.manager)
+        response = self.client.get(self.url("vote_manage_detail", vote))
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.context["identified_responses"])
+        ballot = VoteResponse.objects.get(option__vote=vote)
+        self.assertIsNone(ballot.eligibility_id)
+        self.assertIsNone(ballot.submitted_at)
+        self.assertIsNone(ballot.updated_at)
+
+    def test_renaming_member_does_not_change_frozen_voter_eligibility(self):
+        self.vote = self.open_ballot()
+        eligible = VoteEligibleUser.objects.get(vote=self.vote, user=self.member)
+        self.set_name(self.member, eldvatten_name="Renamed Member")
+        self.assertTrue(can_user_vote(self.vote, self.member))
+        eligible.refresh_from_db()
+        self.assertEqual(eligible.user_id, self.member.pk)
+        response, created = submit_vote_response(
+            self.vote, self.member, self.yes,
+        )
+        self.assertTrue(created)
+        self.assertEqual(response.eligibility_id, eligible.pk)
+
+    def test_private_vote_comments_show_community_name_to_reviewer(self):
+        self.set_name(
+            self.member, eldvatten_name="Astrid", display_name="Legal Label",
+        )
+        self.open_ballot()
+        submit_vote_comment(self.vote, self.member, "Review comment")
+        self.client.force_login(self.manager)
+        response = self.client.get(self.url("vote_manage_detail", self.vote))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Astrid")
+        self.assertContains(response, "Review comment")
+        self.assertNotContains(response, "Legal Label")
+
+    def test_community_name_is_html_escaped_in_management_page(self):
+        self.set_name(self.member, eldvatten_name="<script>alert(1)</script>")
+        self.client.force_login(self.manager)
+        response = self.client.get(self.url("vote_manage_detail", self.vote))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "&lt;script&gt;alert(1)&lt;/script&gt;")
+        self.assertNotContains(response, "<script>alert(1)</script>")
+

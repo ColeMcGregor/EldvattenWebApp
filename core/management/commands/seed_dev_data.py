@@ -95,6 +95,62 @@ FICTIONAL_MEMBER_NAMES = (
 )
 
 
+ELDVATTEN_MEMBER_NAMES = (
+    'Mara Ravenshield',
+    'Eirik Ash-Walker',
+    '',
+    'Caleb Ironhand',
+    'Iris Emberweaver',
+    'Jonah Stormward',
+    'Freya Wolfheart',
+    'Owen Oakstaff',
+    'Leah Foxglove',
+    'Theo Redbeard',
+    'Astrid Sea-Raven',
+    'Miles the Wanderer',
+    'Clara Hearthkeeper',
+    'Finn Stonebrow',
+    'Elena Silverthread',
+    'Rowan Ashencloak',
+    'Sage Moonwatcher',
+    'Dorian Blackthorn',
+    'Hazel Wildwood',
+    'Felix Firekeeper',
+    'Ada Frostsong',
+    'Gavin Bearclaw',
+    'Tessa Riverborn',
+    '',
+    'Milo the Scribe',
+    'Vera Dawnbringer',
+    'Arden Ironwood',
+    'Lena Wyrmfriend',
+    'Silas Longship',
+    'Wren Raven-Eye',
+    'Cora Mistwalker',
+    'Hugo Boarheart',
+    'Maeve Runehand',
+    'Ezra of the North',
+    'Anika Starforge',
+    'Jasper Goldleaf',
+    'Rhea Stormsong',
+    'Nolan Birchbark',
+    'Petra Wolfbane',
+    'Emmett Flint',
+    'Lyra Sunweaver',
+    'Tobin the Quiet',
+    '',
+    'Orin Hammerfall',
+    'Mina of the Vale',
+    'Kieran Nightwatch',
+    'Alma Brightwater',
+    'Soren Wolfsbane',
+    'Edda Deepwinter',
+    'Luca Thornfield',
+    'Selene White-Raven',
+    '',
+)
+
+
 TEST_STARTED_AT = date(
     2026,
     1,
@@ -195,6 +251,7 @@ class Command(BaseCommand):
         )
 
         su_test.display_name = "EldVatten Site Steward"
+        su_test.eldvatten_name = "Site Steward"
         su_test.email = "sutest@example.test"
         su_test.account_status = AccountStatus.MEMBER
         su_test.is_active = True
@@ -207,6 +264,14 @@ class Command(BaseCommand):
         )
 
         su_test.save()
+
+        if (
+            len(FICTIONAL_MEMBER_NAMES) != TEST_USER_COUNT
+            or len(ELDVATTEN_MEMBER_NAMES) != TEST_USER_COUNT
+        ):
+            raise CommandError(
+                "Development name fixtures must match TEST_USER_COUNT."
+            )
 
         staff_user_numbers = (
             ALL_FORUM_PERMISSION_USERS
@@ -238,6 +303,7 @@ class Command(BaseCommand):
             )
 
             user.display_name = FICTIONAL_MEMBER_NAMES[user_number - 1]
+            user.eldvatten_name = ELDVATTEN_MEMBER_NAMES[user_number - 1]
 
             user.email = (
                 f"{username}@example.test"
@@ -959,6 +1025,12 @@ class Command(BaseCommand):
 
         self.stdout.write(
             f"Test users: {len(test_users)}"
+        )
+
+        self.stdout.write(
+            "EldVatten names: "
+            f"{sum(bool(name) for name in ELDVATTEN_MEMBER_NAMES)} set, "
+            f"{sum(not name for name in ELDVATTEN_MEMBER_NAMES)} blank"
         )
 
         self.stdout.write(
