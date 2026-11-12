@@ -42,7 +42,6 @@
 
     </nav>
 
-
     <header class="administration-header">
 
         <h1 class="section-heading">
@@ -54,7 +53,6 @@
         </p>
 
     </header>
-
 
     {% if messages %}
 
@@ -71,7 +69,6 @@
 
     {% endif %}
 
-
     <section
         class="administration-audit-results"
         aria-labelledby="bug-report-summary-heading"
@@ -84,7 +81,6 @@
             </h2>
 
         </div>
-
 
         <dl class="administration-audit-detail-grid">
 
@@ -113,13 +109,8 @@
 
                 {% if report.reporter %}
 
-                    {% if report.reporter.display_name %}
-                        {{ report.reporter.display_name }}
-                    {% else %}
-                        {{ report.reporter.username }}
-                    {% endif %}
-
-                    ({{ report.reporter.username }})
+                    {{ report.reporter.community_name }}
+                    (@{{ report.reporter.username }})
 
                 {% else %}
 
@@ -159,7 +150,6 @@
 
     </section>
 
-
     <section
         class="administration-audit-results"
         aria-labelledby="bug-report-description-heading"
@@ -176,7 +166,6 @@
         <p style="white-space: pre-wrap; overflow-wrap: anywhere;">{{ report.description }}</p>
 
     </section>
-
 
     <section
         class="administration-audit-results"
@@ -203,7 +192,6 @@
 
     </section>
 
-
     <section
         class="administration-audit-results"
         aria-labelledby="bug-report-steps-heading"
@@ -229,7 +217,6 @@
 
     </section>
 
-
     <section
         class="administration-audit-filters"
         aria-labelledby="bug-report-management-heading"
@@ -251,7 +238,6 @@
 
             {% endif %}
 
-
             <div class="administration-audit-filter-grid">
 
                 <div class="administration-audit-filter-field">
@@ -269,7 +255,6 @@
 
             </div>
 
-
             <div class="form-field">
 
                 {{ form.admin_notes.label_tag }}
@@ -286,7 +271,6 @@
                 </p>
 
             </div>
-
 
             <div class="administration-audit-filter-actions">
 
@@ -309,7 +293,6 @@
         </form>
 
     </section>
-
 
     <footer class="administration-section-footer">
 

@@ -1,3 +1,4 @@
+
 {% extends "app/base_mobile.html" %}
 {% load static %}
 
@@ -25,10 +26,10 @@
             <header class="mobile-tavern-post-header">
 
                 <strong>
-                    {% if post.author.display_name %}
-                        {{ post.author.display_name }}
+                    {% if post.author %}
+                        {{ post.author.community_name }}
                     {% else %}
-                        {{ post.author.username }}
+                        Former member
                     {% endif %}
                 </strong>
 
@@ -99,8 +100,5 @@
     {% endfor %}
 
 </section>
-
-
-
 
 {% endblock %}

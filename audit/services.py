@@ -1,4 +1,3 @@
-
 from ipaddress import ip_address, ip_network
 
 from django.conf import settings
@@ -87,10 +86,7 @@ def record_audit_event(
     actor_label = ""
 
     if actor is not None:
-        actor_label = (
-            getattr(actor, "display_name", "")
-            or actor.get_username()
-        )
+        actor_label = actor.community_name
 
     return AuditLog.objects.create(
         actor=actor,

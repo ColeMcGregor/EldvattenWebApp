@@ -209,10 +209,7 @@ def assignment_audit_values(assignment):
         "action_id": assignment.action_id,
         "action": assignment.action.title,
         "user_id": assignment.user_id,
-        "user": (
-            assignment.user.display_name
-            or assignment.user.get_username()
-        ),
+        "user": assignment.user.community_name,
         "status": assignment.status,
         "is_active": assignment.is_active,
         "assigned_at": (

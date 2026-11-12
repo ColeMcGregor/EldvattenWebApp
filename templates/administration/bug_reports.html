@@ -34,7 +34,6 @@
         </span>
     </nav>
 
-
     <header class="administration-header">
 
         <h1 class="section-heading">
@@ -47,7 +46,6 @@
         </p>
 
     </header>
-
 
     <section
         class="administration-audit-filters"
@@ -120,7 +118,6 @@
 
     </section>
 
-
     <section
         class="administration-audit-results"
         aria-labelledby="bug-report-results-heading"
@@ -138,7 +135,6 @@
             </span>
 
         </div>
-
 
         {% if reports %}
 
@@ -188,11 +184,7 @@
 
                                     {% if report.reporter %}
 
-                                        {% if report.reporter.display_name %}
-                                            {{ report.reporter.display_name }}
-                                        {% else %}
-                                            {{ report.reporter.username }}
-                                        {% endif %}
+                                        {{ report.reporter.community_name }}
 
                                     {% elif report.contact_email %}
 
@@ -252,7 +244,6 @@
 
     </section>
 
-
     {% if page.paginator.num_pages > 1 %}
 
         <nav
@@ -282,12 +273,10 @@
 
                 {% endif %}
 
-
                 <span class="administration-audit-page-indicator">
                     Page {{ page.number }}
                     of {{ page.paginator.num_pages }}
                 </span>
-
 
                 {% if page.has_next %}
 
@@ -314,7 +303,6 @@
         </nav>
 
     {% endif %}
-
 
     <footer class="administration-section-footer">
 

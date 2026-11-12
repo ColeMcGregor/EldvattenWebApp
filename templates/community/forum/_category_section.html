@@ -1,3 +1,4 @@
+
 <section
     class="forum-category{% if category.archived_at %} forum-category-archived{% endif %}"
     id="category-{{ category.id }}"
@@ -27,7 +28,6 @@
 
             </div>
 
-
             {% if category.description %}
                 <p class="forum-category-description">
                     {{ category.description }}
@@ -36,7 +36,6 @@
 
         </div>
 
-
         {% if can_manage_categories %}
 
             <div class="forum-category-actions">
@@ -44,7 +43,6 @@
                 <a href="{% url 'community:category_edit' category.id %}">
                     Edit
                 </a>
-
 
                 {% if category.archived_at %}
 
@@ -80,7 +78,6 @@
 
     </header>
 
-
     <div
         class="forum-board-table-header"
         aria-hidden="true"
@@ -90,7 +87,6 @@
         <span>Posts</span>
         <span>Last Post</span>
     </div>
-
 
     <div class="forum-board-list">
 
@@ -112,7 +108,6 @@
                         aria-hidden="true"
                     ></div>
 
-
                     <div class="forum-board-copy">
 
                         <div class="forum-board-heading">
@@ -124,7 +119,6 @@
                                     {{ board.name }}
                                 </a>
                             </h3>
-
 
                             <div class="forum-board-statuses">
 
@@ -150,13 +144,11 @@
 
                         </div>
 
-
                         {% if board.description %}
                             <p class="forum-board-description">
                                 {{ board.description }}
                             </p>
                         {% endif %}
-
 
                         {% if can_manage_boards %}
                             <div class="forum-board-actions">
@@ -170,16 +162,13 @@
 
                 </div>
 
-
                 <div class="forum-count-cell">
                     {{ board.thread_count }}
                 </div>
 
-
                 <div class="forum-count-cell">
                     {{ board.post_count }}
                 </div>
-
 
                 <div class="forum-last-post-cell">
 
@@ -201,11 +190,7 @@
                         <span>
                             by
                             {% if board.latest_visible_post.author %}
-                                {% if board.latest_visible_post.author.display_name %}
-                                    {{ board.latest_visible_post.author.display_name }}
-                                {% else %}
-                                    {{ board.latest_visible_post.author.username }}
-                                {% endif %}
+                                {{ board.latest_visible_post.author.community_name }}
                             {% else %}
                                 Former member
                             {% endif %}
@@ -235,11 +220,9 @@
 
     </div>
 
-
     <div class="forum-visibility-note">
         All other options are either not visible to you or do not exist yet.
     </div>
-
 
     {% if can_manage_boards and not category.archived_at %}
 

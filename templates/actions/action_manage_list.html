@@ -1,3 +1,4 @@
+
 {% extends "app/base_desktop.html" %}
 {% load static %}
 
@@ -141,7 +142,7 @@
                             <div class="action-list-item-meta">
                                 <span>
                                     Created by
-                                    {{ action.created_by.display_name|default:action.created_by.username }}
+                                    {{ action.created_by.community_name }}
                                 </span>
 
                                 {% if action.deadline %}
