@@ -3,178 +3,44 @@
 
 A self-hosted community management and communication platform for **EldVatten**, a nonprofit educational organization focused on Viking-era historical research, re-enactment, and related cultures.
 
-EldVatten brings community discussion, messaging, events, governance, membership, notifications, resources, and administrative operations into one server-rendered Django application.
+The application brings community discussions, messaging, events, voting, membership, resources, and administrative operations into one Django-based system.
 
-> **Project status:** Active development. This README describes the local development environment and the project's functionality and intended architecture. It is **not** a declaration that production deployment or complete browser acceptance has been verified.
+> **Status:** Active development. The instructions below cover local development. Production deployment and full cross-browser acceptance are separate workstreams.
 
-## Quick start
+## Features
 
-The standard development environment runs Django and PostgreSQL in Docker Compose. You do **not** need a local Python or PostgreSQL installation.
-
-### 1. Install prerequisites
-
-| Software | Purpose | Link |
-| --- | --- | --- |
-| Git | Clone and manage source code | [Download Git](https://git-scm.com/downloads) |
-| Docker Desktop | Run development containers on Windows/macOS | [Download Docker Desktop](https://www.docker.com/products/docker-desktop/) |
-| Node.js 22+ | npm and Playwright browser tests | [Download Node.js](https://nodejs.org/) |
-| Visual Studio Code (optional) | Recommended editor | [Download VS Code](https://code.visualstudio.com/) |
-
-npm comes with Node.js. Node.js 20 is the minimum supported by the checked-in Playwright dependencies; Node.js 22 is the recommended baseline.
-
-On Linux, use Docker Engine with the Docker Compose plugin instead of Docker Desktop.
-
-**Windows:** Enable Docker Desktop's WSL 2 backend. If necessary, install WSL 2 from an elevated PowerShell terminal, then restart when prompted:
-
-```powershell
-wsl --install
-```
-
-Check that the tools are available:
-
-```powershell
-git --version
-docker --version
-docker compose version
-node --version
-npm --version
-```
-
-### 2. Clone the repository
-
-```powershell
-git clone https://github.com/ColeMcGregor/EldvattenWebApp.git
-cd EldvattenWebApp
-```
-
-Optionally open it in VS Code with `code .`.
-
-**Check for the root `Dockerfile` before building.** The development `compose.yaml` uses `build: .`, which requires a Dockerfile in the repository root. During a November 12, 2026 review, that file was not retrievable from the default GitHub branch. If your checkout does not contain it, obtain the development Dockerfile from the maintainer. Files on the maintainer's machine may not yet be committed.
-
-### 3. Configure the local environment
-
-Copy the example environment file:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-On Linux/macOS, use `cp .env.example .env`.
-
-Edit `.env` for your local environment. The relevant settings include:
-
-```dotenv
-DJANGO_SECRET_KEY=replace-with-a-long-random-local-secret
-DJANGO_DEBUG=True
-DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
-
-POSTGRES_DB=eldvatten
-POSTGRES_USER=eldvatten
-POSTGRES_PASSWORD=replace-with-a-unique-local-password
-POSTGRES_HOST=db
-POSTGRES_PORT=5432
-
-VAPID_PUBLIC_KEY=
-VAPID_PRIVATE_KEY=
-VAPID_SUBJECT=
-```
-
-- Generate a unique `DJANGO_SECRET_KEY`; never reuse a production key.
-- `DJANGO_DEBUG=True` is for **development only**.
-- `POSTGRES_HOST=db` refers to the database service *inside* the Compose network. Do not replace it with `localhost` unless you deliberately run Django outside Compose and configure database access accordingly.
-- VAPID settings may remain empty for ordinary development without real browser push subscriptions. Actual Web Push requires valid keys and network access to the browser's push provider.
-- `.env` contains secrets, is excluded from Git, and must not be committed.
-
-**Database password caveat:** Changing `POSTGRES_PASSWORD` after PostgreSQL has initialized its persistent volume does not automatically change the existing database user's password.
-
-### 4. Start the containers
-
-Ensure Docker is running, then execute from the repository root:
-
-```powershell
-docker compose config
-docker compose up --build -d
-docker compose ps
-```
-
-The development Compose setup starts:
-
-| Service | Purpose |
+| Area | Capabilities |
 | --- | --- |
-| `web` | Django development server at `0.0.0.0:8000` |
-| `db` | PostgreSQL database |
+| **Accounts and identity** | Registration, authentication, member approvals, account administration, access controls, personal and EldVatten names, and organizational affiliations |
+| **Organization** | Citizenship classes, social ranks, chapters, households, offices, leadership assignments, Orders, governance bodies, and historical records |
+| **The Tavern** | Category → Board → Thread → Post forum, subscriptions, targeted visibility, drafts, moderation, reports, search, and auditing |
+| **Events** | Creation, invitations, visibility, RSVPs, attendance, calendars, and public upcoming events |
+| **Actions** | Assignments, deadlines, completion tracking, and links to Tavern Threads |
+| **Messaging** | Direct and group conversations, blocking, muting, membership controls, and notifications |
+| **Voting** | Eligibility targeting, anonymous and identified ballots, quorum, required responses, voting lifecycles, and results |
+| **Resources** | Private file uploads, external links, visibility targeting, authorized downloads, and management |
+| **Notifications** | In-app and Web Push notifications, preferences, and read/unread state |
+| **Directory** | Member browsing, filtering, and profiles |
+| **Administration and audit** | Member and organizational management, permission-controlled operations, and audit records |
+| **Public website** | Information about EldVatten, public calendar, and upcoming events |
 
-For logs:
+Organization records are used throughout the application for authorization, targeting, and eligibility. **Messages are application-managed and are not end-to-end encrypted.** Features may be at different implementation or acceptance stages depending on the branch.
 
-```powershell
-docker compose logs -f web
-docker compose logs -f db
-```
-
-### 5. Initialize Django
-
-```powershell
-docker compose exec web python manage.py migrate
-docker compose exec web python manage.py check
-docker compose exec web python manage.py createsuperuser
-```
-
-If PostgreSQL is still initializing, let it become ready before running migrations. The `createsuperuser` command is intended for a fresh database; follow its prompts.
-
-### 6. Open the application
-
-| Destination | Local URL |
-| --- | --- |
-| Public homepage | <http://localhost:8000/> |
-| Member login | <http://localhost:8000/accounts/login/> |
-| Django admin | <http://localhost:8000/admin/> |
-
-The local development environment does not require nginx, Cloudflare, or HTTPS termination.
-
----
-
-## Architecture and features
-
-### Technology stack
+## Technology and architecture
 
 | Component | Technology |
 | --- | --- |
 | Backend | Python 3.13, Django 5.2 |
 | Database | PostgreSQL 17 |
 | Frontend | Django templates, HTML, CSS, vanilla JavaScript |
-| Containers | Docker, Docker Compose |
-| Browser tests | Playwright (Chromium, Firefox, WebKit) |
-| Source control | Git, GitHub |
+| Local development | Docker and Docker Compose |
+| Browser testing | Playwright (Chromium, Firefox, WebKit) |
+| Source control | Git and GitHub |
 | Production target | Linux, Gunicorn, nginx, Cloudflare |
 
-Django owns authentication, authorization, routing, application logic, data access, and server-rendered views. PostgreSQL stores persistent application and organizational data.
+Django handles authentication, authorization, routing, server-rendered pages, and application logic. PostgreSQL stores application and organizational data. The application is organized into separate Django domains within a modular monolith.
 
-### Application areas
-
-The following describes the application's feature areas; individual changes may still be under development or awaiting acceptance on a given branch.
-
-| Area | Capabilities |
-| --- | --- |
-| **Accounts and identity** | Registration, authentication, membership approval, account administration, role-based access, personal and EldVatten identities, organizational affiliations |
-| **Organization** | Citizenship classes, social ranks, chapters, households, offices, leadership assignments, governance bodies, Orders and ranks, memberships, sponsorships, historical records |
-| **The Tavern** | Hierarchical forum, visibility targeting, subscriptions, unread tracking, drafts, moderation, reporting, search, notifications, auditing |
-| **Events** | Event creation and visibility, invitations, RSVPs, attendance, calendar views, public upcoming Events |
-| **Actions** | Assignments, deadlines, completion and lifecycle tracking, links to Tavern Threads |
-| **Messaging** | Direct and group conversations, membership controls, blocking, muting, notifications |
-| **Voting** | Eligibility, ballots, anonymous or identified voting, quorum, approval rules, opening/closing votes, results |
-| **Resources** | Resource library, private uploads, external links, targeted visibility, authorized downloads and management |
-| **Notifications** | In-app and Web Push notifications, preferences, read/unread state, links to application records |
-| **Directory** | Member browsing, filtering and member profiles |
-| **Administration and audit** | Account and organizational management, moderation, permission boundaries, audit recording and inspection |
-| **Public website** | General EldVatten information and public-facing Event/calendar content |
-
-**The Tavern** uses the hierarchy `Category → Board → Thread → Post`. Threads and Posts support management, editing, archives/restoration, movement, merging/splitting where applicable, quotation and reporting.
-
-**Messaging is not end-to-end encrypted.** Messages are managed by the application.
-
-Organization records are also used by access-control, targeting, and eligibility services throughout the application.
-
-### Repository layout
+### Repository structure
 
 ```text
 EldvattenWebApp/
@@ -195,9 +61,10 @@ EldvattenWebApp/
 ├── static/
 ├── templates/
 ├── e2e/
+├── Dockerfile
+├── compose.yaml
 ├── manage.py
 ├── requirements.txt
-├── compose.yaml
 ├── package.json
 ├── package-lock.json
 ├── playwright.config.ts
@@ -205,52 +72,283 @@ EldvattenWebApp/
 └── README.md
 ```
 
-The development Compose configuration also requires a root `Dockerfile`; confirm it exists in your checkout.
+The Compose configuration uses `build: .` and therefore requires a root `Dockerfile`. If it is absent from your checkout, obtain it from the maintainer before building.
 
-### Intended production request path
+## Local development setup
 
-```text
-Browser → Cloudflare → nginx → Gunicorn → Django → PostgreSQL
+Django and PostgreSQL run in Docker containers. You do **not** need to install Python or PostgreSQL directly.
+
+### 1. Prerequisites
+
+| Software | Purpose | Link |
+| --- | --- | --- |
+| Git | Source control | [Install Git](https://git-scm.com/downloads) |
+| Docker Desktop | Windows/macOS containers | [Install Docker](https://www.docker.com/products/docker-desktop/) |
+| Node.js 22+ | npm and Playwright | [Install Node.js](https://nodejs.org/) |
+| Visual Studio Code (optional) | Recommended editor | [Install VS Code](https://code.visualstudio.com/) |
+
+Node.js includes npm. The project recommends Node.js 22; Node.js 20 is the minimum supported by the Playwright dependencies described in the existing project configuration. Linux developers can use Docker Engine and the Docker Compose plugin instead of Docker Desktop.
+
+On Windows, enable the Docker Desktop WSL 2 backend. If WSL 2 is not installed, run PowerShell as Administrator:
+
+```powershell
+wsl --install
 ```
 
-This is a **deployment target**, not the local development setup. Production requires separate configuration and security validation; see [Production deployment](#production-deployment).
+Restart if prompted, then verify your tools:
 
----
+```powershell
+git --version
+docker --version
+docker compose version
+node --version
+npm --version
+```
+
+### 2. Clone the repository
+
+```powershell
+git clone https://github.com/ColeMcGregor/EldvattenWebApp.git
+cd EldvattenWebApp
+```
+
+Open the checkout in your preferred editor, or use `code .` in VS Code.
 
 
-## Development Data
+### 3. Configure environment variables
 
-### Populate a Disposable Development Database
+The application uses a file named `.env` to store configuration settings such as database credentials, security keys, and notification settings.
 
-The application provides Django management commands for populating the database with fictional development data.
+This file is specific to your computer and should **never be uploaded to GitHub**.
 
-These commands are located in `core/management/commands/` and are intended for local development, testing, and demonstrating application functionality.
+#### Step 1: Create your `.env` file
 
-#### Primary Development Seeder
+The repository includes a file named `.env.example`, which serves as a template.
 
-The `seed_dev_data.py` command creates fictional user accounts, organizational memberships, roles, permissions, and related development records.
+Open a terminal in the project's root directory (`EldvattenWebApp`) and run:
 
-Run:
+```powershell
+Copy-Item .env.example .env
+```
+
+This creates a copy named `.env` without modifying the original.
+
+If you're using Linux or macOS, use:
+
+```bash
+cp .env.example .env
+```
+
+You should now see both files in the project root:
+
+```text
+EldvattenWebApp/
+├── .env.example
+├── .env
+├── compose.yaml
+├── manage.py
+└── ...
+```
+
+If `.env` does not appear in VS Code, check whether your editor is hiding Git-ignored files. The file may still exist.
+
+#### Step 2: Open and configure `.env`
+
+In VS Code, open `.env` and locate the following settings. If any are missing, add them.
+
+```dotenv
+DJANGO_SECRET_KEY=replace-with-a-long-random-local-secret
+DJANGO_DEBUG=True
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+
+POSTGRES_DB=eldvatten
+POSTGRES_USER=eldvatten
+POSTGRES_PASSWORD=replace-with-a-unique-local-password
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+
+VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_SUBJECT=
+```
+
+Each line follows the format `VARIABLE_NAME=value`.
+
+Do not add spaces around the `=` sign.
+
+#### Step 3: Configure Django
+
+These settings control the Django application.
+
+| Variable | What it does | What you should enter |
+| --- | --- | --- |
+| `DJANGO_SECRET_KEY` | Protects cryptographically signed application data. | A long, randomly generated secret. |
+| `DJANGO_DEBUG` | Enables Django's development features and detailed error pages. | `True` for local development. |
+| `DJANGO_ALLOWED_HOSTS` | Specifies which hostnames can access Django. | `localhost,127.0.0.1` for local development. |
+
+**Generate a Django secret key**
+
+Do not leave `DJANGO_SECRET_KEY` set to the example placeholder.
+
+With the Docker image already built, you can generate a key using:
+
+```powershell
+docker compose run --rm --no-deps web python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+
+Copy the generated value and paste it after `DJANGO_SECRET_KEY=` in `.env`.
+
+For example, the line should look like:
+
+```dotenv
+DJANGO_SECRET_KEY=your-generated-secret-goes-here
+```
+
+Use the actual generated value, not the example text.
+
+**Important:** `DJANGO_DEBUG=True` must only be used for local development. Never enable it on a publicly accessible production server.
+
+#### Step 4: Configure PostgreSQL
+
+PostgreSQL is the database that stores application information.
+
+Docker Compose automatically starts PostgreSQL in its own container. You do not need to install PostgreSQL separately.
+
+| Variable | What it does | What you should enter |
+| --- | --- | --- |
+| `POSTGRES_DB` | Name of the database. | `eldvatten` |
+| `POSTGRES_USER` | Database username. | `eldvatten` |
+| `POSTGRES_PASSWORD` | Password for the database account. | A unique password you choose. |
+| `POSTGRES_HOST` | Hostname Django uses to locate PostgreSQL. | `db` |
+| `POSTGRES_PORT` | PostgreSQL network port. | `5432` |
+
+For a new development environment, keep everything except the password at the suggested values:
+
+```dotenv
+POSTGRES_DB=eldvatten
+POSTGRES_USER=eldvatten
+POSTGRES_PASSWORD=your-chosen-database-password
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+```
+
+Replace `your-chosen-database-password` with an actual password.
+
+**Why is the hostname `db` instead of `localhost`?**
+
+Docker Compose gives each service a hostname based on its service name.
+
+The PostgreSQL service is named `db`, so Django connects to it using `POSTGRES_HOST=db`.
+
+Inside the Django container, `localhost` would refer to the Django container itself, not the PostgreSQL container.
+
+**Important:** Once PostgreSQL has initialized its database volume, changing `POSTGRES_PASSWORD` in `.env` does not automatically update the existing database account's password. Choose the password before starting the containers for the first time.
+
+#### Step 5: Configure Web Push Notifications
+
+EldVatten uses VAPID keys to authenticate browser push notifications. These keys can be generated using Node.js.
+
+1. Open PowerShell in the project directory and run:
+
+   `npx web-push generate-vapid-keys`
+
+2. Copy the generated public and private keys into your `.env` file:
+
+   ```dotenv
+   VAPID_PUBLIC_KEY=your-generated-public-key
+   VAPID_PRIVATE_KEY=your-generated-private-key
+   VAPID_SUBJECT=mailto:your-email@example.com
+   ```
+
+3. Replace the example email with your own contact email address.
+
+4. Save `.env` and restart the application:
+
+   `docker compose up -d --force-recreate web`
+
+**Important:** Keep your private key secret and never commit it to GitHub. Retain your keys between restarts, since changing them may require users to subscribe to notifications again.
+
+**Optional:** Leave these variables empty if you do not need to test real Web Push notifications during local development.
+
+#### Step 6: Save and verify your configuration
+
+Save the `.env` file using `Ctrl + S`.
+
+Before continuing, confirm:
+
+- [ ] `.env` exists in the repository root, alongside `compose.yaml`.
+- [ ] `DJANGO_SECRET_KEY` contains a generated secret instead of the placeholder. This is for you to generate/create yourself.
+- [ ] `DJANGO_DEBUG=True`.
+- [ ] `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1`.
+- [ ] `POSTGRES_DB=eldvatten`.
+- [ ] `POSTGRES_USER=eldvatten`.
+- [ ] `POSTGRES_PASSWORD` contains your chosen password.
+- [ ] `POSTGRES_HOST=db`.
+- [ ] `POSTGRES_PORT=5432`.
+- [ ] VAPID settings are left empty unless needed.
+
+You can check whether Docker Compose recognizes your configuration by running:
+
+```powershell
+docker compose config --quiet
+```
+
+If the command finishes without errors, Docker Compose has successfully parsed its configuration. This does not yet verify that Django can connect to PostgreSQL.
+
+**Security reminder:** `.env` contains passwords and security keys. It should remain on your development machine and must never be committed to GitHub. The project's `.gitignore` is intended to exclude it. One or both of us will get notified if your forget this by github themself. *PAY ATTENTION TO THIS*
+
+
+### 4. Start the application
+
+From the repository root:
+
+```powershell
+docker compose config
+docker compose up --build -d
+docker compose ps
+```
+
+The `web` service runs the Django development server on port `8000`; `db` runs PostgreSQL. If the database is still starting, allow it to become ready before migrating.
+
+```powershell
+docker compose exec web python manage.py migrate
+docker compose exec web python manage.py check
+docker compose exec web python manage.py createsuperuser
+```
+
+`createsuperuser` is for setting up an administrative login on a clean development database.
+
+### 5. Open the application
+
+| Destination | URL |
+| --- | --- |
+| Public homepage | <http://localhost:8000/> |
+| Member login | <http://localhost:8000/accounts/login/> |
+| Django admin | <http://localhost:8000/admin/> |
+
+*AT THIS POINT, THE APPLICATION SHOULD BE ACCESSIBLE LOCALLY IF DOCKER, THE .ENV IS CONFIGURED, AND ALL MIGRATIONS HAVE SUCCESSFULLY BEEN COMPLETED. IF IT IS NOT, SOMETHING IS WRONG, REACH OUT TO GITHUB OWNER*
+
+## Development data
+
+Management commands in `core/management/commands/` populate a **disposable development database** with fictional accounts and application records.
+
+### Seed data
+
+Start with the main seeder, which creates fictional accounts, organizational memberships, roles, permissions, and supporting data:
 
 ```powershell
 docker compose exec web python manage.py seed_dev_data
 ```
 
-This establishes the primary development data used throughout the application.
+Then run the domain seeders you need:
 
-#### Domain-Specific Seeders
-
-Additional commands populate individual application domains with fictional records.
-
-| Command | Purpose |
+| Command | Creates |
 | --- | --- |
-| `seed_action_data` | Creates fictional Actions, assignments, and related task records. |
-| `seed_event_data` | Creates fictional Events and associated scheduling data. |
-| `seed_forum_data` | Populates The Tavern with Categories, Boards, Threads, and Posts. |
-| `seed_resource_data` | Creates fictional Resources for testing browsing and management. |
-| `seed_voting_data` | Creates fictional Voting records covering different voting scenarios. |
-
-Run the relevant commands from the repository root:
+| `seed_action_data` | Actions and assignments |
+| `seed_event_data` | Events and scheduling records |
+| `seed_forum_data` | Tavern Categories, Boards, Threads, and Posts |
+| `seed_resource_data` | Resources |
+| `seed_voting_data` | Voting scenarios |
 
 ```powershell
 docker compose exec web python manage.py seed_action_data
@@ -260,63 +358,39 @@ docker compose exec web python manage.py seed_resource_data
 docker compose exec web python manage.py seed_voting_data
 ```
 
-Run the primary development seeder first when setting up a fresh database so that the fictional accounts and organizational records are available to domain-specific seeders.
+The domain seeders can be run individually when their supporting records are already present. Use the main seeder first on a new database.
 
-Each command can also be invoked individually when its required supporting data is present.
+### Development accounts
 
-#### Maintenance Commands
+| Account | Password | Purpose |
+| --- | --- | --- |
+| `suTest` | `testpassword` | Development superuser |
+| `testuser01`–`testuser52` | `Eldvatten!123_` | Fictional member accounts |
 
-The same directory contains two database and file-maintenance utilities:
+The accounts have varied statuses, memberships, permissions, ranks, and leadership assignments for testing. **These credentials are for disposable development data only.**
+
+### Maintenance commands
 
 | Command | Purpose |
 | --- | --- |
-| `cleanup_orphaned_resource_files` | Identifies and cleans up Resource files that are no longer associated with active database records. |
-| `cleanup_submission_throttles` | Removes obsolete submission-throttling records. |
+| `cleanup_orphaned_resource_files` | Identifies or cleans up files no longer associated with Resources |
+| `cleanup_submission_throttles` | Cleans up expired submission-throttling records |
 
-These utilities are separate from development-data generation and should only be run when their maintenance behavior is required.
+Maintenance commands are not seeders. Review their available options and effects before running them.
 
-### Development Data Safety
+> **Data safety:** Seeders modify the connected database. Do not run them against production, real member information, or a shared database you need to preserve. The development seeder expects Django's debug/development configuration.
 
-**Warning:** Seeding commands modify the connected database and may create or update substantial amounts of data.
-
-- Use these commands only against a disposable development database.
-- Never execute development seeders against production or real member data.
-- Confirm that Docker Compose is connected to the intended database before running them.
-- Keep development credentials separate from production credentials.
-- Development seeders should be run with Django's development configuration (`DJANGO_DEBUG=True`).
-
-The generated records are fictional and intended for testing. They are not production data.
-
-The primary development seeder and the domain-specific seeders may have dependencies on existing accounts, organizational records, or other application data. Review the relevant command implementation when running them against a partially populated database.
-
-
-
-### Seeded test accounts
-
-| Account | Development password | Purpose |
-| --- | --- | --- |
-| `suTest` | `testpassword` | Development superuser |
-| `testuser01` through `testuser52` | `Eldvatten!123_` | Fictional development members |
-
-The seed data varies account statuses, organizational memberships, roles, permissions, social ranks, citizenship, and leadership assignments. The source README also identifies EldVatten names among seeded fields; verify the current local implementation and migrations when using this feature.
-
-These credentials are intentionally known and **must never be used in production**.
-
----
-
-
-FROM HERE THE APPLICATION SHOULD BE ACCESSIBLE FROM LOCALHOST:8000 IF ALL WAS DONE RIGHT. 
-
+## Testing
 
 ### Django tests
 
-Run the full backend test suite:
+Run the complete backend regression suite:
 
 ```powershell
-docker compose exec web python manage.py test               (over 700 tests so be careful)
+docker compose exec web python manage.py test
 ```
 
-Run individual domains or a related group:
+The full suite is substantial. To test a specific area while developing, run an individual app or a group of related apps:
 
 ```powershell
 docker compose exec web python manage.py test accounts
@@ -325,30 +399,24 @@ docker compose exec web python manage.py test notifications
 docker compose exec web python manage.py test accounts messaging notifications organization audit
 ```
 
-The Django test runner normally creates and deletes a separate test database. The configured PostgreSQL user must be allowed to create it.
+Django normally creates and removes a separate test database. The PostgreSQL user must have permission to create it. Backend tests cover models, services, authorization, validation, workflows, notifications, and auditing; they do not replace browser acceptance testing.
 
-These tests cover models, application services, authentication, authorization, validation, workflows, notifications, administrative operations, audit logging, and cross-domain integrations. Passing tests do not, by themselves, establish complete browser or production acceptance.
+### Playwright setup
 
-### Install Playwright
-
-From the repository root:
+Install Node dependencies and browser binaries from the repository root:
 
 ```powershell
 npm ci
 npx playwright install
 ```
 
-Playwright is configured for Chromium, Firefox, and WebKit. On Linux, additional OS dependencies may be needed; after reviewing the package changes, you can use:
+On Linux, Playwright may also need system packages:
 
 ```bash
 npx playwright install --with-deps
 ```
 
-### Configure browser-test credentials
-
-The authentication setup in `e2e/auth.setup.ts` uses `suTest`, `testuser01`, and `testuser02`.
-
-Create `.env.playwright` at the repository root:
+Playwright authentication setup (`e2e/auth.setup.ts`) uses three seeded accounts. Create `.env.playwright` in the repository root:
 
 ```dotenv
 E2E_SUTEST_PASSWORD=testpassword
@@ -356,27 +424,33 @@ E2E_TESTUSER01_PASSWORD=Eldvatten!123_
 E2E_TESTUSER02_PASSWORD=Eldvatten!123_
 ```
 
-Adjust these values if the development credentials have changed. `.env.playwright` is Git-ignored and must not be committed.
+Update the values if your development passwords differ. The file and the generated authentication states under `playwright/.auth/` contain credentials; do not commit or share them.
 
-The setup creates authenticated session files under `playwright/.auth/` (for example, `suTest.json`). **These files contain authentication state and must not be committed or shared.**
+### Run browser tests
 
-Start Django and PostgreSQL before running browser tests.
-
-### Run Playwright
+Start Django and PostgreSQL before running Playwright:
 
 ```powershell
-# Generate authenticated browser state
 npx playwright test --project=setup
-
-# Run browser projects
 npx playwright test --project=chromium
 npx playwright test --project=firefox
 npx playwright test --project=webkit
+```
 
-# Run Chromium with a visible browser
+For a visible browser, add `--headed`, for example:
+
+```powershell
 npx playwright test --project=chromium --headed
 ```
 
+The Tavern acceptance suite is in `e2e/tavern-suite.spec.ts` and requires an explicit mutation flag:
+
+```powershell
+$env:E2E_TAVERN_MUTATIONS = "1"
+npx playwright test e2e/tavern-suite.spec.ts --project=chromium --headed
+```
+
+**Mutating browser tests must run only against a disposable development database.** The flag permits mutations; it does not make the connected database safe to modify. Some suites use Docker Compose to manage fixtures.
 
 ### Reports and debugging
 
@@ -385,106 +459,101 @@ npx playwright show-report
 npx playwright show-trace path/to/trace.zip
 ```
 
-Playwright traces and related artifacts may be written to `test-results/`. The Playwright VS Code extension can also run and debug individual tests.
+Test artifacts may be created under `test-results/`. The Playwright VS Code extension can also run and debug individual tests. Some suites require seeded accounts and organizational permissions; an empty database with a new superuser may not suffice.
 
-Browser tests may require the seeded users, permissions, and records. Creating a superuser alone may not satisfy every acceptance test.
+## Development commands and tooling
 
----
-
-## Everyday development commands
-
-Run these from the repository root:
+Run these commands from the repository root:
 
 | Task | Command |
 | --- | --- |
-| Start services | `docker compose up -d` |
-| Stop services (keep data) | `docker compose down` |
-| Rebuild services | `docker compose up --build -d` |
-| Show service status | `docker compose ps` |
+| Start containers | `docker compose up -d` |
+| Stop containers, retain data | `docker compose down` |
+| Rebuild containers | `docker compose up --build -d` |
+| Check container status | `docker compose ps` |
 | Follow Django logs | `docker compose logs -f web` |
+| Follow database logs | `docker compose logs -f db` |
 | Open Django shell | `docker compose exec web python manage.py shell` |
-| Check configuration | `docker compose exec web python manage.py check` |
+| Run Django checks | `docker compose exec web python manage.py check` |
 | Check for missing migrations | `docker compose exec web python manage.py makemigrations --check --dry-run` |
 | Generate migrations | `docker compose exec web python manage.py makemigrations` |
 | Apply migrations | `docker compose exec web python manage.py migrate` |
 
-The Compose setup mounts the checkout into Django using `.:/app`, so most Python, template, CSS, and JavaScript edits appear in the container without rebuilding. The development server reloads ordinary Python changes. Rebuild after changing dependencies or container build settings.
+The development Compose configuration mounts the checkout into the Django container at `/app`, so most Python, template, CSS, and JavaScript changes do not require an image rebuild. Rebuild after changing dependencies or the Dockerfile.
 
-**Data persistence:** PostgreSQL uses a Docker volume. `docker compose down` preserves it; **`docker compose down -v` deletes Compose-managed volumes, including database data**. Use `-v` only when intentionally resetting disposable development data.
+**Database persistence:** `docker compose down` preserves volumes. `docker compose down -v` removes Compose-managed volumes, including PostgreSQL data. Only use `-v` when intentionally discarding the development database.
 
 ### Recommended VS Code extensions
 
 | Extension | ID | Purpose |
 | --- | --- | --- |
-| Python | `ms-python.python` | Python tooling and debugging |
-| Pylance | `ms-python.vscode-pylance` | Python analysis |
-| Docker | `ms-azuretools.vscode-docker` | Container management |
-| Playwright Test | `ms-playwright.playwright` | Browser test execution/debugging |
-| Django | `batisteo.vscode-django` | Template syntax support |
+| Python | `ms-python.python` | Python support and debugging |
+| Pylance | `ms-python.vscode-pylance` | Language analysis |
+| Docker | `ms-azuretools.vscode-docker` | Container tools |
+| Playwright Test | `ms-playwright.playwright` | Browser test execution |
+| Django | `batisteo.vscode-django` | Template editing |
 
-Install from the VS Code Extensions view or with `code --install-extension <extension-id>` if `code` is on your `PATH`. VS Code is optional; `.vscode/` is excluded from Git tracking in the source README's reviewed configuration.
-
----
+Install these through the Extensions panel or `code --install-extension <extension-id>`.
 
 ## Troubleshooting
 
 | Problem | What to check |
 | --- | --- |
-| Docker does not start | Docker Desktop/Engine, `docker compose version`, WSL 2 backend on Windows |
-| Dockerfile missing | `compose.yaml` requires a root `Dockerfile` because it uses `build: .`; request it from the maintainer if absent |
-| Django cannot connect to PostgreSQL | `docker compose ps`, `docker compose logs db`, and `POSTGRES_HOST=db` inside Compose |
-| Port 8000 already in use | Stop the conflicting process or adjust the host-port mapping and Playwright `baseURL` |
-| Playwright login fails | Running Django, seeded users, `.env.playwright`, matching credentials, `http://localhost:8000` |
-| Playwright browsers missing | Run `npx playwright install` |
-| Browser tests lack required records | Seed a **disposable** development database; verify expected permissions and fixtures |
-| Local files differ from GitHub | Run `git status`; uncommitted/unpushed files are unavailable to other contributors |
+| Docker does not start | Docker Desktop/Engine, `docker compose version`, and WSL 2 on Windows |
+| Missing `Dockerfile` | `compose.yaml` uses `build: .`; obtain the root Dockerfile from the maintainer if absent |
+| Database connection fails | `docker compose ps`, `docker compose logs db`, and `POSTGRES_HOST=db` |
+| Port 8000 is busy | Stop the other process or update the port mapping and Playwright `baseURL` |
+| Playwright login fails | Running app, seeded users, correct `.env.playwright`, matching passwords |
+| Browser binaries missing | `npx playwright install` |
+| Browser tests lack fixtures | Run appropriate seeders against disposable development data |
+| Local files differ from GitHub | Use `git status` to identify uncommitted or unpushed changes |
 
+For real Web Push troubleshooting, check notification permission, service-worker registration, valid VAPID keys, browser push-service support, and outbound network connectivity. Simulated push tests do not verify delivery by external push services.
 
 ## Contributing and security
 
-For collaborative work:
+Create a focused branch, keep changes scoped to the relevant domain, run affected Django and browser tests, and review changes before committing or opening a pull request.
 
-1. Create a focused Git branch, such as `git switch -c feature/example-change`.
-2. Keep changes scoped to the relevant application area.
-3. Run appropriate Django tests and any relevant Playwright checks.
-4. Review your diff and staged files carefully.
-5. Submit a pull request when collaborating.
-
-EXPECTED commit message formatting:
-
-```
+```powershell
+git switch -c feature/example-change
+git add .
+git diff --cached
 git commit -m "feat(Templates:community): updated thread_detail to contain drafts link"
+git push -u origin feature/example-change
 ```
 
-**Do not commit:**
+Use the repository's established commit-message convention. Check `git status` and staged diffs for sensitive or accidental files.
 
-- `.env`, `.env.playwright`, VAPID private keys, or other secrets.
-- Playwright authentication state files.
-- Production database exports or real member information.
-- Private uploaded media.
-- Test logs or reports containing sensitive data.
+**Never commit:**
 
-The repository's `.gitignore` is intended to exclude common local secrets and outputs. Inspect `git status` and the staged diff rather than relying on ignore rules alone.
-
+- `.env`, `.env.playwright`, VAPID private keys, or other secrets
+- Playwright authentication states (`playwright/.auth/`)
+- Production database dumps or real member records
+- Private uploaded media
+- Test reports containing sensitive information
 
 ## Production deployment
 
-**The development Compose configuration is not a production deployment.** The target environment includes Linux hosting, PostgreSQL, Gunicorn, nginx, Cloudflare, HTTPS, hardened Django settings, static-file delivery, protected private media, logging and monitoring, health checks, backups and tested restoration, appropriate rate limiting, and real Web Push configuration.
+The development Compose configuration is **not** suitable for public production use as-is.
 
-Run Django's deployment checks against **actual production settings** as part of validation:
+The planned production environment uses Linux, PostgreSQL, Gunicorn, nginx, and Cloudflare, with HTTPS, hardened Django settings, static-file delivery, protected private media, logging, monitoring, health checks, backups, restore procedures, and production Web Push credentials.
+
+```text
+Browser → Cloudflare → nginx → Gunicorn → Django → PostgreSQL
+```
+
+Deployment validation must include authentication, authorization, private file access, trusted-proxy configuration, browser compatibility, push delivery, and a tested backup restoration procedure.
+
+Run Django's deployment checks **under production settings**:
 
 ```powershell
 docker compose exec web python manage.py check --deploy
 ```
 
-A passing check is not sufficient on its own. Production validation must also cover authorization, private uploads/downloads, proxy trust, browser compatibility, push delivery, backups, and restoration. Do not treat the development settings (`DJANGO_DEBUG=True`, `runserver`) as production-ready.
-
----
+A passing deployment check alone does not establish that the environment is secure or production-ready.
 
 ## License and copyright
 
 Copyright © 2026 McGregor Systems LLC. All rights reserved.
 
-This software is proprietary. Copying, modification, distribution, sublicensing, or use outside the terms authorized by the copyright holder is prohibited. Access to the repository does not, by itself, grant a license to use or distribute the contents.
-
-**Maintainer action required:** The source README reports that `package.json` declares `"license": "ISC"`, which conflicts with the proprietary notice above. Reconcile the package metadata and intended license before distributing the project to additional parties.
+This software is proprietary. Copying, modification, distribution, sublicensing, or use outside the terms authorized by the copyright holder is prohibited. Access to the repository does not, by itself, grant a license to use or distribute its contents.
