@@ -22,8 +22,6 @@ from .models import (
     PushSubscription,
 )
 from .services import (
-    get_unread_notification_count,
-    get_user_notifications,
     mark_all_notifications_read,
     mark_notification_read,
     mark_notification_unread,
@@ -56,22 +54,10 @@ def get_notification_return_url(request):
 
 
 @login_required
+@require_GET
 def notification_list(request):
-    notifications = get_user_notifications(
-        request.user,
-    )
-
-    unread_count = get_unread_notification_count(
-        request.user,
-    )
-
-    return render(
-        request,
-        "notifications/notification_list.html",
-        {
-            "notifications": notifications,
-            "unread_count": unread_count,
-        },
+    return redirect(
+        f"{reverse('my_eldvatten')}?section=notifications"
     )
 
 
