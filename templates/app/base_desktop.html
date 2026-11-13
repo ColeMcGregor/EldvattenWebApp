@@ -27,6 +27,11 @@
         rel="stylesheet"
         href="{% static 'css/app_desktop.css' %}"
     >
+
+    <script
+        src="{% static 'js/back_to_top.js' %}"
+        defer
+    ></script>
 </head>
 
 <body class="app-body">
@@ -210,6 +215,19 @@
         {% endblock %}
 
     </div>
+
+    <button
+        id="app-back-to-top"
+        class="app-back-to-top"
+        type="button"
+        aria-label="Back to top"
+        aria-hidden="true"
+        tabindex="-1"
+        disabled
+    >
+        <span aria-hidden="true">↑</span>
+        <span>Top</span>
+    </button>
 
 </body>
 </html>
