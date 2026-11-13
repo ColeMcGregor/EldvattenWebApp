@@ -1,0 +1,92 @@
+
+{% extends "app/base_desktop.html" %}
+
+{% block title %}
+    Organization | Administration | EldVatten
+{% endblock %}
+
+{% block nav_administration %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+{% block app_content %}
+
+<div class="administration-page">
+
+    <nav class="administration-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'administration:index' %}">Administration</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Organization</span>
+    </nav>
+
+    <header class="administration-header">
+        <h1 class="section-heading">Organization</h1>
+        <p class="administration-description">
+            Manage EldVatten's organizational structure,
+            memberships, offices, and governance.
+        </p>
+    </header>
+
+    <section class="administration-section-content" aria-labelledby="organization-areas-heading">
+        <h2 id="organization-areas-heading">Management Areas</h2>
+        <p class="administration-description">
+            These areas will become available as their management
+            workflows are implemented.
+        </p>
+
+        <div class="administration-card-grid">
+
+            <a class="administration-card" href="{% url 'organization:chapter_manage' %}" aria-labelledby="organization-chapters">
+                <div class="administration-card-header">
+                    <h3 id="organization-chapters" class="administration-card-title">Chapters</h3>
+                </div>
+                <p class="administration-card-description">Chapter details, status, citizens, and chapter officers.</p>
+            </a>
+
+            <a class="administration-card" href="{% url 'organization:household_manage' %}" aria-labelledby="organization-households">
+                <div class="administration-card-header">
+                    <h3 id="organization-households" class="administration-card-title">Households</h3>
+                </div>
+                <p class="administration-card-description">Households, their members, and household leadership.</p>
+            </a>
+
+            <a class="administration-card" href="{% url 'organization:citizenship_manage' %}" aria-labelledby="organization-citizenship">
+                <div class="administration-card-header">
+                    <h3 id="organization-citizenship" class="administration-card-title">Citizenship &amp; Ranks</h3>
+                </div>
+                <p class="administration-card-description">Citizenship classes, citizenship history, and social ranks.</p>
+            </a>
+
+            <a class="administration-card" href="{% url 'organization:office_manage' %}" aria-labelledby="organization-governance">
+                <div class="administration-card-header">
+                    <h3 id="organization-governance" class="administration-card-title">Offices &amp; Governance</h3>
+                </div>
+                <p class="administration-card-description">Officer appointments, governance bodies, and council membership.</p>
+            </a>
+
+            <a class="administration-card" href="{% url 'organization:order_manage' %}" aria-labelledby="organization-orders">
+                <div class="administration-card-header">
+                    <h3 id="organization-orders" class="administration-card-title">Orders</h3>
+                </div>
+                <p class="administration-card-description">Orders of Merit, Krig Grisar, and Order membership and ranks.</p>
+            </a>
+
+            <a class="administration-card" href="{% url 'organization:community_group_manage' %}" aria-labelledby="organization-groups">
+                <div class="administration-card-header">
+                    <h3 id="organization-groups" class="administration-card-title">Community Groups</h3>
+                </div>
+                <p class="administration-card-description">Community groups and their membership assignments.</p>
+            </a>
+
+        </div>
+    </section>
+
+    <footer class="administration-section-footer">
+        <a class="administration-back-link" href="{% url 'administration:index' %}">
+            &larr; Back to Administration
+        </a>
+    </footer>
+
+</div>
+
+{% endblock %}

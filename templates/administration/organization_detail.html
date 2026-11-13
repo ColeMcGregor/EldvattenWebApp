@@ -1,0 +1,252 @@
+
+{% extends "app/base_desktop.html" %}
+
+{% block title %}
+    {{ record.name }} | {{ title }} | Organization | EldVatten
+{% endblock %}
+
+{% block nav_administration %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+{% block app_content %}
+
+<div class="administration-page administration-audit-page">
+
+    <nav
+        class="administration-breadcrumb"
+        aria-label="Breadcrumb"
+    >
+        <a href="{% url 'administration:index' %}">
+            Administration
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a href="{% url 'organization:index' %}">
+            Organization
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <a href="{{ manage_url }}">
+            {{ title }}
+        </a>
+
+        <span aria-hidden="true">/</span>
+
+        <span aria-current="page">
+            {{ record.name }}
+        </span>
+    </nav>
+
+
+    <header class="administration-header">
+
+        <h1 class="section-heading">
+            {{ record.name }}
+        </h1>
+
+        {% if description %}
+            <p class="administration-description">
+                {{ description }}
+            </p>
+        {% endif %}
+
+        {% if can_edit and edit_url %}
+            <div class="administration-audit-filter-actions">
+                <a
+                    href="{{ edit_url }}#organization-form"
+                    class="administration-audit-button"
+                >
+                    Edit {{ singular_title }}
+                </a>
+            </div>
+        {% endif %}
+
+    </header>
+
+
+    {% if messages %}
+        <div
+            class="administration-audit-results"
+            role="status"
+        >
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+
+    <section
+        class="administration-audit-results"
+        aria-labelledby="organization-information-heading"
+    >
+
+        <div class="administration-audit-results-header">
+            <h2 id="organization-information-heading">
+                {{ singular_title }} Information
+            </h2>
+        </div>
+
+        <dl class="administration-audit-detail-grid">
+
+            {% for field in fields %}
+
+                <dt>{{ field.label }}</dt>
+
+                <dd>
+                    {% if field.url %}
+                        <a href="{{ field.url }}">
+                            {{ field.value|default:"Not provided" }}
+                        </a>
+                    {% else %}
+                        {{ field.value|default:"Not provided" }}
+                    {% endif %}
+                </dd>
+
+            {% endfor %}
+
+        </dl>
+
+    </section>
+
+
+    {% for section in sections %}
+
+        <section
+            class="administration-audit-results"
+            aria-labelledby="organization-section-{{ forloop.counter }}"
+        >
+
+            <div class="administration-audit-results-header">
+
+                <h2 id="organization-section-{{ forloop.counter }}">
+                    {{ section.title }}
+                </h2>
+
+                {% if section.count != None %}
+                    <span class="administration-audit-results-count">
+                        {{ section.count }}
+                    </span>
+                {% endif %}
+
+                {% if section.action_url %}
+                    <a
+                        href="{{ section.action_url }}"
+                        class="administration-audit-button"
+                    >
+                        {{ section.action_label }}
+                    </a>
+                {% endif %}
+
+            </div>
+
+
+            {% if section.description %}
+                <p class="administration-description">
+                    {{ section.description }}
+                </p>
+            {% endif %}
+
+
+            {% if section.items %}
+
+                <div class="administration-audit-table-wrapper">
+
+                    <table class="administration-audit-table">
+
+                        <thead>
+                            <tr>
+                                <th scope="col">
+                                    Name
+                                </th>
+
+                                <th scope="col">
+                                    Details
+                                </th>
+
+                                <th scope="col">
+                                    Dates
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for item in section.items %}
+
+                                <tr>
+
+                                    <td>
+                                        {% if item.url %}
+                                            <a
+                                                href="{{ item.url }}"
+                                                class="administration-audit-target"
+                                            >
+                                                {{ item.name }}
+                                            </a>
+                                        {% else %}
+                                            <span class="administration-audit-target">
+                                                {{ item.name }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {{ item.details|default:"—" }}
+                                    </td>
+
+                                    <td>
+                                        {% if item.started_at %}
+                                            {{ item.started_at|date:"M j, Y" }}
+                                        {% endif %}
+
+                                        {% if item.ended_at %}
+                                            &ndash;
+                                            {{ item.ended_at|date:"M j, Y" }}
+                                        {% elif item.started_at %}
+                                            &ndash; Present
+                                        {% else %}
+                                            &mdash;
+                                        {% endif %}
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <div class="administration-empty-state">
+                    <p>
+                        {{ section.empty_message|default:"No records found." }}
+                    </p>
+                </div>
+
+            {% endif %}
+
+        </section>
+
+    {% endfor %}
+
+
+    <footer class="administration-section-footer">
+        <a
+            href="{{ manage_url }}"
+            class="administration-back-link"
+        >
+            &larr; Back to {{ title }}
+        </a>
+    </footer>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,340 @@
+
+{% extends "app/base_desktop.html" %}
+
+{% block title %}
+    {{ title }} | Organization | EldVatten
+{% endblock %}
+
+{% block nav_administration %}active{% endblock %}
+{% block app_shell_class %}app-two-column{% endblock %}
+{% block app_right_rail %}{% endblock %}
+
+{% block app_content %}
+
+<div class="administration-page administration-audit-page">
+
+    <nav class="administration-breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'administration:index' %}">Administration</a>
+        <span aria-hidden="true">/</span>
+        <a href="{% url 'organization:index' %}">Organization</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{{ title }}</span>
+    </nav>
+
+    <header class="administration-header">
+        <h1 class="section-heading">{{ title }}</h1>
+        {% if description %}
+            <p class="administration-description">{{ description }}</p>
+        {% endif %}
+    </header>
+
+    {% if messages %}
+        <div class="administration-audit-results" role="status">
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if tabs %}
+        <nav class="administration-audit-filter-actions" aria-label="{{ title }} sections">
+            {% for tab in tabs %}
+                <a
+                    href="{{ tab.url }}"
+                    class="administration-audit-button"
+                    {% if tab.active %}aria-current="page"{% endif %}
+                >
+                    {{ tab.title }}
+                </a>
+            {% endfor %}
+        </nav>
+    {% endif %}
+
+    <section class="administration-audit-filters" aria-labelledby="organization-filter-heading">
+        <h2 id="organization-filter-heading">Find {{ title }}</h2>
+
+        <form method="get" action="{{ manage_url }}" class="administration-audit-filter-form">
+            <div class="administration-audit-filter-grid">
+                <div class="administration-audit-filter-field">
+                    <label for="organization-search">Search</label>
+                    <input
+                        id="organization-search"
+                        type="search"
+                        name="search"
+                        value="{{ search }}"
+                        maxlength="150"
+                        placeholder="Search by name"
+                    >
+                </div>
+
+                {% if status_filters %}
+                    <div class="administration-audit-filter-field">
+                        <label for="organization-status">Status</label>
+                        <select id="organization-status" name="status">
+                            <option value="">All statuses</option>
+                            {% for option in status_filters %}
+                                <option
+                                    value="{{ option.value }}"
+                                    {% if option.selected %}selected{% endif %}
+                                >
+                                    {{ option.label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="administration-audit-filter-actions">
+                <button type="submit" class="administration-audit-button">Search</button>
+                <a href="{{ manage_url }}" class="administration-audit-clear-link">Clear Filters</a>
+            </div>
+        </form>
+    </section>
+
+    {% if form and form_mode %}
+        <section class="administration-audit-filters" aria-labelledby="organization-form-heading" id="organization-form">
+            <h2 id="organization-form-heading">
+                {% if form_mode == "edit" %}Edit{% else %}Create{% endif %} {{ singular_title }}
+            </h2>
+
+            <form method="post" action="{{ form_action }}" class="administration-audit-filter-form">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="form-errors" role="alert">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <div class="administration-audit-filter-grid">
+                    {% for field in form.visible_fields %}
+                        <div class="administration-audit-filter-field">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {% if field.help_text %}
+                                <p class="administration-audit-secondary">{{ field.help_text }}</p>
+                            {% endif %}
+                            {% if field.errors %}
+                                <div class="form-errors" role="alert">{{ field.errors }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+
+                <div class="administration-audit-filter-actions">
+                    <button type="submit" class="administration-audit-button">
+                        {% if form_mode == "edit" %}Save Changes{% else %}Create {{ singular_title }}{% endif %}
+                    </button>
+                    <a href="{{ manage_url }}" class="administration-audit-clear-link">Cancel</a>
+                </div>
+            </form>
+        </section>
+    {% endif %}
+
+    <section class="administration-audit-results" aria-labelledby="organization-records-heading">
+        <div class="administration-audit-results-header">
+            <h2 id="organization-records-heading">{{ title }}</h2>
+
+            {% if page %}
+                <span class="administration-audit-results-count">
+                    {{ page.paginator.count }} record{{ page.paginator.count|pluralize }}
+                </span>
+            {% endif %}
+
+            {% if can_add and not form_mode %}
+                <a class="administration-audit-button" href="{{ create_url }}#organization-form">
+                    Add {{ singular_title }}
+                </a>
+            {% endif %}
+        </div>
+
+        {% if records %}
+            <div class="administration-audit-table-wrapper">
+                <table class="administration-audit-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Description</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in records %}
+                            <tr>
+                                <td>
+                                    <span class="administration-audit-target">{{ row.name }}</span>
+                                </td>
+                                <td>{{ row.status_label|default:"—" }}</td>
+                                <td>{{ row.description|default:"—"|truncatechars:140 }}</td>
+                                <td>
+                                    {% if row.detail_url %}
+                                        <a href="{{ row.detail_url }}">View</a>
+                                    {% endif %}
+                                    {% if row.can_edit and row.edit_url %}
+                                        <a href="{{ row.edit_url }}#organization-form">Edit</a>
+                                    {% endif %}
+                                    {% if not row.detail_url and not row.can_edit %}
+                                        —
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="administration-empty-state">
+                <p>No matching records found.</p>
+            </div>
+        {% endif %}
+
+        {% if page and page.paginator.num_pages > 1 %}
+            <nav class="administration-audit-filter-actions" aria-label="Results pagination">
+                {% if page.has_previous %}
+                    <a href="?page={{ page.previous_page_number }}{% if filter_query %}&amp;{{ filter_query }}{% endif %}">Previous</a>
+                {% endif %}
+                <span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+                {% if page.has_next %}
+                    <a href="?page={{ page.next_page_number }}{% if filter_query %}&amp;{{ filter_query }}{% endif %}">Next</a>
+                {% endif %}
+            </nav>
+        {% endif %}
+    </section>
+
+
+    {% if can_view_assignments %}
+        <section class="administration-audit-results" aria-labelledby="organization-assignments-heading">
+            <div class="administration-audit-results-header">
+                <h2 id="organization-assignments-heading">{{ assignment_title }}s</h2>
+                {% if can_assign %}
+                    <a class="administration-audit-button" href="{{ manage_url }}?assignment=create#assignment-form">
+                        New Assignment
+                    </a>
+                {% endif %}
+            </div>
+
+            {% if show_assignment_form and assignment_form %}
+                <div class="administration-audit-filters" id="assignment-form">
+                    <h3>Record {{ assignment_title }}</h3>
+                    <form method="post" action="{{ manage_url }}?assignment=create#assignment-form" class="administration-audit-filter-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="operation" value="assign">
+                        {% if assignment_form.non_field_errors %}
+                            <div class="form-errors" role="alert">{{ assignment_form.non_field_errors }}</div>
+                        {% endif %}
+                        <div class="administration-audit-filter-grid">
+                            {% for field in assignment_form.visible_fields %}
+                                <div class="administration-audit-filter-field">
+                                    {{ field.label_tag }}
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                        <p class="administration-audit-secondary">{{ field.help_text }}</p>
+                                    {% endif %}
+                                    {% if field.errors %}
+                                        <div class="form-errors" role="alert">{{ field.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% for field in assignment_form.hidden_fields %}{{ field }}{% endfor %}
+                        <div class="administration-audit-filter-actions">
+                            <button class="administration-audit-button" type="submit">Record Assignment</button>
+                            <a class="administration-audit-clear-link" href="{{ manage_url }}">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            {% endif %}
+
+            <h3>Current Assignments</h3>
+            {% if current_assignments %}
+                <div class="administration-audit-table-wrapper">
+                    <table class="administration-audit-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Member</th>
+                                <th scope="col">Assignment</th>
+                                <th scope="col">Start Date</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in current_assignments %}
+                                <tr>
+                                    <td>{{ item.name }}</td>
+                                    <td>{{ item.details }}</td>
+                                    <td>{{ item.started_at|date:"M j, Y" }}</td>
+                                    <td>
+                                        {% if can_end %}
+                                            <form method="post" action="{{ manage_url }}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="operation" value="end">
+                                                <input type="hidden" name="assignment_id" value="{{ item.id }}">
+                                                <button type="submit" class="administration-audit-button">
+                                                    End Assignment
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            &mdash;
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="administration-description">No current assignments recorded.</p>
+            {% endif %}
+
+            <h3>Assignment History</h3>
+            {% if assignment_history %}
+                <div class="administration-audit-table-wrapper">
+                    <table class="administration-audit-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Member</th>
+                                <th scope="col">Assignment</th>
+                                <th scope="col">Start Date</th>
+                                <th scope="col">End Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in assignment_history %}
+                                <tr>
+                                    <td>{{ item.name }}</td>
+                                    <td>{{ item.details }}</td>
+                                    <td>{{ item.started_at|date:"M j, Y" }}</td>
+                                    <td>{{ item.ended_at|date:"M j, Y" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if history_page and history_page.paginator.num_pages > 1 %}
+                    <nav class="administration-audit-filter-actions" aria-label="Assignment history pagination">
+                        {% if history_page.has_previous %}
+                            <a href="?history_page={{ history_page.previous_page_number }}">Previous</a>
+                        {% endif %}
+                        <span>History page {{ history_page.number }} of {{ history_page.paginator.num_pages }}</span>
+                        {% if history_page.has_next %}
+                            <a href="?history_page={{ history_page.next_page_number }}">Next</a>
+                        {% endif %}
+                    </nav>
+                {% endif %}
+            {% else %}
+                <p class="administration-description">No former assignments recorded.</p>
+            {% endif %}
+        </section>
+    {% endif %}
+
+    <footer class="administration-section-footer">
+        <a class="administration-back-link" href="{% url 'organization:index' %}">
+            &larr; Back to Organization
+        </a>
+    </footer>
+
+</div>
+
+{% endblock %}

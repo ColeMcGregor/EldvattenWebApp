@@ -46,6 +46,10 @@ urlpatterns = [
         "administration/",
         include("administration.urls"),
     ),
+    path(
+        "organization/",
+        include("organization.urls"),
+    ),
     path("accounts/", include("accounts.urls")),
     path("actions/", include("actions.urls")),
     path("events/", include("events.urls")),

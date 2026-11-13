@@ -234,6 +234,17 @@ def get_section_links(user, section_slug):
                 "url": reverse("resources:manage_list"),
             })
 
+    elif section_slug == "organization":
+        links.append({
+            "title": "Manage Organization",
+            "description": (
+                "Manage chapters, households, citizenship, "
+                "social ranks, offices, Orders, governance "
+                "bodies, and community groups."
+            ),
+            "url": reverse("organization:index"),
+        })
+
     elif section_slug == "system":
         if allowed("audit.view_auditlog"):
             links.append({

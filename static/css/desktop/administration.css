@@ -300,6 +300,20 @@ a.administration-card:focus-visible {
     outline-offset: 2px;
 }
 
+/* Keep boolean fields compact instead of inheriting text-input sizing. */
+.administration-audit-filter-field input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    min-height: 18px;
+    padding: 0;
+    margin: 0;
+
+    flex: 0 0 auto;
+    accent-color: var(--eldvatten-red);
+    cursor: pointer;
+}
+
 .administration-audit-filter-actions {
     display: flex;
     align-items: center;
